@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="Vermut Island"
+run/main_scene="uid://bl7tnt2xredev"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+SettingsManager="*uid://cv38rv1w4rjbs"
 
 [physics]
 

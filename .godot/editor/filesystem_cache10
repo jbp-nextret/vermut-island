@@ -1,3 +1,11 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1779871641
+::res://::1779886424
 icon.svg::CompressedTexture2D::2974256565764864136::1779871632::1779871643::1::::<><><>0<>0<>48c871925b4c09e57d8c5b6afec150cf<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+::res://Scenes/::1779886424
+MainMenu.tscn::PackedScene::3225735930745961849::1779886242::0::1::::<><><>0<>0<><>::uid://icg54xai1n1c::::res://Scripts/Menu.gd<>uid://lr7jc30gxk70::::res://Scenes/Video.gd
+SettingsManager.tscn::PackedScene::580303447189780445::1779886424::0::1::::<><><>0<>0<><>::uid://cv38rv1w4rjbs::::res://Scripts/settings_manager.gd
+::res://Scripts/::1779886424
+audio.gd::GDScript::29549748651614343::1779886370::0::1::::<>VBoxContainer<><>0<>0<><>::
+menu.gd::GDScript::566058939105508538::1779886392::0::1::::<>VBoxContainer<><>0<>0<><>::
+settings_manager.gd::GDScript::6306644824350511984::1779877282::0::1::::<>Node<><>0<>0<><>::
+Video.gd::GDScript::809130867197087545::1779886231::0::1::::<>VBoxContainer<><>0<>0<><>::
