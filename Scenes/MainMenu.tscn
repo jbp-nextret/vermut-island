@@ -471,6 +471,22 @@ offset_bottom = -182.0
 grow_vertical = 0
 text = "Back"
 
+[node name="Label" type="Label" parent="." unique_id=1476490782]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_top = 146.0
+offset_right = 180.0
+offset_bottom = 219.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.36804634, 0.0632562, 0.02836297, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 53
+text = "Vermut Island"
+
 [connection signal="pressed" from="Menu/Control/Start" to="Menu" method="_on_start_button_pressed"]
 [connection signal="pressed" from="Menu/Control2/Options" to="Menu" method="_on_options_button_pressed"]
 [connection signal="pressed" from="Menu/Control3/Quit" to="Menu" method="_on_quit_button_pressed"]
