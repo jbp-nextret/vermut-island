@@ -1,9 +1,6 @@
-Label
-Button
-OptionButton
-HBoxContainer
-VBoxContainer
-HSlider
-CheckBox
-Control
-Node
+WorldEnvironment
+DirectionalLight3D
+MeshInstance3D
+Camera3D
+CSGBox3D
+MeshInstance2D

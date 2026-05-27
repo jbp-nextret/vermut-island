@@ -1,12 +1,5 @@
-res://Scripts/Menu.gd
-res://MainMenu.tscn
-res://Scripts/Settings_Manager.gd
-res://Scenes/SettingsManager.tscn
-res://Scripts/SettingsManager.gd
+res://Scenes/World.tscn
 res://Scenes/MainMenu.tscn
-res://Scenes/Video.gd
-res://Scripts/audio.gd
-res://Scenes/main_menu.tscn
-res://Scripts/controls.gd
-res://Scripts/language.gd
 res://Scripts/main_menu.gd
+res://Scenes/SettingsManager.tscn
+res://Scripts/controls.gd
