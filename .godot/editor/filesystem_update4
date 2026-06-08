@@ -1,0 +1,5 @@
+res://Scenes/World.tscn
+res://Scenes/MainMenu.tscn
+res://Scripts/main_menu.gd
+res://Scenes/SettingsManager.tscn
+res://Scripts/controls.gd
