@@ -1,5 +1,8 @@
-res://Scenes/World.tscn
-res://Scenes/MainMenu.tscn
-res://Scripts/main_menu.gd
-res://Scenes/SettingsManager.tscn
+res://Scripts/audio.gd
 res://Scripts/controls.gd
+res://Scripts/language.gd
+res://Scripts/main_menu.gd
+res://Scripts/settings_manager.gd
+res://Scripts/video.gd
+res://Scripts/camera_3d.gd
+res://Scripts/personatge.gd
