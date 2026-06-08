@@ -6,3 +6,9 @@ res://Scripts/settings_manager.gd
 res://Scripts/video.gd
 res://Scripts/camera_3d.gd
 res://Scripts/personatge.gd
+res://Scenes/Harvest.tscn
+res://Scripts/Harvest/seed_data.gd
+res://Scenes/PlotTile3D.tscn
+res://Scripts/Harvest/plot_tile_3d.gd
+res://Scripts/GameManager.gd
+res://UI/SeedSelector.tscn

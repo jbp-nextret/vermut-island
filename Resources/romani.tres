@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="SeedData" format=3 uid="uid://dgoohig6x8o6w"]
+
+[ext_resource type="Script" uid="uid://cvv3iagrow3ju" path="res://Scripts/Harvest/seed_data.gd" id="1_u28dt"]
+
+[resource]
+script = ExtResource("1_u28dt")
+metadata/_custom_type_script = "uid://cvv3iagrow3ju"

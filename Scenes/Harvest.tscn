@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://cvoohq06vuiyc"]
+
+[ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="1_rjlat"]
+[ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_d5xvm"]
+[ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_7swu5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fj7yv"]
+albedo_color = Color(0.78431374, 0.65882355, 0.50980395, 1)
+roughness = 0.9
+
+[sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tlwt5"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+shading_mode = 0
+albedo_texture = ExtResource("1_rjlat")
+billboard_mode = 1
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
+dof_blur_far_enabled = true
+dof_blur_far_distance = 20.0
+dof_blur_amount = 0.2
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
+sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
+sky_horizon_color = Color(1, 0.83137256, 0.627451, 1)
+ground_bottom_color = Color(0.54509807, 0.4509804, 0.33333334, 1)
+ground_horizon_color = Color(0.848752, 0.7644334, 0.6615786, 1)
+
+[sub_resource type="Sky" id="Sky_036b0"]
+sky_material = SubResource("ProceduralSkyMaterial_aqk2v")
+
+[sub_resource type="Environment" id="Environment_dwbse"]
+background_mode = 2
+sky = SubResource("Sky_036b0")
+ambient_light_source = 2
+ambient_light_color = Color(1, 0.9411765, 0.8156863, 1)
+ambient_light_energy = 0.4
+glow_enabled = true
+
+[node name="Harvest" type="Node3D" unique_id=59139261]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2056104759]
+size = Vector3(20, 0.2, 20)
+material = SubResource("StandardMaterial3D_fj7yv")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="CSGBox3D" unique_id=1834379718]
+transform = Transform3D(0.8660254, 0.40957603, -0.28678823, 0, 0.57357645, 0.81915206, 0.5, -0.7094065, 0.49673176, 0, 5.884812, 0)
+light_color = Color(1, 0.83137256, 0.627451, 1)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="CSGBox3D/DirectionalLight3D" unique_id=1320449043]
+transform = Transform3D(-0.8660254, -0.17101008, 0.46984637, 0, 0.9396926, 0.34202012, -0.50000006, 0.2961981, -0.81379765, 0, 0, 0)
+light_color = Color(0.627451, 0.76862746, 1, 1)
+light_energy = 0.3
+
+[node name="Personatge" type="MeshInstance3D" parent="." unique_id=669074303]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
+mesh = SubResource("QuadMesh_fj7yv")
+surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
+script = ExtResource("2_d5xvm")
+
+[node name="Camera3D" type="Camera3D" parent="Personatge" unique_id=1933959984]
+transform = Transform3D(0.9957247, 0.008692841, -0.09196064, 0.013504938, 0.9711639, 0.23802984, 0.09137802, -0.23825409, 0.96689457, -0.207, 3.58599, 10.553521)
+attributes = SubResource("CameraAttributesPractical_tlwt5")
+projection = 1
+size = 9.119
+script = ExtResource("3_7swu5")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
+environment = SubResource("Environment_dwbse")
