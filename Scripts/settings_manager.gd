@@ -74,8 +74,8 @@ func apply_audio_settings():
 	var sfx_db    = linear_to_db(clamp(audio_settings["sfx_volume"], 0.0, 1.0))
  
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), master_db)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), music_db)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), sfx_db)
+	#AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), music_db)
+	#AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), sfx_db)
  
 func apply_language_settings():
 	TranslationServer.set_locale(language_settings["locale"])

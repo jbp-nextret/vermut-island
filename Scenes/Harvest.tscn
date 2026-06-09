@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="1_rjlat"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_d5xvm"]
 [ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_7swu5"]
+[ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="4_d5xvm"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fj7yv"]
 albedo_color = Color(0.78431374, 0.65882355, 0.50980395, 1)
@@ -58,7 +59,7 @@ light_color = Color(0.627451, 0.76862746, 1, 1)
 light_energy = 0.3
 
 [node name="Personatge" type="MeshInstance3D" parent="." unique_id=669074303]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2089515, 0.545, -3.4479427)
 mesh = SubResource("QuadMesh_fj7yv")
 surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
 script = ExtResource("2_d5xvm")
@@ -72,3 +73,6 @@ script = ExtResource("3_7swu5")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")
+
+[node name="Cultiu" parent="." unique_id=804750959 instance=ExtResource("4_d5xvm")]
+transform = Transform3D(0.020837782, 0, -0.99978286, 0, 1, 0, 0.99978286, 0, 0.020837782, 3.3697028, 0.7411692, 2.4561243)
