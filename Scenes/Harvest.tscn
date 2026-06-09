@@ -74,5 +74,14 @@ script = ExtResource("3_7swu5")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")
 
+[node name="Cultiu2" parent="." unique_id=1756339199 instance=ExtResource("4_d5xvm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49630177, 0, 5.9076557)
+
+[node name="Cultiu3" parent="." unique_id=187920626 instance=ExtResource("4_d5xvm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5438905, 0, 5.75474)
+
 [node name="Cultiu" parent="." unique_id=804750959 instance=ExtResource("4_d5xvm")]
-transform = Transform3D(0.020837782, 0, -0.99978286, 0, 1, 0, 0.99978286, 0, 0.020837782, 3.3697028, 0.7411692, 2.4561243)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0700014, 0, 5.133076)
+
+[node name="Cultiu4" parent="." unique_id=1573308854 instance=ExtResource("4_d5xvm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4688113, -2.3841858e-07, 5.1615653)

@@ -1,7 +1,5 @@
-res://Scenes/PlotTile3D.tscn
 res://Scenes/Cultiu.tscn
-res://Scripts/Harvest/cultiu.gd
-res://Scripts/GestorTemps.gd
-res://Scripts/personatge.gd
 res://Scenes/Harvest.tscn
-res://Scripts/settings_manager.gd
+res://Scripts/Harvest/cultiu.gd
+res://Inventari.gd
+res://Scripts/personatge.gd

@@ -5,11 +5,13 @@
 [ext_resource type="Texture2D" uid="uid://cxwr2dfhy4q3q" path="res://sprites/Crops/plant-1.png" id="3_sntq1"]
 [ext_resource type="Texture2D" uid="uid://ci1v6rkxnpdfa" path="res://sprites/Crops/plant-3.png" id="4_eew2j"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_d7ys5"]
-size = Vector2(1, 1)
+[sub_resource type="QuadMesh" id="QuadMesh_bb2lw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bb2lw"]
-transparency = 1
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3akmn"]
 
@@ -18,12 +20,11 @@ script = ExtResource("1_fgd7j")
 textures = Array[Texture2D]([ExtResource("2_bb2lw"), ExtResource("3_sntq1"), ExtResource("4_eew2j")])
 
 [node name="Sprite" type="MeshInstance3D" parent="." unique_id=45116920]
-transform = Transform3D(1, 0, 0, 0, 0.97437006, 0.22495104, 0, -0.22495104, 0.97437006, 0, 0.03, 0)
-mesh = SubResource("PlaneMesh_d7ys5")
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0)
+mesh = SubResource("QuadMesh_bb2lw")
 surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
 
 [node name="Area3D" type="Area3D" parent="." unique_id=140292717]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.023284972, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=203617868]
 shape = SubResource("BoxShape3D_3akmn")

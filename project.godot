@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 SettingsManager="*uid://ijdrpavo5oun"
 GestorTemps="*uid://dougf3exk8rg5"
+Inventari="*uid://bh4l3o5k21jci"
 
 [input]
 

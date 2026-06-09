@@ -52,3 +52,6 @@ func _physics_process(delta):
 	# Passar el temps (testing)
 	if Input.is_action_just_pressed("ui_accept"):  # tecla Enter
 		GestorTemps.passar_dia()
+	
+	if Input.is_action_just_pressed("ui_cancel"):  # Escape
+		print(Inventari.items)
