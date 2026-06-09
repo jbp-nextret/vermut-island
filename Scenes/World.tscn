@@ -1,8 +1,13 @@
 [gd_scene format=3 uid="uid://dc800gk60usnc"]
 
 [ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="1_5nsto"]
+[ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scenes/World.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_gjpho"]
+[ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
 [ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_p70al"]
+[ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fj7yv"]
 albedo_color = Color(0.78431374, 0.65882355, 0.50980395, 1)
@@ -41,8 +46,18 @@ ambient_light_energy = 0.4
 glow_enabled = true
 
 [node name="World" type="Node3D" unique_id=59139261]
+script = ExtResource("1_45d1s")
+cultiu_escena = ExtResource("6_q2d71")
+
+[node name="ZonaHort" type="Area3D" parent="." unique_id=1516069919]
+script = ExtResource("2_y7y61")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZonaHort" unique_id=1547884258]
+transform = Transform3D(3.855, 0, 0, 0, 3.855, 0, 0, 0, 3.855, 0, 0.1, 0)
+shape = SubResource("BoxShape3D_5nsto")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2056104759]
+use_collision = true
 size = Vector3(20, 0.2, 20)
 material = SubResource("StandardMaterial3D_fj7yv")
 
@@ -72,3 +87,15 @@ script = ExtResource("3_p70al")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")
+
+[node name="Cultiu" parent="." unique_id=804750959 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5276885, 0, 3.412897)
+
+[node name="Cultiu2" parent="." unique_id=1888624443 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9806511, 4.7683716e-07, 6.689115)
+
+[node name="Cultiu3" parent="." unique_id=267493038 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.1868353, 0, 6.089847)
+
+[node name="Cultiu4" parent="." unique_id=924805698 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3061314, 4.7683716e-07, 7.9107404)

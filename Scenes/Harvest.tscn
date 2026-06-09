@@ -44,6 +44,7 @@ glow_enabled = true
 [node name="Harvest" type="Node3D" unique_id=59139261]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2056104759]
+use_collision = true
 size = Vector3(20, 0.2, 20)
 material = SubResource("StandardMaterial3D_fj7yv")
 

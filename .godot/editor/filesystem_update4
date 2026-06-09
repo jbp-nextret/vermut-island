@@ -3,3 +3,6 @@ res://Scenes/Harvest.tscn
 res://Scripts/Harvest/cultiu.gd
 res://Inventari.gd
 res://Scripts/personatge.gd
+res://Scenes/World.tscn
+res://Scenes/World.gd
+res://Scripts/Harvest/zona_hort.gd
