@@ -45,11 +45,38 @@ ambient_light_color = Color(1, 0.9411765, 0.8156863, 1)
 ambient_light_energy = 0.4
 glow_enabled = true
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_45d1s"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.53333336, 1, 0.53333336, 0.5176471)
+
+[sub_resource type="QuadMesh" id="QuadMesh_y7y61"]
+material = SubResource("StandardMaterial3D_45d1s")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_45d1s"]
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 1.0
+initial_velocity_max = 3.0
+scale_min = 0.049999997
+scale_max = 0.099999994
+color = Color(1, 0.84313726, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_45d1s"]
+radius = 1.0
+height = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_y7y61"]
+radius = 1.0
+height = 2.0
+
 [node name="World" type="Node3D" unique_id=59139261]
 script = ExtResource("1_45d1s")
 cultiu_escena = ExtResource("6_q2d71")
 
 [node name="ZonaHort" type="Area3D" parent="." unique_id=1516069919]
+transform = Transform3D(3.92, 0, 0, 0, 3.92, 0, 0, 0, 3.92, 0, 0, 0)
 script = ExtResource("2_y7y61")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ZonaHort" unique_id=1547884258]
@@ -79,7 +106,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
 script = ExtResource("2_gjpho")
 
 [node name="Camera3D" type="Camera3D" parent="Personatge" unique_id=1933959984]
-transform = Transform3D(0.9957247, 0.008692841, -0.09196064, 0.013504938, 0.9711639, 0.23802984, 0.09137802, -0.23825409, 0.96689457, -0.207, 3.58599, 10.553521)
+transform = Transform3D(0.9957247, 0.008692836, -0.09196064, 0.016227297, 0.9636172, 0.26679337, 0.09093403, -0.26714504, 0.95935637, -0.207, 3.9917822, 11.399097)
 attributes = SubResource("CameraAttributesPractical_tlwt5")
 projection = 1
 size = 9.119
@@ -99,3 +126,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.1868353, 0, 6.089847)
 
 [node name="Cultiu4" parent="." unique_id=924805698 instance=ExtResource("6_q2d71")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3061314, 4.7683716e-07, 7.9107404)
+
+[node name="CursorPlantacio" type="MeshInstance3D" parent="." unique_id=901322730]
+mesh = SubResource("QuadMesh_y7y61")
+
+[node name="ParticulesPlantar" type="GPUParticles3D" parent="." unique_id=373403496]
+emitting = false
+amount = 20
+one_shot = true
+explosiveness = 0.9
+process_material = SubResource("ParticleProcessMaterial_45d1s")
+draw_pass_1 = SubResource("SphereMesh_45d1s")
+
+[node name="ParticulesCollir" type="GPUParticles3D" parent="." unique_id=2042707556]
+emitting = false
+amount = 20
+one_shot = true
+explosiveness = 0.9
+process_material = SubResource("ParticleProcessMaterial_45d1s")
+draw_pass_1 = SubResource("SphereMesh_y7y61")

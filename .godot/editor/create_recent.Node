@@ -1,6 +1,7 @@
+GPUParticles3D
+MeshInstance3D
 CollisionShape3D
 Area3D
-MeshInstance3D
 AnimatedSprite3D
 WorldEnvironment
 DirectionalLight3D

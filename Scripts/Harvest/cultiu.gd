@@ -72,4 +72,5 @@ func _process(delta):
 		recollit = true
 		print("Recollit: " + name)
 		Inventari.afegir("raim", 1)
+		EventBus.emit_signal("cultiu_recollit", global_position)
 		queue_free()
