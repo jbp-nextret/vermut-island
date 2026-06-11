@@ -32,15 +32,17 @@ func _ready():
 	var process_mat = ParticleProcessMaterial.new()
 	process_mat.direction = Vector3(0, 1, 0)
 	process_mat.spread = 180.0
-	process_mat.initial_velocity_min = 1.0
-	process_mat.initial_velocity_max = 3.0
+	process_mat.initial_velocity_min = 3.0
+	process_mat.initial_velocity_max = 6.0
 	process_mat.gravity = Vector3(0, -9.8, 0)
-	process_mat.scale_min = 0.05
-	process_mat.scale_max = 0.15
+	process_mat.scale_min = 0.3
+	process_mat.scale_max = 0.6
 	particules_collir.process_material = process_mat
 	particules_collir.one_shot = true
 	particules_collir.explosiveness = 0.9
-	particules_collir.amount = 20
+	particules_collir.amount = 40
+	particules_collir.lifetime = 1.5
+	process_mat.color = Color(1.0, 0.85, 0.0, 1.0)
 
 	# Connecta l'EventBus
 	EventBus.cultiu_recollit.connect(_on_cultiu_recollit)

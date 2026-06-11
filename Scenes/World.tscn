@@ -59,18 +59,13 @@ direction = Vector3(0, 1, 0)
 spread = 180.0
 initial_velocity_min = 1.0
 initial_velocity_max = 3.0
-scale_min = 0.049999997
-scale_max = 0.099999994
+scale_max = 5.0
 color = Color(1, 0.84313726, 0, 1)
 
-[sub_resource type="SphereMesh" id="SphereMesh_45d1s"]
-radius = 1.0
-height = 2.0
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y7y61"]
-albedo_color = Color(0.325602, 0.19041106, 0.063638955, 1)
+albedo_color = Color(0.53565264, 0.32503757, 0.22566774, 1)
 
-[sub_resource type="SphereMesh" id="SphereMesh_y7y61"]
+[sub_resource type="SphereMesh" id="SphereMesh_45d1s"]
 material = SubResource("StandardMaterial3D_y7y61")
 radius = 2.0
 height = 4.0
@@ -119,18 +114,6 @@ script = ExtResource("3_p70al")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")
 
-[node name="Cultiu" parent="." unique_id=804750959 instance=ExtResource("6_q2d71")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5276885, 0, 3.412897)
-
-[node name="Cultiu2" parent="." unique_id=1888624443 instance=ExtResource("6_q2d71")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9806511, 4.7683716e-07, 6.689115)
-
-[node name="Cultiu3" parent="." unique_id=267493038 instance=ExtResource("6_q2d71")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.1868353, 0, 6.089847)
-
-[node name="Cultiu4" parent="." unique_id=924805698 instance=ExtResource("6_q2d71")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3061314, 4.7683716e-07, 7.9107404)
-
 [node name="CursorPlantacio" type="MeshInstance3D" parent="." unique_id=901322730]
 mesh = SubResource("QuadMesh_y7y61")
 
@@ -142,12 +125,19 @@ explosiveness = 0.9
 process_material = SubResource("ParticleProcessMaterial_45d1s")
 draw_pass_1 = SubResource("SphereMesh_45d1s")
 
-[node name="ParticulesCollir" type="GPUParticles3D" parent="." unique_id=2042707556]
+[node name="ParticulesCollir" type="GPUParticles3D" parent="." unique_id=1535356545]
 emitting = false
 amount = 20
 one_shot = true
 explosiveness = 0.9
 process_material = SubResource("ParticleProcessMaterial_45d1s")
-draw_passes = 2
-draw_pass_1 = SubResource("SphereMesh_y7y61")
-draw_pass_2 = null
+draw_pass_1 = SubResource("SphereMesh_45d1s")
+
+[node name="Cultiu" parent="." unique_id=804750959 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.581895, 0.5999999, -1.5202484)
+
+[node name="Cultiu2" parent="." unique_id=76840667 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1957521, 0.5999999, 4.7507567)
+
+[node name="Cultiu3" parent="." unique_id=30912915 instance=ExtResource("6_q2d71")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2587023, 0.5999999, 3.2887573)

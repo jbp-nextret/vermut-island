@@ -9,11 +9,18 @@ enum Estat { LLAVOR, CREIXENT, MIG, GRAN, MADUR }
 var estat_actual = Estat.LLAVOR
 var dies_passats = 0
 var recollit = false
+var jugador_a_prop = false
 
 @onready var sprite = $Sprite
 @onready var area = $Area3D
+@onready var icona = $IconaRecollir
 
 func _ready():
+	icona.text = "🖱️"
+	icona.visible = false
+	icona.position.y = 1.2  # per sobre del sprite
+	icona.font_size = 32
+	icona.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_to_group("cultius")
 	
 	# Alinea el sprite amb el terra automàticament
@@ -68,9 +75,25 @@ func _process(delta):
 		return
 	
 	var distancia = global_position.distance_to(personatge.global_position)
-	if distancia < 1.5 and Input.is_action_just_pressed("ui_accept"):
-		recollit = true
-		print("Recollit: " + name)
-		Inventari.afegir("raim", 1)
-		EventBus.emit_signal("cultiu_recollit", global_position)
-		queue_free()
+	
+	# Feedback visual quan el jugador és a prop
+	if distancia < 1.5:
+		icona.visible = true
+		if not jugador_a_prop:
+			jugador_a_prop = true
+		# Pulsació contínua
+		var escala = 1.0 + sin(Time.get_ticks_msec() * 0.005) * 0.2
+		icona.modulate = Color(1.0, 1.0, 1.0, escala)  # pulsació icona
+		icona.font_size = int(32 * escala)
+		
+		if Input.is_action_just_pressed("clic_dret"):
+			recollit = true
+			Inventari.afegir("raim", 1)
+			EventBus.emit_signal("cultiu_recollit", global_position)
+			queue_free()
+	else:
+		# Torna a mida normal quan s'allunya
+		icona.visible = false
+		if jugador_a_prop:
+			jugador_a_prop = false
+			$Sprite.scale = Vector3.ONE

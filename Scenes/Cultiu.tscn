@@ -28,3 +28,5 @@ surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=203617868]
 shape = SubResource("BoxShape3D_3akmn")
+
+[node name="IconaRecollir" type="Label3D" parent="." unique_id=460014797]
