@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dc800gk60usnc"]
 
 [ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="1_5nsto"]
-[ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scenes/World.gd" id="1_45d1s"]
+[ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_gjpho"]
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
 [ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_p70al"]
@@ -67,9 +67,13 @@ color = Color(1, 0.84313726, 0, 1)
 radius = 1.0
 height = 2.0
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y7y61"]
+albedo_color = Color(0.325602, 0.19041106, 0.063638955, 1)
+
 [sub_resource type="SphereMesh" id="SphereMesh_y7y61"]
-radius = 1.0
-height = 2.0
+material = SubResource("StandardMaterial3D_y7y61")
+radius = 2.0
+height = 4.0
 
 [node name="World" type="Node3D" unique_id=59139261]
 script = ExtResource("1_45d1s")
@@ -144,4 +148,6 @@ amount = 20
 one_shot = true
 explosiveness = 0.9
 process_material = SubResource("ParticleProcessMaterial_45d1s")
+draw_passes = 2
 draw_pass_1 = SubResource("SphereMesh_y7y61")
+draw_pass_2 = null

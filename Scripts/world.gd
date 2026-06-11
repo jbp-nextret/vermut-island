@@ -18,6 +18,33 @@ func _ready():
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.albedo_color = Color(0.2, 1.0, 0.2, 0.5)
 	cursor.set_surface_override_material(0, material)
+	
+	# Assigna mesh a les partícules
+	var mesh = QuadMesh.new()
+	mesh.size = Vector2(0.1, 0.1)
+	particules_plantar.draw_pass_1 = mesh
+		
+	# Partícules de collir
+	var mesh2 = QuadMesh.new()
+	mesh2.size = Vector2(0.1, 0.1)
+	particules_collir.draw_pass_1 = mesh2
+
+	var process_mat = ParticleProcessMaterial.new()
+	process_mat.direction = Vector3(0, 1, 0)
+	process_mat.spread = 180.0
+	process_mat.initial_velocity_min = 1.0
+	process_mat.initial_velocity_max = 3.0
+	process_mat.gravity = Vector3(0, -9.8, 0)
+	process_mat.scale_min = 0.05
+	process_mat.scale_max = 0.15
+	particules_collir.process_material = process_mat
+	particules_collir.one_shot = true
+	particules_collir.explosiveness = 0.9
+	particules_collir.amount = 20
+
+	# Connecta l'EventBus
+	EventBus.cultiu_recollit.connect(_on_cultiu_recollit)
+	print("EventBus connectat")
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):
@@ -108,6 +135,10 @@ func plantar_a_cursor():
 		cursor.visible = false
 		print("Plantat! Llavors restants: ", Inventari.tenir("llavor_raim"))
 
+func _on_cultiu_recollit(posicio: Vector3):
+	print("Event rebut a posicio: ", posicio)
+	llançar_particules(particules_collir, posicio)
+	
 func dins_zona_hort(posicio: Vector3) -> bool:
 	return zona_hort.conte_punt(posicio)
 
