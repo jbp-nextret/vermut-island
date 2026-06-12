@@ -27,7 +27,7 @@ func _ready():
 	var quad = $Sprite.mesh
 	$Sprite.position.y = quad.size.y / 2.0
 	
-	area.body_entered.connect(_jugador_a_prop)
+	#area.body_entered.connect(_jugador_a_prop)
 	actualitzar_sprite()
 
 func passar_dia():
@@ -59,12 +59,6 @@ func actualitzar_sprite():
 	material.albedo_texture = textures[estat_actual]
 	sprite.set_surface_override_material(0, material)
 
-func _jugador_a_prop(body):
-	if body.name == "Personatge" and estat_actual == Estat.MADUR:
-		recollit = true
-		# Avisa al gestor de cultius que s'ha collit
-		# EventBus.emit_signal("cultiu_recollit", self)
-		queue_free()
 		
 func _process(delta):
 	if recollit or estat_actual != Estat.MADUR:
@@ -86,7 +80,7 @@ func _process(delta):
 		icona.modulate = Color(1.0, 1.0, 1.0, escala)  # pulsació icona
 		icona.font_size = int(32 * escala)
 		
-		if Input.is_action_just_pressed("clic_dret"):
+		if Input.is_action_just_pressed("accio_secundaria"):
 			recollit = true
 			Inventari.afegir("raim", 1)
 			EventBus.emit_signal("cultiu_recollit", global_position)

@@ -4,15 +4,9 @@
 [ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_gjpho"]
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
-[ext_resource type="PackedScene" uid="uid://dyb8ecccmdwy8" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
+[ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
 [ext_resource type="Script" uid="uid://dcwidug4yc871" path="res://Scripts/pivot_camera.gd" id="6_y7y61"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fj7yv"]
-albedo_color = Color(0.78431374, 0.65882355, 0.50980395, 1)
-roughness = 0.9
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
 
@@ -24,10 +18,19 @@ shading_mode = 0
 albedo_texture = ExtResource("1_5nsto")
 billboard_mode = 1
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_y7y61"]
+size = Vector3(0.8, 1.5, 0.3)
+
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
 dof_blur_far_enabled = true
 dof_blur_far_distance = 20.0
 dof_blur_amount = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fj7yv"]
+albedo_color = Color(0.78431374, 0.65882355, 0.50980395, 1)
+roughness = 0.9
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
 sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
@@ -75,6 +78,31 @@ height = 4.0
 script = ExtResource("1_45d1s")
 cultiu_escena = ExtResource("6_q2d71")
 
+[node name="Personatge" type="CharacterBody3D" parent="." unique_id=365534406]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.31829834, 0)
+script = ExtResource("2_gjpho")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Personatge" unique_id=669074303]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
+mesh = SubResource("QuadMesh_fj7yv")
+surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Personatge" unique_id=1221939212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8315735, 0)
+shape = SubResource("BoxShape3D_y7y61")
+
+[node name="PivotCamera" type="Node3D" parent="Personatge" unique_id=877136974]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
+script = ExtResource("6_y7y61")
+
+[node name="Camera3D" type="Camera3D" parent="Personatge/PivotCamera" unique_id=1933959984]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+keep_aspect = 0
+attributes = SubResource("CameraAttributesPractical_tlwt5")
+projection = 1
+fov = 50.1
+size = 14.214
+
 [node name="ZonaHort" type="Area3D" parent="." unique_id=1516069919]
 transform = Transform3D(3.92, 0, 0, 0, 3.92, 0, 0, 0, 3.92, 0, 0, 0)
 script = ExtResource("2_y7y61")
@@ -98,23 +126,6 @@ shadow_enabled = true
 transform = Transform3D(-0.8660254, -0.17101008, 0.46984637, 0, 0.9396926, 0.34202012, -0.50000006, 0.2961981, -0.81379765, 0, 0, 0)
 light_color = Color(0.627451, 0.76862746, 1, 1)
 light_energy = 0.3
-
-[node name="Personatge" type="MeshInstance3D" parent="." unique_id=669074303]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
-mesh = SubResource("QuadMesh_fj7yv")
-surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
-script = ExtResource("2_gjpho")
-
-[node name="PivotCamera" type="Node3D" parent="Personatge" unique_id=877136974]
-script = ExtResource("6_y7y61")
-
-[node name="Camera3D" type="Camera3D" parent="Personatge/PivotCamera" unique_id=1933959984]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
-keep_aspect = 0
-attributes = SubResource("CameraAttributesPractical_tlwt5")
-projection = 1
-fov = 50.1
-size = 14.214
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")

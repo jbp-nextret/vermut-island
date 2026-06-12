@@ -62,9 +62,8 @@ func _input(event):
 		mode_plantacio = false
 		cursor.visible = false
 	
-	if mode_plantacio and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			plantar_a_cursor()
+	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
+		plantar_a_cursor()
 
 func _process(delta):
 	if not mode_plantacio:

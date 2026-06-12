@@ -1,15 +1,20 @@
-extends MeshInstance3D
+extends CharacterBody3D
 
 const SPEED = 5.0
 const SPRINT_SPEED = 10.0
-const JUMP_FORCE = 8.0
+const JUMP_FORCE = 6.0
 const GRAVITY = 20.0
 
-var velocity_y = 0.0
-var on_ground = true
-const GROUND_Y = 0.75
-
 func _physics_process(delta):
+	# Gravetat
+	if not is_on_floor():
+		velocity.y -= GRAVITY * delta
+	
+	# Salt
+	if is_on_floor() and Input.is_action_just_pressed("jump"):
+		velocity.y = JUMP_FORCE
+	
+	# Moviment horitzontal
 	var direction = Vector3.ZERO
 	
 	if Input.is_action_pressed("move_right"):
@@ -24,34 +29,9 @@ func _physics_process(delta):
 	if direction.length() > 0:
 		direction = direction.normalized()
 	
-	# Sprint
 	var current_speed = SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED
 	
-	# Moviment horitzontal
-	position.x += direction.x * current_speed * delta
-	position.z += direction.z * current_speed * delta
+	velocity.x = direction.x * current_speed
+	velocity.z = direction.z * current_speed
 	
-	# Salt i gravetat
-	if on_ground and Input.is_action_just_pressed("jump"):
-		velocity_y = JUMP_FORCE
-		on_ground = false
-	
-	velocity_y -= GRAVITY * delta
-	position.y += velocity_y * delta
-	
-	# Comprova si ha tocat terra
-	if position.y <= GROUND_Y:
-		position.y = GROUND_Y
-		velocity_y = 0.0
-		on_ground = true
-	
-	# Límits del terreny
-	position.x = clamp(position.x, -9.0, 9.0)
-	position.z = clamp(position.z, -9.0, 9.0)
-	
-	# Passar el temps (testing)
-	if Input.is_action_just_pressed("ui_accept"):  # tecla Enter
-		GestorTemps.passar_dia()
-	
-	if Input.is_action_just_pressed("ui_cancel"):  # Escape
-		print(Inventari.items)
+	move_and_slide()
