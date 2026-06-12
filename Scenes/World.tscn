@@ -4,8 +4,8 @@
 [ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_gjpho"]
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
-[ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_p70al"]
-[ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
+[ext_resource type="PackedScene" uid="uid://dyb8ecccmdwy8" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
+[ext_resource type="Script" uid="uid://dcwidug4yc871" path="res://Scripts/pivot_camera.gd" id="6_y7y61"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
@@ -105,12 +105,16 @@ mesh = SubResource("QuadMesh_fj7yv")
 surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
 script = ExtResource("2_gjpho")
 
-[node name="Camera3D" type="Camera3D" parent="Personatge" unique_id=1933959984]
-transform = Transform3D(0.9957247, 0.008692836, -0.09196064, 0.016227297, 0.9636172, 0.26679337, 0.09093403, -0.26714504, 0.95935637, -0.207, 3.9917822, 11.399097)
+[node name="PivotCamera" type="Node3D" parent="Personatge" unique_id=877136974]
+script = ExtResource("6_y7y61")
+
+[node name="Camera3D" type="Camera3D" parent="Personatge/PivotCamera" unique_id=1933959984]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+keep_aspect = 0
 attributes = SubResource("CameraAttributesPractical_tlwt5")
 projection = 1
-size = 9.119
-script = ExtResource("3_p70al")
+fov = 50.1
+size = 14.214
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")
