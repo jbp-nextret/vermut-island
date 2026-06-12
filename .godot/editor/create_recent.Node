@@ -1,6 +1,11 @@
+Label3D
+GPUParticles3D
+MeshInstance3D
+CollisionShape3D
+Area3D
+AnimatedSprite3D
 WorldEnvironment
 DirectionalLight3D
-MeshInstance3D
 Camera3D
 CSGBox3D
 MeshInstance2D
