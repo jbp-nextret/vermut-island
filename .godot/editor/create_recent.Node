@@ -1,7 +1,8 @@
+Sprite3D
+MeshInstance3D
 GridMap
 T2GTerrainLayer
 CollisionShape3D
-MeshInstance3D
 StaticBody3D
 Node3D
 CharacterBody3D

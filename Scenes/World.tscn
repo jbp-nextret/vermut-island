@@ -7,7 +7,10 @@
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
 [ext_resource type="Script" uid="uid://dcwidug4yc871" path="res://Scripts/pivot_camera.gd" id="6_y7y61"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
-[ext_resource type="MeshLibrary" uid="uid://c46kb05ru52q3" path="res://MeshLibrary/block_mesh_lib.tres" id="8_q2d71"]
+[ext_resource type="MeshLibrary" uid="uid://b721lowisp1mv" path="res://MeshLibrary/terrain_mesh_lib.tres" id="8_q2d71"]
+[ext_resource type="Shader" uid="uid://chqjpq23nhe2k" path="res://Shaders/water.gdshader" id="9_uo7di"]
+[ext_resource type="Texture2D" uid="uid://b7ryajyvuj75s" path="res://sprites/grass.png" id="10_7yo87"]
+[ext_resource type="Texture2D" uid="uid://dmdln37pqvewt" path="res://sprites/arbres.png" id="11_ti1bm"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
 
@@ -74,6 +77,25 @@ albedo_color = Color(0.53565264, 0.32503757, 0.22566774, 1)
 material = SubResource("StandardMaterial3D_y7y61")
 radius = 2.0
 height = 4.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_uo7di"]
+size = Vector2(1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7yo87"]
+render_priority = 0
+shader = ExtResource("9_uo7di")
+shader_parameter/albedo = Color(5.7756904e-07, 0.7526083, 0.7532908, 1)
+shader_parameter/scroll_speed1 = Vector2(0.05, 0)
+shader_parameter/scroll_speed2 = Vector2(-0.03, 0)
+shader_parameter/blend_factor = 0.28
+shader_parameter/scale1 = Vector2(1, 1)
+shader_parameter/scale2 = Vector2(1, 1)
+shader_parameter/wave_strength = 1.0
+shader_parameter/wave_scale = 0.02
+shader_parameter/pixelation_level = 64
+shader_parameter/FoamSize = 0.5
+shader_parameter/WaterOpacity = 1.0
+shader_parameter/FoamGlowIntensity = 0.5
 
 [node name="World" type="Node3D" unique_id=59139261]
 script = ExtResource("1_45d1s")
@@ -180,5 +202,66 @@ theme_override_font_sizes/font_size = 40
 mesh_library = ExtResource("8_q2d71")
 cell_size = Vector3(1, 1, 1)
 data = {
-"cells": PackedInt32Array(65532, 65529, 1048583, 65532, 65530, 1048583, 65532, 65531, 1048583, 65532, 65532, 1048583, 65532, 65533, 1048583, 65533, 65529, 1048583, 65533, 65530, 1048583, 65533, 65531, 1048583, 65533, 65532, 1048583, 65533, 65533, 1048583, 65534, 65529, 1048583, 65534, 65530, 1048583, 65534, 65531, 1048583, 65534, 65532, 1048583, 65534, 65533, 1048583, 65535, 65529, 1048583, 65535, 65530, 1048583, 65535, 65531, 1048583, 65535, 65532, 1048583, 65535, 65533, 1048583, 0, 65529, 1048583, 0, 65530, 1048583, 0, 65531, 1048583, 0, 65532, 1048583, 0, 65533, 1048583, 1, 65529, 1048583, 1, 65530, 1048583, 1, 65531, 1048583, 1, 65532, 1048583, 1, 65533, 1048583, 2, 65529, 1048583, 2, 65530, 1048583, 2, 65531, 1048583, 2, 65532, 1048583, 2, 65533, 1048583, 3, 65529, 1048583, 3, 65530, 1048583, 3, 65531, 1048583, 3, 65532, 1048583, 3, 65533, 1048583)
+"cells": PackedInt32Array(3, 2, 1048583, 3, 1, 1048583, 3, 0, 1048583, 4, 0, 1441799, 4, 65535, 1048583, 4, 65534, 1048583, 3, 65534, 1048583, 3, 65535, 1048583, 4, 1, 1441794, 4, 2, 1441795, 4, 3, 2, 5, 2, 1048580, 5, 1, 655363, 5, 0, 1441799, 5, 65535, 1048583, 5, 65534, 1048583, 5, 3, 3, 6, 65534, 7, 6, 65535, 7, 6, 0, 7, 6, 1, 655362, 6, 2, 1048579, 6, 3, 1048578, 7, 65534, 1441799, 7, 65535, 1441799, 7, 0, 1441799, 7, 1, 1441799, 7, 3, 1441799, 7, 2, 1441799, 2, 65534, 1441798, 2, 65535, 1441798, 2, 0, 1441798, 2, 1, 1441798, 2, 2, 1441798, 2, 3, 1441798, 3, 3, 1441799, 3, 65533, 655366, 4, 65533, 655366, 5, 65533, 655366, 6, 65533, 655366, 7, 65533, 655366, 2, 65533, 1441797, 2, 4, 5, 8, 4, 1048581, 8, 65533, 655365, 8, 3, 1048582, 8, 2, 1048582, 8, 1, 1048582, 8, 0, 1048582, 8, 65535, 1048582, 8, 65534, 1048582, 3, 4, 6, 4, 4, 6, 5, 4, 6, 6, 4, 6, 7, 4, 6)
 }
+metadata/_editor_floor_ = Vector3(0, 0, 0)
+
+[node name="Water" type="MeshInstance3D" parent="." unique_id=622112960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79888964, 0.5539739, -0.55045605)
+visible = false
+mesh = SubResource("PlaneMesh_uo7di")
+surface_material_override/0 = SubResource("ShaderMaterial_7yo87")
+
+[node name="Grass1" type="Sprite3D" parent="." unique_id=1407149707]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 2.611533, 1.1148477, 0)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
+
+[node name="Grass2" type="Sprite3D" parent="." unique_id=1576624002]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 3.437285, 1.1259834, -2.025179)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(64, 0, 32, 32)
+
+[node name="Grass3" type="Sprite3D" parent="." unique_id=253991404]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 4.180579, 1.1605494, 0)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(128, 0, 32, 32)
+
+[node name="Grass4" type="Sprite3D" parent="." unique_id=1631846648]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 4.8964157, 1.6307926, 2.3592634)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(192, 0, 32, 32)
+
+[node name="Grass5" type="Sprite3D" parent="." unique_id=877001100]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 6.405539, 1.1380706, -1.699403)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(224, 0, 32, 32)
+
+[node name="Tree1" type="Sprite3D" parent="." unique_id=372274798]
+transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 7.7616987, 2.7982454, -0.7345972)
+billboard = 2
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("11_ti1bm")
+region_enabled = true
+region_rect = Rect2(5, 0, 64, 64)
