@@ -4,8 +4,8 @@
 [ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_gjpho"]
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
+[ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="5_7yo87"]
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
-[ext_resource type="Script" uid="uid://dcwidug4yc871" path="res://Scripts/pivot_camera.gd" id="6_y7y61"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
 [ext_resource type="MeshLibrary" uid="uid://b721lowisp1mv" path="res://MeshLibrary/terrain_mesh_lib.tres" id="8_q2d71"]
 [ext_resource type="Shader" uid="uid://chqjpq23nhe2k" path="res://Shaders/water.gdshader" id="9_uo7di"]
@@ -114,17 +114,17 @@ surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8315735, 0)
 shape = SubResource("BoxShape3D_y7y61")
 
-[node name="PivotCamera" type="Node3D" parent="Personatge" unique_id=877136974]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
-script = ExtResource("6_y7y61")
+[node name="CameraPivot" type="Node3D" parent="Personatge" unique_id=1029563795]
+transform = Transform3D(0.64278764, 0.31157833, -0.6998164, 0, 0.9135454, 0.40673664, 0.76604444, -0.26144528, 0.5872157, 0, 0.5, 0)
 
-[node name="Camera3D" type="Camera3D" parent="Personatge/PivotCamera" unique_id=1933959984]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+[node name="Camera3D" type="Camera3D" parent="Personatge/CameraPivot" unique_id=1933959984]
 keep_aspect = 0
 attributes = SubResource("CameraAttributesPractical_tlwt5")
 projection = 1
 fov = 50.1
-size = 14.214
+size = 14.494
+near = 0.001
+script = ExtResource("5_7yo87")
 
 [node name="ZonaHort" type="Area3D" parent="." unique_id=1516069919]
 transform = Transform3D(3.92, 0, 0, 0, 3.92, 0, 0, 0, 3.92, 0, 0, 0)
@@ -186,7 +186,6 @@ dies_per_fase = 1
 
 [node name="CicleDiaNit" type="Node3D" parent="." unique_id=1634308306]
 script = ExtResource("7_y7y61")
-durada_dia = 2.0
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2078583627]
 
@@ -215,6 +214,7 @@ surface_material_override/0 = SubResource("ShaderMaterial_7yo87")
 [node name="Grass1" type="Sprite3D" parent="." unique_id=1407149707]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 2.611533, 1.1148477, 0)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("10_7yo87")
@@ -224,6 +224,7 @@ region_rect = Rect2(0, 0, 32, 32)
 [node name="Grass2" type="Sprite3D" parent="." unique_id=1576624002]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 3.437285, 1.1259834, -2.025179)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("10_7yo87")
@@ -233,6 +234,7 @@ region_rect = Rect2(64, 0, 32, 32)
 [node name="Grass3" type="Sprite3D" parent="." unique_id=253991404]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 4.180579, 1.1605494, 0)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("10_7yo87")
@@ -242,6 +244,7 @@ region_rect = Rect2(128, 0, 32, 32)
 [node name="Grass4" type="Sprite3D" parent="." unique_id=1631846648]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 4.8964157, 1.6307926, 2.3592634)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("10_7yo87")
@@ -251,6 +254,7 @@ region_rect = Rect2(192, 0, 32, 32)
 [node name="Grass5" type="Sprite3D" parent="." unique_id=877001100]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 6.405539, 1.1380706, -1.699403)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("10_7yo87")
@@ -260,6 +264,7 @@ region_rect = Rect2(224, 0, 32, 32)
 [node name="Tree1" type="Sprite3D" parent="." unique_id=372274798]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 7.7616987, 2.7982454, -0.7345972)
 billboard = 2
+shaded = true
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("11_ti1bm")

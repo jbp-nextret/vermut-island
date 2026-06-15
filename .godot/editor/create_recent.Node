@@ -1,10 +1,10 @@
+Node3D
 Sprite3D
 MeshInstance3D
 GridMap
 T2GTerrainLayer
 CollisionShape3D
 StaticBody3D
-Node3D
 CharacterBody3D
 Label
 CanvasLayer
@@ -12,4 +12,3 @@ Label3D
 GPUParticles3D
 Area3D
 AnimatedSprite3D
-WorldEnvironment

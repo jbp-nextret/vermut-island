@@ -60,7 +60,7 @@ func actualitzar_rellotge():
 		icona = "🌙"
 	var dia_setmana = DIES[(GestorTemps.dia_actual - 1) % 7]
 	rellotge.text = "%s %02d:%02d\n%s" % [icona, hores, minuts, dia_setmana]
-	print("Hora actual: ", hora_actual)
+	#print("Hora actual: ", hora_actual)
 
 func _get_colors_per_hora() -> Array:
 	# Retorna [color_actual, color_seguent, t] per interpolar
