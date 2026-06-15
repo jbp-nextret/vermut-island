@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
 [ext_resource type="Script" uid="uid://dcwidug4yc871" path="res://Scripts/pivot_camera.gd" id="6_y7y61"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
+[ext_resource type="MeshLibrary" uid="uid://c46kb05ru52q3" path="res://MeshLibrary/block_mesh_lib.tres" id="8_q2d71"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
 
@@ -174,3 +175,10 @@ theme_override_colors/font_color = Color(0, 0.45502484, 0.9414053, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.61960787)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 40
+
+[node name="GridMap" type="GridMap" parent="CanvasLayer/Rellotge" unique_id=1082508556]
+mesh_library = ExtResource("8_q2d71")
+cell_size = Vector3(1, 1, 1)
+data = {
+"cells": PackedInt32Array(65532, 65529, 1048583, 65532, 65530, 1048583, 65532, 65531, 1048583, 65532, 65532, 1048583, 65532, 65533, 1048583, 65533, 65529, 1048583, 65533, 65530, 1048583, 65533, 65531, 1048583, 65533, 65532, 1048583, 65533, 65533, 1048583, 65534, 65529, 1048583, 65534, 65530, 1048583, 65534, 65531, 1048583, 65534, 65532, 1048583, 65534, 65533, 1048583, 65535, 65529, 1048583, 65535, 65530, 1048583, 65535, 65531, 1048583, 65535, 65532, 1048583, 65535, 65533, 1048583, 0, 65529, 1048583, 0, 65530, 1048583, 0, 65531, 1048583, 0, 65532, 1048583, 0, 65533, 1048583, 1, 65529, 1048583, 1, 65530, 1048583, 1, 65531, 1048583, 1, 65532, 1048583, 1, 65533, 1048583, 2, 65529, 1048583, 2, 65530, 1048583, 2, 65531, 1048583, 2, 65532, 1048583, 2, 65533, 1048583, 3, 65529, 1048583, 3, 65530, 1048583, 3, 65531, 1048583, 3, 65532, 1048583, 3, 65533, 1048583)
+}
