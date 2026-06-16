@@ -8,8 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
 [ext_resource type="MeshLibrary" uid="uid://b721lowisp1mv" path="res://MeshLibrary/terrain_mesh_lib.tres" id="8_q2d71"]
+[ext_resource type="Texture2D" uid="uid://7uwx15ejs7n6" path="res://sprites/water-0.png" id="9_op4cu"]
 [ext_resource type="Shader" uid="uid://chqjpq23nhe2k" path="res://Shaders/water.gdshader" id="9_uo7di"]
 [ext_resource type="Texture2D" uid="uid://b7ryajyvuj75s" path="res://sprites/grass.png" id="10_7yo87"]
+[ext_resource type="Texture2D" uid="uid://br4wteai5as35" path="res://sprites/water-1.png" id="10_8l3nt"]
 [ext_resource type="Texture2D" uid="uid://dmdln37pqvewt" path="res://sprites/arbres.png" id="11_ti1bm"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
@@ -79,23 +81,37 @@ radius = 2.0
 height = 4.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_uo7di"]
-size = Vector2(1, 1)
+size = Vector2(128, 128)
+subdivide_width = 10
+subdivide_depth = 10
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_kwl8l"]
+noise_type = 3
+seed = 1
+domain_warp_enabled = true
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_xiqgv"]
+noise = SubResource("FastNoiseLite_kwl8l")
+seamless = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7yo87"]
 render_priority = 0
 shader = ExtResource("9_uo7di")
-shader_parameter/albedo = Color(5.7756904e-07, 0.7526083, 0.7532908, 1)
-shader_parameter/scroll_speed1 = Vector2(0.05, 0)
-shader_parameter/scroll_speed2 = Vector2(-0.03, 0)
-shader_parameter/blend_factor = 0.28
-shader_parameter/scale1 = Vector2(1, 1)
-shader_parameter/scale2 = Vector2(1, 1)
-shader_parameter/wave_strength = 1.0
-shader_parameter/wave_scale = 0.02
+shader_parameter/albedo = Color(1.0701526, 1.4544619, 1.5243363, 1)
+shader_parameter/water_texture1 = ExtResource("9_op4cu")
+shader_parameter/water_texture2 = ExtResource("10_8l3nt")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_xiqgv")
+shader_parameter/scroll_speed1 = Vector2(0.015, 0.5)
+shader_parameter/scroll_speed2 = Vector2(0.175, 0.135)
+shader_parameter/blend_factor = 0.725
+shader_parameter/scale1 = Vector2(64, 64)
+shader_parameter/scale2 = Vector2(64, 64)
+shader_parameter/wave_strength = 0.15
+shader_parameter/wave_scale = 0.385
 shader_parameter/pixelation_level = 64
-shader_parameter/FoamSize = 0.5
-shader_parameter/WaterOpacity = 1.0
-shader_parameter/FoamGlowIntensity = 0.5
+shader_parameter/FoamSize = 1.29
+shader_parameter/WaterOpacity = 0.75
+shader_parameter/FoamGlowIntensity = 0.47
 
 [node name="World" type="Node3D" unique_id=59139261]
 script = ExtResource("1_45d1s")
@@ -199,8 +215,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 40
 
 [node name="Water" type="MeshInstance3D" parent="." unique_id=622112960]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79888964, 0.5539739, -0.55045605)
-visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79888964, -0.79008126, -0.55045605)
 mesh = SubResource("PlaneMesh_uo7di")
 surface_material_override/0 = SubResource("ShaderMaterial_7yo87")
 
