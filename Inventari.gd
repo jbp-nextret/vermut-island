@@ -4,7 +4,7 @@ var items = {}
 
 func _ready():
 	# Per provar, comencem amb 5 llavors de raïm
-	afegir("llavor_raim", 15)
+	afegir("llavor_raim", 150)
 	
 func afegir(item: String, quantitat: int = 1):
 	if items.has(item):
