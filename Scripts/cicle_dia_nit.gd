@@ -5,8 +5,8 @@ extends Node
 
 var hora_actual: float = 8.0  # comença a les 8 del matí (0-24)
 
-@onready var llum_principal = get_node("../CSGBox3D/DirectionalLight3D")
-@onready var llum_rebliment = get_node("../CSGBox3D/DirectionalLight3D/DirectionalLight3D")
+@onready var llum_principal = get_node("../GridMap/DirectionalLight3D")
+@onready var llum_rebliment = get_node("../GridMap/DirectionalLight3D/DirectionalLight3D")
 @onready var entorn = get_node("../WorldEnvironment")
 @onready var rellotge = get_node("../CanvasLayer/Rellotge")
 

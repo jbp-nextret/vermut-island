@@ -25,7 +25,7 @@ func _ready():
 	
 	# Alinea el sprite amb el terra automàticament
 	var quad = $Sprite.mesh
-	$Sprite.position.y = quad.size.y / 2.0
+	#$Sprite.position.y = quad.size.y / 2.0
 	
 	#area.body_entered.connect(_jugador_a_prop)
 	actualitzar_sprite()
