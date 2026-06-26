@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bnffb5tarqj36"
-path="res://.godot/imported/TerrainMeshesUpdated_tileset.png-86cc8de1e64ef488eda9f2a86ba94f01.ctex"
+uid="uid://vw0wxibtfajb"
+path="res://.godot/imported/TerrainMeshesFull_tileset.png-ebf0e5077a7bae42e87dde7a9e738d7b.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "fa6f700d57b5b8f20c3329262859127a"
+"md5": "f10295e3a523128126e6c1503ce5f44a"
 }
 
 [deps]
 
-source_file="res://Models/TerrainMeshesUpdated_tileset.png"
-dest_files=["res://.godot/imported/TerrainMeshesUpdated_tileset.png-86cc8de1e64ef488eda9f2a86ba94f01.ctex"]
+source_file="res://Models/TerrainMeshesFull_tileset.png"
+dest_files=["res://.godot/imported/TerrainMeshesFull_tileset.png-ebf0e5077a7bae42e87dde7a9e738d7b.ctex"]
 
 [params]
 
