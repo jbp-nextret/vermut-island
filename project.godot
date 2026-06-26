@@ -86,3 +86,18 @@ reset_camera={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[shader_globals]
+
+wind_strength={
+"type": "float",
+"value": 0.08
+}
+wind_direction={
+"type": "vec2",
+"value": Vector2(1, 0.3)
+}
+wind_speed={
+"type": "float",
+"value": 1.2
+}

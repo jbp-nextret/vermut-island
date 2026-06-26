@@ -11,8 +11,10 @@
 [ext_resource type="Shader" uid="uid://chqjpq23nhe2k" path="res://Shaders/water.gdshader" id="9_uo7di"]
 [ext_resource type="Texture2D" uid="uid://b7ryajyvuj75s" path="res://sprites/grass.png" id="10_7yo87"]
 [ext_resource type="Texture2D" uid="uid://br4wteai5as35" path="res://sprites/water-1.png" id="10_8l3nt"]
+[ext_resource type="Shader" uid="uid://de4xtd18dfkws" path="res://Shaders/vegetation_wind.gdshader" id="11_kwl8l"]
 [ext_resource type="Texture2D" uid="uid://dmdln37pqvewt" path="res://sprites/arbres.png" id="11_ti1bm"]
 [ext_resource type="MeshLibrary" uid="uid://df7ljtkqkcfp2" path="res://MeshLibrary/terrain_mesh_lib_full.tres" id="13_op4cu"]
+[ext_resource type="Script" uid="uid://wvb1oedkxme" path="res://Scripts/weather_manager.gd" id="14_8l3nt"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
 
@@ -108,6 +110,24 @@ shader_parameter/FoamSize = 0.905
 shader_parameter/WaterOpacity = 0.62
 shader_parameter/FoamGlowIntensity = 0.745
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_kwl8l"]
+load_path = "res://.godot/imported/grass.png-1572a75374ab70eb30be63c3ab8a61c1.s3tc.ctex"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xiqgv"]
+render_priority = 0
+shader = ExtResource("11_kwl8l")
+shader_parameter/texture_albedo = SubResource("CompressedTexture2D_kwl8l")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kwl8l"]
+render_priority = 0
+shader = ExtResource("11_kwl8l")
+shader_parameter/texture_albedo = ExtResource("10_7yo87")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_waglr"]
+render_priority = 0
+shader = ExtResource("11_kwl8l")
+shader_parameter/texture_albedo = ExtResource("11_ti1bm")
+
 [node name="World" type="Node3D" unique_id=59139261]
 script = ExtResource("1_45d1s")
 cultiu_escena = ExtResource("6_q2d71")
@@ -188,7 +208,8 @@ mesh = SubResource("PlaneMesh_uo7di")
 surface_material_override/0 = SubResource("ShaderMaterial_7yo87")
 
 [node name="Grass1" type="Sprite3D" parent="." unique_id=1407149707]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -4.423379, 1.5848031, 2.8885498)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, -4.423379, 1.5848031, 2.8885498)
+material_override = SubResource("ShaderMaterial_xiqgv")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -198,7 +219,8 @@ region_enabled = true
 region_rect = Rect2(0, 0, 32, 32)
 
 [node name="Grass2" type="Sprite3D" parent="." unique_id=1576624002]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 3.437285, 1.6110908, -4.5436115)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 3.437285, 1.6110908, -4.5436115)
+material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -208,7 +230,8 @@ region_enabled = true
 region_rect = Rect2(64, 0, 32, 32)
 
 [node name="Grass3" type="Sprite3D" parent="." unique_id=253991404]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -4.1814814, 1.6089747, 0)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, -4.1814814, 1.6089747, 0)
+material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -218,7 +241,8 @@ region_enabled = true
 region_rect = Rect2(128, 0, 32, 32)
 
 [node name="Grass4" type="Sprite3D" parent="." unique_id=1631846648]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 6.1216354, 1.6147404, 1.3131208)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 6.1216354, 1.6147404, 1.3131208)
+material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -228,7 +252,8 @@ region_enabled = true
 region_rect = Rect2(192, 0, 32, 32)
 
 [node name="Grass5" type="Sprite3D" parent="." unique_id=877001100]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 6.405539, 1.6097503, -1.699403)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 6.405539, 1.6097503, -1.699403)
+material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -238,7 +263,8 @@ region_enabled = true
 region_rect = Rect2(224, 0, 32, 32)
 
 [node name="Tree1" type="Sprite3D" parent="." unique_id=372274798]
-transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 7.7616987, 3.3289614, -0.7345972)
+transform = Transform3D(5.142301, 0, -6.1283555, 0, 8, 0, 6.1283555, 0, 5.142301, 9.412313, 3.2075734, 1.7006369)
+material_override = SubResource("ShaderMaterial_waglr")
 billboard = 2
 shaded = true
 alpha_cut = 1
@@ -265,3 +291,6 @@ shadow_enabled = true
 transform = Transform3D(-0.8660254, -0.17101008, 0.46984637, 0, 0.9396926, 0.34202012, -0.50000006, 0.2961981, -0.81379765, 0, 0, 0)
 light_color = Color(0.627451, 0.76862746, 1, 1)
 light_energy = 0.3
+
+[node name="WeatherManager" type="Node3D" parent="." unique_id=2142120609]
+script = ExtResource("14_8l3nt")
