@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dawgolgr4yrxl" path="res://sprites/Crops/plant-0.png" id="2_bb2lw"]
 [ext_resource type="Texture2D" uid="uid://cxwr2dfhy4q3q" path="res://sprites/Crops/plant-1.png" id="3_sntq1"]
 [ext_resource type="Texture2D" uid="uid://ci1v6rkxnpdfa" path="res://sprites/Crops/plant-3.png" id="4_eew2j"]
+[ext_resource type="PackedScene" uid="uid://dseups6wj7tx6" path="res://Scenes/Llavors.tscn" id="5_sntq1"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_bb2lw"]
 
@@ -12,12 +13,16 @@ transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 cull_mode = 2
+billboard_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3akmn"]
+size = Vector3(1, 0.5048828, 1)
 
 [node name="Cultiu" type="Node3D" unique_id=804750959]
 script = ExtResource("1_fgd7j")
+dies_per_fase = 1
 textures = Array[Texture2D]([ExtResource("2_bb2lw"), ExtResource("3_sntq1"), ExtResource("4_eew2j")])
+llavor_drop_escena = ExtResource("5_sntq1")
 
 [node name="Sprite" type="MeshInstance3D" parent="." unique_id=45116920]
 transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0)
@@ -27,6 +32,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
 [node name="Area3D" type="Area3D" parent="." unique_id=140292717]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=203617868]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2475586, 0)
 shape = SubResource("BoxShape3D_3akmn")
 
 [node name="IconaRecollir" type="Label3D" parent="." unique_id=460014797]

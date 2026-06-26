@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://oqm80ectsvwf"]
+
+[ext_resource type="PackedScene" uid="uid://bgbln5ovolh88" path="res://Models/TerrainMeshesFull.glb" id="1_0oded"]
+
+[node name="TerrainMeshesFull" unique_id=267323525 instance=ExtResource("1_0oded")]

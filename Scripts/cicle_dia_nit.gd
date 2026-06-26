@@ -5,8 +5,8 @@ extends Node
 
 var hora_actual: float = 8.0  # comença a les 8 del matí (0-24)
 
-@onready var llum_principal = get_node("../CSGBox3D/DirectionalLight3D")
-@onready var llum_rebliment = get_node("../CSGBox3D/DirectionalLight3D/DirectionalLight3D")
+@onready var llum_principal = get_node("../GridMap/DirectionalLight3D")
+@onready var llum_rebliment = get_node("../GridMap/DirectionalLight3D/DirectionalLight3D")
 @onready var entorn = get_node("../WorldEnvironment")
 @onready var rellotge = get_node("../CanvasLayer/Rellotge")
 
@@ -60,7 +60,7 @@ func actualitzar_rellotge():
 		icona = "🌙"
 	var dia_setmana = DIES[(GestorTemps.dia_actual - 1) % 7]
 	rellotge.text = "%s %02d:%02d\n%s" % [icona, hores, minuts, dia_setmana]
-	print("Hora actual: ", hora_actual)
+	#print("Hora actual: ", hora_actual)
 
 func _get_colors_per_hora() -> Array:
 	# Retorna [color_actual, color_seguent, t] per interpolar

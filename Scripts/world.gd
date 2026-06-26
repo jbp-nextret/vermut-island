@@ -7,6 +7,11 @@ extends Node3D
 @onready var particules_collir = $ParticulesCollir
 
 var mode_plantacio = false
+var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
+var arrastrant = false
+var posicio_drag_inici = Vector3.ZERO
+var posicio_drag_actual = Vector3.ZERO
+var zone_seleccionada = []  # Llista de posicions a plantar
 
 func _ready():
 	cursor.visible = false
@@ -44,113 +49,215 @@ func _ready():
 	particules_collir.lifetime = 1.5
 	process_mat.color = Color(1.0, 0.85, 0.0, 1.0)
 
-	# Connecta l'EventBus
-	EventBus.cultiu_recollit.connect(_on_cultiu_recollit)
-	print("EventBus connectat")
+	if EventBus.has_signal("cultiu_recollit"):
+		EventBus.cultiu_recollit.connect(_on_cultiu_recollit)
+	else:
+		print("Signal cultiu_recollit no existeix a EventBus")
+
+func _on_cultiu_recollit(posicio: Vector3):
+	print("Event rebut a posicio: ", posicio)
+	llançar_particules(particules_collir, posicio)
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):
-		if Inventari.tenir("llavor_raim") > 0:
-			mode_plantacio = true
-			cursor.visible = true
-			print("Mode plantació activat — clica al terra")
-		else:
-			print("No tens llavors!")
+		mode_plantacio = true
+		cursor.visible = true
+		print("Mode plantació activat — clica i arrastra per seleccionar")
 	
 	# Cancel·la el mode plantació amb Escape
 	if Input.is_action_just_pressed("ui_cancel"):
 		mode_plantacio = false
 		cursor.visible = false
+		arrastrant = false
+		zone_seleccionada.clear()
+		print("Mode plantació cancel·lat")
 	
-	if mode_plantacio and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			plantar_a_cursor()
+	# Confirma la selecció amb accio_secundaria
+	if mode_plantacio and Input.is_action_just_pressed("accio_secundaria"):
+		if arrastrant:
+			arrastrant = false
+			plantar_zona_seleccionada()
+			zone_seleccionada.clear()
+			print("Plantació confirmada")
+	
+	# Drag amb accio_primaria
+	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
+		arrastrant = true
+		posicio_drag_inici = cursor.global_position
+		zone_seleccionada.clear()
+		print("Drag iniciat")
+	
+	if mode_plantacio and Input.is_action_just_released("accio_primaria"):
+		if arrastrant:
+			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
+
 
 func _process(delta):
-	if not mode_plantacio:
+	if not mode_plantacio: return
+	var espai = get_world_3d().direct_space_state
+	var camera = get_viewport().get_camera_3d()
+	var pos_ratolí = get_viewport().get_mouse_position()
+	var origen = camera.project_ray_origin(pos_ratolí)
+	var direccio = camera.project_ray_normal(pos_ratolí)
+	
+	var query = PhysicsRayQueryParameters3D.create(origen, origen + direccio * 100.0)
+	var resultat = espai.intersect_ray(query)
+	
+	if resultat:
+		var posicio = resultat.position
+		var gridmap = get_node("GridMap")
+		
+		# Busca el bloc directament a sota (mateixa X, Z)
+		var pos_x = int(round(posicio.x))
+		var pos_z = int(round(posicio.z))
+		
+		var bloc_trobat = false
+		var item_name_mes_propa = ""
+		var cell_coords_mes_propa = Vector3i.ZERO
+		
+		# Busca de dalt a baix a la columna X, Z
+		for y in range(int(posicio.y), int(posicio.y) - 5, -1):
+			var cell_coords = Vector3i(pos_x, y, pos_z)
+			var cell_item = gridmap.get_cell_item(cell_coords)
+			if cell_item >= 0:
+				var item_name = gridmap.mesh_library.get_item_name(cell_item)
+				if item_name in blocs_plantables:
+					bloc_trobat = true
+					item_name_mes_propa = item_name
+					cell_coords_mes_propa = cell_coords
+					break
+		
+		if bloc_trobat:
+			var posicio_cursor = gridmap.map_to_local(cell_coords_mes_propa)
+			
+			if item_name_mes_propa.contains("half"):
+				posicio_cursor.y = float(cell_coords_mes_propa.y) + 0.5
+			else:
+				posicio_cursor.y = float(cell_coords_mes_propa.y) + 1.0
+			
+			cursor.global_position = posicio_cursor
+			cursor.visible = true
+			posicio_drag_actual = posicio_cursor
+			
+			# Si està arrastrant, calcula la zona rectangular
+			if arrastrant:
+				actualitzar_zona_seleccionada(gridmap, cell_coords_mes_propa, item_name_mes_propa)
+		else:
+			cursor.visible = false
+		
+		var mat = cursor.get_surface_override_material(0)
+		if mat == null: return
+		
+		# Canvia color segons si la posició és vàlida
+		var posicio_valida = bloc_trobat and not cultiu_a_prop(cursor.global_position) and dins_zona_hort(cursor.global_position)
+		
+		if arrastrant:
+			# Mentre arrossega, mostra feedback
+			if posicio_valida:
+				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.7)
+			else:
+				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.7)
+		else:
+			# Quan no arrossega, mostra color normal
+			if posicio_valida:
+				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.5)
+			else:
+				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.5)
+	else:
+		cursor.visible = false
+
+
+func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
+	# Calcula el rectangle entre la posició inicial i l'actual
+	var min_x = mini(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
+	var max_x = maxi(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
+	var min_z = mini(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
+	var max_z = maxi(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
+	var y = cell_coords.y
+	
+	zone_seleccionada.clear()
+	
+	# Omple el rectangle
+	for x in range(min_x, max_x + 1):
+		for z in range(min_z, max_z + 1):
+			var cell_coords_rect = Vector3i(x, y, z)
+			var cell_item = gridmap.get_cell_item(cell_coords_rect)
+			if cell_item >= 0:
+				var item = gridmap.mesh_library.get_item_name(cell_item)
+				if item in blocs_plantables:
+					var posicio_final = gridmap.map_to_local(cell_coords_rect)
+					if item.contains("half"):
+						posicio_final.y = float(cell_coords_rect.y) + 1
+					else:
+						posicio_final.y = float(cell_coords_rect.y) + 1.5
+					
+					# Mostra els punts de feedback visual
+					visualitzar_posicio_plantacio(posicio_final)
+					zone_seleccionada.append({"posicio": posicio_final, "cell_coords": cell_coords_rect, "item_name": item})
+
+
+func visualitzar_posicio_plantacio(posicio: Vector3):
+	# Crea visuals de feedback (petits cursors verds)
+	var debug_sphere = MeshInstance3D.new()
+	debug_sphere.mesh = SphereMesh.new()
+	debug_sphere.mesh.radius = 0.1
+	debug_sphere.mesh.height = 0.2
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.8)
+	debug_sphere.set_surface_override_material(0, mat)
+	add_child(debug_sphere)
+	debug_sphere.global_position = posicio
+	
+	# Elimina el sphere després d'un moment
+	await get_tree().create_timer(0.1).timeout
+	debug_sphere.queue_free()
+
+
+func plantar_zona_seleccionada():
+	if zone_seleccionada.is_empty():
+		print("Cap zona seleccionada")
 		return
 	
-	# Mou el cursor a la posició del ratolí
-	var espai = get_world_3d().direct_space_state
-	var camera = get_viewport().get_camera_3d()
-	var pos_ratolí = get_viewport().get_mouse_position()
+	print("Plantant ", zone_seleccionada.size(), " cultius...")
 	
-	var origen = camera.project_ray_origin(pos_ratolí)
-	var direccio = camera.project_ray_normal(pos_ratolí)
+	for data in zone_seleccionada:
+		plantar_en_posicio(data["posicio"], get_node("GridMap"), data["cell_coords"], data["item_name"])
 	
-	var query = PhysicsRayQueryParameters3D.create(
-		origen,
-		origen + direccio * 100.0
-	)
-	
-	var resultat = espai.intersect_ray(query)
-	
-	if resultat:
-		var posicio = resultat.position
-		posicio.y = 0.05  # lleugerament per sobre del terra
-		cursor.global_position = posicio
-		
-		# Canvia de color segons si es pot plantar o no
-		var material = cursor.get_surface_override_material(0)
-		if material == null:
-			return
-		if not dins_zona_hort(posicio) or cultiu_a_prop(posicio):
-			material.albedo_color = Color(1.0, 0.2, 0.2, 0.5)
-		else:
-			material.albedo_color = Color(0.2, 1.0, 0.2, 0.5)
-
-func plantar_a_cursor():
-	var espai = get_world_3d().direct_space_state
-	var camera = get_viewport().get_camera_3d()
-	var pos_ratolí = get_viewport().get_mouse_position()
-	
-	var origen = camera.project_ray_origin(pos_ratolí)
-	var direccio = camera.project_ray_normal(pos_ratolí)
-	
-	var query = PhysicsRayQueryParameters3D.create(
-		origen,
-		origen + direccio * 100.0
-	)
-	
-	var resultat = espai.intersect_ray(query)
-	
-	if resultat:
-		var posicio = resultat.position
-		posicio.y = 0.0
-		
-		if not dins_zona_hort(posicio):
-			print("No pots plantar aquí!")
-			return
-		
-		if cultiu_a_prop(posicio):
-			print("Ja hi ha un cultiu aquí!")
-			return
-		
-		var cultiu = cultiu_escena.instantiate()
-		add_child(cultiu)
-		cultiu.global_position = posicio
-		
-		llançar_particules(particules_plantar, posicio)
-		
-		Inventari.items["llavor_raim"] -= 1
+	# Desactiva el mode si no queden llavors
+	if Inventari.tenir("llavor_raim") <= 0:
 		mode_plantacio = false
 		cursor.visible = false
-		print("Plantat! Llavors restants: ", Inventari.tenir("llavor_raim"))
 
-func _on_cultiu_recollit(posicio: Vector3):
-	print("Event rebut a posicio: ", posicio)
-	llançar_particules(particules_collir, posicio)
+
+func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: Vector3i, item_name: String):
+	# Comprova si tens llavors
+	if Inventari.tenir("llavor_raim") <= 0:
+		return
 	
-func dins_zona_hort(posicio: Vector3) -> bool:
-	return zona_hort.conte_punt(posicio)
-
+	if not dins_zona_hort(posicio_cultiu):
+		return
+	
+	if cultiu_a_prop(posicio_cultiu):
+		return
+	
+	var cultiu = cultiu_escena.instantiate()
+	add_child(cultiu)
+	cultiu.global_position = posicio_cultiu
+	llançar_particules(particules_plantar, posicio_cultiu)
+	Inventari.items["llavor_raim"] -= 1
+	
+	print("Cultiu plantat a: ", posicio_cultiu)
+	
+func llançar_particules(particules: GPUParticles3D, posicio: Vector3):
+	particules.global_position = posicio
+	particules.restart()
+	particules.emitting = true
+	
 func cultiu_a_prop(posicio: Vector3) -> bool:
 	for node in get_tree().get_nodes_in_group("cultius"):
 		if node.global_position.distance_to(posicio) < 1.0:
 			return true
 	return false
 	
-func llançar_particules(particules: GPUParticles3D, posicio: Vector3):
-	particules.global_position = posicio
-	particules.restart()
-	particules.emitting = true
+func dins_zona_hort(posicio: Vector3) -> bool:
+	return zona_hort.conte_punt(posicio)
