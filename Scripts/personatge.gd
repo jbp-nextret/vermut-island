@@ -5,6 +5,9 @@ const SPRINT_SPEED = 10.0
 const JUMP_FORCE = 8.0
 const GRAVITY = 20.0
 
+func _ready():
+	add_to_group("jugador")
+	
 func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -32,3 +35,7 @@ func _physics_process(delta):
 	velocity.z = direction.z * current_speed
 	
 	move_and_slide()
+# Mort
+	if SalutJugador.vida_actual <= 0:
+		print("Has mort!")
+		get_tree().reload_current_scene()
