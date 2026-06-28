@@ -23,6 +23,11 @@ Inventari="*uid://bh4l3o5k21jci"
 EventBus="*uid://curq8pb0lhx7u"
 SalutJugador="*uid://cq38u4e6yef4u"
 
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/tile_to_gridmap/plugin.cfg")

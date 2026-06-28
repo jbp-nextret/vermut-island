@@ -19,6 +19,7 @@
 [ext_resource type="Script" uid="uid://wvb1oedkxme" path="res://Scripts/weather_manager.gd" id="14_8l3nt"]
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
 [ext_resource type="PackedScene" uid="uid://die76m4fw81yo" path="res://Scenes/Enemic.tscn" id="17_rwt1y"]
+[ext_resource type="PackedScene" uid="uid://cnqnfql0khi5f" path="res://Scenes/Casa.tscn" id="20_r0dna"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
 
@@ -175,10 +176,11 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 stretch_shrink = 2
-metadata/_edit_use_anchors_ = true
 
 [node name="SubViewport" type="SubViewport" parent="." unique_id=159401540]
+handle_input_locally = false
 size = Vector2i(576, 324)
+render_target_update_mode = 4
 
 [node name="World" type="Node3D" parent="SubViewport" unique_id=59139261]
 script = ExtResource("1_45d1s")
@@ -278,7 +280,7 @@ region_enabled = true
 region_rect = Rect2(0, 0, 32, 32)
 
 [node name="Grass2" type="Sprite3D" parent="SubViewport/World" unique_id=1576624002]
-transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 3.437285, 1.6110908, -4.5436115)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 1.5504174, 1.6110908, -4.163911)
 material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
@@ -289,7 +291,7 @@ region_enabled = true
 region_rect = Rect2(64, 0, 32, 32)
 
 [node name="Grass3" type="Sprite3D" parent="SubViewport/World" unique_id=253991404]
-transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, -4.1814814, 1.6089747, 0)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, -3.6057067, 2.602907, 1.7626657)
 material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
@@ -300,7 +302,7 @@ region_enabled = true
 region_rect = Rect2(128, 0, 32, 32)
 
 [node name="Grass6" type="Sprite3D" parent="SubViewport/World" unique_id=85604883]
-transform = Transform3D(3.4485557, 0, -4.1098285, 0, 5.365, 0, 4.1098285, 0, 3.4485557, -3.036693, 1.8760641, -0.4303751)
+transform = Transform3D(3.4485557, 0, -4.1098285, 0, 5.365, 0, 4.1098285, 0, 3.4485557, -3.036693, 2.8222272, 1.7442658)
 material_override = SubResource("ShaderMaterial_kwl8l")
 flip_h = true
 billboard = 2
@@ -312,7 +314,7 @@ region_enabled = true
 region_rect = Rect2(128, 0, 32, 32)
 
 [node name="Grass4" type="Sprite3D" parent="SubViewport/World" unique_id=1631846648]
-transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 6.1216354, 1.6147404, 1.3131208)
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 3.4722872, 1.6147404, 0.0074152946)
 material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
@@ -368,11 +370,16 @@ script = ExtResource("14_8l3nt")
 
 [node name="Spawner" type="Node3D" parent="SubViewport/World" unique_id=2121140639]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2459946, 5.1631794, 0)
+visible = false
 script = ExtResource("16_waglr")
 escena_enemic = ExtResource("17_rwt1y")
+max_enemics = 0
 rango_spawn = 10.0
 
 [node name="Water" type="MeshInstance3D" parent="SubViewport/World" unique_id=656118576]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.586518, 1.5097125, 3.9963725)
 mesh = SubResource("BoxMesh_rwt1y")
 surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
+
+[node name="Casa" parent="." unique_id=2000112226 instance=ExtResource("20_r0dna")]
+transform = Transform3D(-0.048220586, 0, -6.2648144, 0, 6.264998, 0, 6.2648144, 0, -0.048220586, -1.8368902, 4.969103, -6.0498047)
