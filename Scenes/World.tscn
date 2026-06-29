@@ -382,4 +382,4 @@ mesh = SubResource("BoxMesh_rwt1y")
 surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 
 [node name="Casa" parent="." unique_id=2000112226 instance=ExtResource("20_r0dna")]
-transform = Transform3D(-0.048220586, 0, -6.2648144, 0, 6.264998, 0, 6.2648144, 0, -0.048220586, -1.8368902, 4.969103, -6.0498047)
+transform = Transform3D(-0.048220586, 0, -6.2648144, 0, 6.264998, 0, 6.2648144, 0, -0.048220586, -1.8368902, 4.969103, -17.802212)
