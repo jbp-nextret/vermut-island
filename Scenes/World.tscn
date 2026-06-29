@@ -146,7 +146,7 @@ stretch_shrink = 2
 
 [node name="SubViewport" type="SubViewport" parent="." unique_id=159401540]
 handle_input_locally = false
-size = Vector2i(960, 540)
+size = Vector2i(576, 324)
 render_target_update_mode = 4
 
 [node name="World" type="Node3D" parent="SubViewport" unique_id=59139261]
@@ -300,5 +300,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.586518, 1.5097125, 3.99637
 mesh = SubResource("BoxMesh_rwt1y")
 surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 
-[node name="Casa" parent="." unique_id=2000112226 instance=ExtResource("20_r0dna")]
+[node name="Casa" parent="SubViewport/World" unique_id=2000112226 instance=ExtResource("20_r0dna")]
 transform = Transform3D(-0.048220586, 0, -6.2648144, 0, 6.264998, 0, 6.2648144, 0, -0.048220586, -1.8368902, 4.969103, -17.802212)
+
+[node name="SpawnCasa" type="Node3D" parent="SubViewport/World" unique_id=1056946412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)

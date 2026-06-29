@@ -3,6 +3,7 @@ extends Area3D
 @export var nom_casa: String = "Casa"
 @export var escena_interior: PackedScene  # Assigna la escena interior
 @export var posicio_entrada: Vector3 = Vector3.ZERO
+@export var sortida_world: Vector3 = Vector3.ZERO
 
 var jugador_dins = false
 
@@ -31,4 +32,5 @@ func entrar_casa():
 		return
 	
 	print("Entrant a ", nom_casa)
-	get_tree().change_scene_to_file(escena_interior.resource_path)
+	EventBus.request_player_spawn(sortida_world)
+	get_tree().change_scene_to_file("res://Scenes/CasaInterior.tscn")

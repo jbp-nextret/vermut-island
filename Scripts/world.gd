@@ -5,6 +5,7 @@ extends Node3D
 @onready var cursor = $CursorPlantacio
 @onready var particules_plantar = $ParticulesPlantar
 @onready var particules_collir = $ParticulesCollir
+@onready var spawn_casa = $SpawnCasa
 
 var mode_plantacio = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
@@ -15,6 +16,17 @@ var zone_seleccionada = []  # Llista de posicions a plantar
 
 func _ready():
 	cursor.visible = false
+	
+	if EventBus.has_signal("player_spawn_requested"):
+		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
+	else:
+		print("Signal player_spawn_requested no existeix a EventBus")
+	
+	if EventBus.has_pending_spawn:
+		var posicio = EventBus.consume_pending_spawn()
+		call_deferred("aplicar_spawn_player", posicio)
+	elif is_instance_valid(spawn_casa):
+		call_deferred("aplicar_spawn_player", spawn_casa.global_position)
 	
 	# Crea el material del cursor per codi
 	var material = StandardMaterial3D.new()
@@ -57,6 +69,20 @@ func _ready():
 func _on_cultiu_recollit(posicio: Vector3):
 	print("Event rebut a posicio: ", posicio)
 	llançar_particules(particules_collir, posicio)
+
+func _on_player_spawn_requested(posicio: Vector3):
+	call_deferred("aplicar_spawn_player", posicio)
+
+func aplicar_spawn_player(posicio: Vector3):
+	var player = get_node_or_null("Personatge")
+	if player:
+		var spawn_pos = posicio
+		spawn_pos.y = max(posicio.y, 1.0)
+		player.global_position = spawn_pos
+		player.global_rotation = Vector3.ZERO
+		print("Personatge reposicionat a: ", spawn_pos)
+	else:
+		print("No s'ha trobat el Personatge")
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):

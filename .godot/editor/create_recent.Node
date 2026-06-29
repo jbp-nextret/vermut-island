@@ -1,3 +1,4 @@
+Node3D
 CollisionShape3D
 Area3D
 ItemList
@@ -8,7 +9,6 @@ StaticBody3D
 MeshInstance3D
 SubViewportContainer
 SubViewport
-Node3D
 CharacterBody3D
 RigidBody3D
 Sprite3D

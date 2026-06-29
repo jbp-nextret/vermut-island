@@ -5,8 +5,10 @@ extends Node3D
 
 var mode_decoracio = false
 var mode_construccio = false
+var mode_eliminacio = false
 var moble_actual: Node3D = null
 var moble_preview: Node3D = null
+var moble_hovered: Node3D = null
 var punts_grid: Array[Node3D] = []
 var index_preview := -1
 var rotacio_preview := 0.0
@@ -117,22 +119,34 @@ func _input(event):
 			entrar_mode_construccio()
 	if !mode_construccio:
 		return
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		if mode_eliminacio:
+			desactivar_mode_eliminacio()
+		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			rotacio_preview += 90
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			rotacio_preview -= 90
 		elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if moble_preview:
+			if moble_preview and not mode_eliminacio:
 				col_locar_moble()
 			else:
 				seleccionar_moble()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			eliminar_moble()
+			if mode_eliminacio:
+				if moble_hovered:
+					eliminar_moble(moble_hovered)
+				else:
+					print("No hi ha cap moble per eliminar")
+			else:
+				activar_mode_eliminacio()
 
 func _process(delta):
-	if mode_construccio and moble_preview:
+	if mode_construccio and moble_preview and not mode_eliminacio:
 		actualitzar_preview()
+	if mode_construccio and mode_eliminacio:
+		actualitzar_hover_eliminacio()
 		
 func actualitzar_preview():
 
@@ -163,7 +177,8 @@ func mostrar_grid():
 
 func amagar_grid():
 	for punto in punts_grid:
-		punto.queue_free()
+		if is_instance_valid(punto):  # Comprova que sigui vàlid
+			punto.queue_free()
 	punts_grid.clear()
 
 func _on_moble_seleccionat(index: int):
@@ -178,18 +193,69 @@ func _on_moble_seleccionat(index: int):
 	moble_preview.visible = false
 
 func col_locar_moble():
-
 	if index_preview == -1:
 		return
 
 	var moble = mobles_disponibles[index_preview].instantiate()
-
 	add_child(moble)
+	moble.add_to_group("Mobles")
 
 	moble.global_position = moble_preview.global_position
 	moble.rotation = moble_preview.rotation
 
 	print("Moble col·locat")
+	# La grid es manté visible
+
+func obtenir_moble_desde_collider(collider: Node) -> Node3D:
+	var node = collider
+	while node and node != self:
+		if node.is_in_group("Mobles"):
+			return node
+		node = node.get_parent()
+	return null
+
+func deseleccionar_moble():
+	if moble_seleccionat:
+		canviar_color_moble(moble_seleccionat, Color.WHITE)
+		moble_seleccionat = null
+
+func activar_mode_eliminacio():
+	mode_eliminacio = true
+	print("Mode eliminació activat")
+	deseleccionar_moble()
+	if moble_preview:
+		moble_preview.visible = false
+	if moble_hovered:
+		canviar_color_moble(moble_hovered, Color.WHITE)
+		moble_hovered = null
+
+func desactivar_mode_eliminacio():
+	mode_eliminacio = false
+	if moble_preview:
+		moble_preview.visible = true
+	if moble_hovered:
+		canviar_color_moble(moble_hovered, Color.WHITE)
+		moble_hovered = null
+
+func actualitzar_hover_eliminacio():
+	var ratoli = get_viewport().get_mouse_position()
+	var camera = get_viewport().get_camera_3d()
+	var origen = camera.project_ray_origin(ratoli)
+	var direccio = camera.project_ray_normal(ratoli)
+	var query = PhysicsRayQueryParameters3D.create(
+		origen,
+		origen + direccio * 100
+	)
+	var resultat = get_world_3d().direct_space_state.intersect_ray(query)
+	var moble = null
+	if resultat and resultat.collider:
+		moble = obtenir_moble_desde_collider(resultat.collider)
+	if moble_hovered and moble_hovered != moble:
+		canviar_color_moble(moble_hovered, Color.WHITE)
+		moble_hovered = null
+	if moble and moble != moble_preview:
+		moble_hovered = moble
+		canviar_color_moble(moble_hovered, Color.RED)
 
 func obtenir_posicio_grid() -> Vector3:
 	var ratolí_pos = get_viewport().get_mouse_position()
@@ -221,38 +287,19 @@ func canviar_color_moble(moble:Node3D, color:Color):
 			material.albedo_color = color
 			child.set_surface_override_material(0, material)
 
-func eliminar_moble():
-	# Raycast per detectar quin moble hi ha al clic dret
-	var ratoli = get_viewport().get_mouse_position()
-	var camera = get_viewport().get_camera_3d()
-	var origen = camera.project_ray_origin(ratoli)
-	var direccio = camera.project_ray_normal(ratoli)
-	var query = PhysicsRayQueryParameters3D.create(
-		origen,
-		origen + direccio * 100
-	)
-	var resultat = get_world_3d().direct_space_state.intersect_ray(query)
-	
-	if !resultat:
+func eliminar_moble(moble: Node3D):
+	if moble == null:
 		return
-	
-	var node = resultat.collider
-	if node == null:
-		return
-	
-	# Busca el pare (el moble sencer)
-	var moble = node.get_parent()
-	
-	# Comprova que no sigui el preview ni els elements de la sala
-	if moble == moble_preview or moble.name in ["Sol", "Paret Fons", "Paret Esquerra", "Paret Dreta"]:
-		return
-	
+	if moble_seleccionat and moble_seleccionat != moble:
+		canviar_color_moble(moble_seleccionat, Color.WHITE)
+	moble_seleccionat = moble
+	canviar_color_moble(moble_seleccionat, Color.RED)
+
 	print("Eliminant moble: ", moble.name)
 	moble.queue_free()
-	
 	if moble_seleccionat == moble:
-		moble_seleccionat = null
-	
+		deseleccionar_moble()
+
 func seleccionar_moble():
 	var ratoli = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
@@ -268,13 +315,15 @@ func seleccionar_moble():
 	var node = resultat.collider
 	if node == null:
 		return
-	var moble = node.get_parent()
-	if moble_seleccionat:
-		canviar_color_moble(moble_seleccionat, Color.GREEN)
-
+	var moble = obtenir_moble_desde_collider(node)
+	if !moble or moble == moble_preview:
+		return
+	
+	if moble_seleccionat and moble_seleccionat != moble:
+		canviar_color_moble(moble_seleccionat, Color.WHITE)
+	
 	moble_seleccionat = moble
-
-	canviar_color_moble(moble_seleccionat, Color.GREEN)
+	canviar_color_moble(moble_seleccionat, Color.RED)
 
 
 func entrar_mode_construccio():
@@ -291,9 +340,14 @@ func sortir_mode_construccio():
 		moble_preview.queue_free()
 		moble_preview = null
 
+	deseleccionar_moble()
+	desactivar_mode_eliminacio()
 	index_preview = -1
 	rotacio_preview = 0
 	
 func _on_salir_casa():
 	print("Sortint de la casa")
+	call_deferred("change_scene_to_world")
+
+func change_scene_to_world():
 	get_tree().change_scene_to_file("res://Scenes/World.tscn")

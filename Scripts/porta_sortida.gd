@@ -7,5 +7,4 @@ func _ready():
 
 func _on_body_entered(body):
 	if body.name == "Personatge":
-		if Input.is_action_just_pressed("accio_secundaria"):
-			salir_casa.emit()
+		salir_casa.emit()
