@@ -1,6 +1,10 @@
-StaticBody3D
-Area3D
 CollisionShape3D
+Area3D
+ItemList
+Panel
+CanvasLayer
+Camera3D
+StaticBody3D
 MeshInstance3D
 SubViewportContainer
 SubViewport
@@ -8,7 +12,3 @@ Node3D
 CharacterBody3D
 RigidBody3D
 Sprite3D
-GridMap
-T2GTerrainLayer
-Label
-CanvasLayer

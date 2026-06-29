@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cxsc7icmwwpot"]
+
+[ext_resource type="PackedScene" uid="uid://d3lvht6jagw7u" path="res://Models/barra_mig.glb" id="1_6kary"]
+[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_iww4q"]
+
+[node name="BarraMig" unique_id=353170269 instance=ExtResource("1_6kary")]
+script = ExtResource("2_iww4q")
+model_path = "res://Models/barra_mig.glb"

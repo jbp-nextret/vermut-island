@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://djg0q2wme880f"]
+
+[ext_resource type="Script" uid="uid://cydkicb4ugbo6" path="res://Scripts/casa_interior.gd" id="1_xd4tj"]
+[ext_resource type="PackedScene" uid="uid://cxsc7icmwwpot" path="res://Scenes/mobles/barra_mig.tscn" id="2_2qpbc"]
+[ext_resource type="PackedScene" uid="uid://cxg75mbja24wq" path="res://Scenes/Personatge.tscn" id="2_fapeo"]
+[ext_resource type="Script" uid="uid://b11jlv552i76u" path="res://Scripts/porta_sortida.gd" id="3_fapeo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xd4tj"]
+
+[node name="CasaInterior" type="Node3D" unique_id=2072462834]
+script = ExtResource("1_xd4tj")
+mobles_disponibles = Array[PackedScene]([ExtResource("2_2qpbc"), null, null])
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=887685824]
+transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 10, 9)
+fov = 45.0
+
+[node name="Personatge" parent="." unique_id=1584712923 instance=ExtResource("2_fapeo")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1647939945]
+
+[node name="Panel" type="Panel" parent="CanvasLayer" unique_id=159324112]
+modulate = Color(1, 1, 1, 0.3137255)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemList" type="ItemList" parent="CanvasLayer" unique_id=962212923]
+offset_right = 199.0
+offset_bottom = 143.0
+
+[node name="PortaSortida" type="Area3D" parent="." unique_id=1105138131]
+script = ExtResource("3_fapeo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PortaSortida" unique_id=854634030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.305176, 0.45703125, 0)
+shape = SubResource("BoxShape3D_xd4tj")

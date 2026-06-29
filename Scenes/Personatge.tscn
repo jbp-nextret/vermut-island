@@ -1,0 +1,68 @@
+[gd_scene format=3 uid="uid://cxg75mbja24wq"]
+
+[ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="1_6e338"]
+[ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="2_nmqa2"]
+[ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_a8kkx"]
+[ext_resource type="Shader" uid="uid://dqpalewyt7prn" path="res://Shaders/edge_shader.gdshader" id="4_rktk1"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_fj7yv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tlwt5"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+albedo_texture = ExtResource("2_nmqa2")
+billboard_mode = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y7y61"]
+size = Vector3(0.8, 1.006958, 0.962207)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
+dof_blur_far_enabled = true
+dof_blur_far_distance = 20.0
+dof_blur_amount = 0.2
+
+[sub_resource type="QuadMesh" id="QuadMesh_r0dna"]
+flip_faces = true
+size = Vector2(2, 2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b5aes"]
+render_priority = 0
+shader = ExtResource("4_rktk1")
+shader_parameter/lightIntensity = 12.11
+shader_parameter/lineAlpha = 0.7
+shader_parameter/useLighting = true
+shader_parameter/lineHighlight = 0.2
+shader_parameter/lineShadow = 0.55
+
+[node name="Personatge" type="CharacterBody3D" unique_id=1584712923]
+script = ExtResource("1_6e338")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=642921402]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.545, 0)
+mesh = SubResource("QuadMesh_fj7yv")
+surface_material_override/0 = SubResource("StandardMaterial3D_tlwt5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=349418859]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5850525, -0.003564477)
+shape = SubResource("BoxShape3D_y7y61")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=996099225]
+transform = Transform3D(0.64278764, 0.31157833, -0.6998164, 0, 0.9135454, 0.40673664, 0.76604444, -0.26144528, 0.5872157, 0, 0.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=98852084]
+keep_aspect = 0
+attributes = SubResource("CameraAttributesPractical_tlwt5")
+projection = 1
+fov = 50.1
+size = 21.225
+near = 0.001
+far = 21.0
+script = ExtResource("3_a8kkx")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CameraPivot/Camera3D" unique_id=54584575]
+transform = Transform3D(0.64278764, 0, 0.7660444, 0.31157833, 0.9135455, -0.26144528, -0.6998164, 0.40673664, 0.5872157, 0, -1.3118277, -0.5840633)
+visible = false
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_r0dna")
+surface_material_override/0 = SubResource("ShaderMaterial_b5aes")

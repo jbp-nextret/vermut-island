@@ -1,14 +1,26 @@
 [gd_scene format=3 uid="uid://cnqnfql0khi5f"]
 
 [ext_resource type="PackedScene" uid="uid://bvwuvfobkmlh8" path="res://Models/Casa.glb" id="1_ioxd8"]
+[ext_resource type="Script" uid="uid://chcdq30i3s66u" path="res://Scripts/porta_casa.gd" id="2_mmhxk"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ioxd8"]
-size = Vector3(0.7922363, 1.0700684, 0.9370117)
+size = Vector3(0.7005615, 1.0490112, 0.86032104)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mmhxk"]
+size = Vector3(0.07754883, 0.33458984, 0.24)
 
 [node name="Casa" unique_id=2000112226 instance=ExtResource("1_ioxd8")]
 
 [node name="Collider" type="StaticBody3D" parent="." index="8" unique_id=169931092]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Collider" index="0" unique_id=448597267]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3654964, -0.13221791, -0.0058037043)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3496883, -0.12168935, -0.0061546564)
 shape = SubResource("BoxShape3D_ioxd8")
+
+[node name="Porta" type="Area3D" parent="Collider" index="1" unique_id=728213141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70461273, -0.48849487, -0.22509766)
+script = ExtResource("2_mmhxk")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collider/Porta" index="0" unique_id=1907739960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.041574717, 0.025205076, 0)
+shape = SubResource("BoxShape3D_mmhxk")
