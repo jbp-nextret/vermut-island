@@ -27,6 +27,12 @@ SalutJugador="*uid://cq38u4e6yef4u"
 
 enabled=PackedStringArray("res://addons/tile_to_gridmap/plugin.cfg")
 
+[file_customization]
+
+folder_colors={
+"res://Models/": "green"
+}
+
 [input]
 
 move_right={

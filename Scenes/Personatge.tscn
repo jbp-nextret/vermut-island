@@ -20,6 +20,8 @@ size = Vector3(0.8, 1.006958, 0.962207)
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
 dof_blur_far_enabled = true
 dof_blur_far_distance = 20.0
+dof_blur_near_enabled = true
+dof_blur_near_distance = 0.61
 dof_blur_amount = 0.2
 
 [sub_resource type="QuadMesh" id="QuadMesh_r0dna"]
@@ -57,7 +59,6 @@ projection = 1
 fov = 50.1
 size = 21.225
 near = 0.001
-far = 21.0
 script = ExtResource("3_a8kkx")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CameraPivot/Camera3D" unique_id=54584575]

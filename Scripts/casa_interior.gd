@@ -24,7 +24,7 @@ func _ready():
 	
 	# Mobles
 	item_list.clear()
-	var noms_mobles = ["Barra Normal", "Barra Mig", "Barra Lateral"]
+	var noms_mobles = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira"]
 	for nom in noms_mobles:
 		item_list.add_item(nom)
 	
@@ -110,13 +110,13 @@ func crear_porta_visual(posicio: Vector3, mida: Vector3):
 	material.emission = Color(0.8, 0.6, 0.0)
 	material.emission_energy_multiplier = 2.0
 	porta.set_surface_override_material(0, material)
-
 func _input(event):
-	if Input.is_action_just_pressed("ui_focus_next"):
+	if event.is_action_pressed("decorar"):
 		if mode_construccio:
 			sortir_mode_construccio()
 		else:
 			entrar_mode_construccio()
+func _unhandled_input(event: InputEvent) -> void:
 	if !mode_construccio:
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -124,23 +124,25 @@ func _input(event):
 			desactivar_mode_eliminacio()
 		return
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			rotacio_preview += 90
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			rotacio_preview -= 90
-		elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if moble_preview and not mode_eliminacio:
-				col_locar_moble()
-			else:
-				seleccionar_moble()
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			if mode_eliminacio:
-				if moble_hovered:
-					eliminar_moble(moble_hovered)
+		# COMPROVA SI EL CLIC ÉS DINS LA UI
+		if panel_ui.get_global_rect().has_point(event.position):
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+				rotacio_preview += 90
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+				rotacio_preview -= 90
+			elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				if moble_preview and not mode_eliminacio:
+					col_locar_moble()
 				else:
-					print("No hi ha cap moble per eliminar")
-			else:
-				activar_mode_eliminacio()
+					seleccionar_moble()
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				if mode_eliminacio:
+					if moble_hovered:
+						eliminar_moble(moble_hovered)
+					else:
+						print("No hi ha cap moble per eliminar")
+				else:
+					activar_mode_eliminacio()
 
 func _process(delta):
 	if mode_construccio and moble_preview and not mode_eliminacio:
@@ -193,19 +195,32 @@ func _on_moble_seleccionat(index: int):
 	moble_preview.visible = false
 
 func col_locar_moble():
-	if index_preview == -1:
-		return
+	var pos = moble_preview.global_position
+	var moble_vell = buscar_moble_a_posicio(pos)
+	if moble_vell:
+		moble_vell.queue_free()
 
 	var moble = mobles_disponibles[index_preview].instantiate()
+	moble.add_to_group("mobles")
 	add_child(moble)
-	moble.add_to_group("Mobles")
 
-	moble.global_position = moble_preview.global_position
+	moble.global_position = pos
 	moble.rotation = moble_preview.rotation
 
 	print("Moble col·locat")
 	# La grid es manté visible
+	
+func buscar_moble_a_posicio(posicio: Vector3) -> Node3D:
 
+	for moble in get_tree().get_nodes_in_group("mobles"):
+
+		if round(moble.global_position.x / grid_size) == round(posicio.x / grid_size) \
+		and round(moble.global_position.z / grid_size) == round(posicio.z / grid_size):
+
+			return moble
+
+	return null
+	
 func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 	var node = collider
 	while node and node != self:
