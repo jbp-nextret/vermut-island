@@ -1,5 +1,6 @@
 extends Node3D
 
+# Variables mobles
 @export var mobles_disponibles: Array[PackedScene]
 @export var grid_size: float = 1.0
 
@@ -14,6 +15,13 @@ var index_preview := -1
 var rotacio_preview := 0.0
 var moble_seleccionat: Node3D = null
 
+# Variables càmera
+var camera_rotation_x = 0.0
+var camera_rotation_y = 0.0
+var camera_distance = 8.0
+var camera_height = 5.0
+
+# Variables UI
 @onready var panel_ui = $CanvasLayer/Panel
 @onready var item_list = $CanvasLayer/ItemList
 @onready var porta_sortida = $PortaSortida
@@ -110,12 +118,14 @@ func crear_porta_visual(posicio: Vector3, mida: Vector3):
 	material.emission = Color(0.8, 0.6, 0.0)
 	material.emission_energy_multiplier = 2.0
 	porta.set_surface_override_material(0, material)
+	
 func _input(event):
 	if event.is_action_pressed("decorar"):
 		if mode_construccio:
 			sortir_mode_construccio()
 		else:
 			entrar_mode_construccio()
+			
 func _unhandled_input(event: InputEvent) -> void:
 	if !mode_construccio:
 		return
@@ -123,18 +133,50 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mode_eliminacio:
 			desactivar_mode_eliminacio()
 		return
+	
+	# ROTACIÓ DE MOBLES AMB Q/E
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_Q:
+			rotacio_preview -= 90
+			print("Moble rotat -90°: ", rotacio_preview)
+		elif event.keycode == KEY_E:
+			rotacio_preview += 90
+			print("Moble rotat +90°: ", rotacio_preview)
+	
+	# ROTACIÓ DE CÀMERA AMB BOTÓ CENTRAL DEL RATOLÍ
 	if event is InputEventMouseButton:
-		# COMPROVA SI EL CLIC ÉS DINS LA UI
-		if panel_ui.get_global_rect().has_point(event.position):
-			if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-				rotacio_preview += 90
-			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-				rotacio_preview -= 90
-			elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				if moble_preview and not mode_eliminacio:
-					col_locar_moble()
-				else:
+		if event.button_index == MOUSE_BUTTON_MIDDLE and event.pressed:
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		elif event.button_index == MOUSE_BUTTON_MIDDLE and not event.pressed:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
+	# ROTACIÓ AMB MOVIMENT DEL RATOLÍ
+	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		camera_rotation_y -= event.relative.x * 0.01
+		camera_rotation_x -= event.relative.y * 0.01
+		camera_rotation_x = clamp(camera_rotation_x, -1.5, 1.5)
+		actualitzar_posicio_camera()
+	
+	# ZOOM AMB RODETA
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and mode_construccio:
+			camera_distance -= 0.5
+			camera_distance = clamp(camera_distance, 3.0, 15.0)
+			actualitzar_posicio_camera()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and mode_construccio:
+			camera_distance += 0.5
+			camera_distance = clamp(camera_distance, 3.0, 15.0)
+			actualitzar_posicio_camera()
+	
+	# SELECCIONAR/COL·LOCAR MOBLES (només fora de la UI)
+	if event is InputEventMouseButton:
+		#if not panel_ui.get_global_rect().has_point(event.position):
+			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				print("Entrant a col·locar")
+				if mode_eliminacio:
 					seleccionar_moble()
+				else:
+					col_locar_moble()
 			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				if mode_eliminacio:
 					if moble_hovered:
@@ -143,7 +185,40 @@ func _unhandled_input(event: InputEvent) -> void:
 						print("No hi ha cap moble per eliminar")
 				else:
 					activar_mode_eliminacio()
+func actualitzar_posicio_camera():
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	
+	# Calcula la nova posició de la càmera
+	var pos_x = sin(camera_rotation_y) * cos(camera_rotation_x) * camera_distance
+	var pos_y = camera_height + sin(camera_rotation_x) * camera_distance
+	var pos_z = cos(camera_rotation_y) * cos(camera_rotation_x) * camera_distance
+	
+	camera.global_position = Vector3(pos_x, pos_y, pos_z)
+	camera.look_at(Vector3.ZERO, Vector3.UP)
 
+func entrar_mode_construccio():
+	mode_construccio = true
+	panel_ui.visible = true
+	mostrar_grid()
+	actualitzar_posicio_camera()  # Posiciona la càmera
+
+func sortir_mode_construccio():
+	mode_construccio = false
+	panel_ui.visible = false
+	amagar_grid()
+
+	if moble_preview:
+		moble_preview.queue_free()
+		moble_preview = null
+
+	deseleccionar_moble()
+	desactivar_mode_eliminacio()
+	index_preview = -1
+	rotacio_preview = 0
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)  # Restaura el ratolí
+	
 func _process(delta):
 	if mode_construccio and moble_preview and not mode_eliminacio:
 		actualitzar_preview()
@@ -195,7 +270,15 @@ func _on_moble_seleccionat(index: int):
 	moble_preview.visible = false
 
 func col_locar_moble():
+	print("Col·locar moble")
+	if moble_preview == null:
+		return
+
+	if index_preview < 0 or index_preview >= mobles_disponibles.size():
+		return
+
 	var pos = moble_preview.global_position
+
 	var moble_vell = buscar_moble_a_posicio(pos)
 	if moble_vell:
 		moble_vell.queue_free()
@@ -208,7 +291,6 @@ func col_locar_moble():
 	moble.rotation = moble_preview.rotation
 
 	print("Moble col·locat")
-	# La grid es manté visible
 	
 func buscar_moble_a_posicio(posicio: Vector3) -> Node3D:
 
@@ -224,7 +306,7 @@ func buscar_moble_a_posicio(posicio: Vector3) -> Node3D:
 func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 	var node = collider
 	while node and node != self:
-		if node.is_in_group("Mobles"):
+		if node.is_in_group("mobles"):
 			return node
 		node = node.get_parent()
 	return null
@@ -339,26 +421,6 @@ func seleccionar_moble():
 	
 	moble_seleccionat = moble
 	canviar_color_moble(moble_seleccionat, Color.RED)
-
-
-func entrar_mode_construccio():
-	mode_construccio = true
-	panel_ui.visible = true
-	mostrar_grid()
-
-func sortir_mode_construccio():
-	mode_construccio = false
-	panel_ui.visible = false
-	amagar_grid()
-
-	if moble_preview:
-		moble_preview.queue_free()
-		moble_preview = null
-
-	deseleccionar_moble()
-	desactivar_mode_eliminacio()
-	index_preview = -1
-	rotacio_preview = 0
 	
 func _on_salir_casa():
 	print("Sortint de la casa")
