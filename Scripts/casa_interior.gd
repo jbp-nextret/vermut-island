@@ -26,18 +26,24 @@ var camera_height = 5.0
 @onready var item_list = $CanvasLayer/ItemList
 @onready var porta_sortida = $PortaSortida
 
+# Gestió colors
+var materials_originals := {}
+var material_hover := StandardMaterial3D.new()
+
 func _ready():
 	crear_interior()
 	porta_sortida.salir_casa.connect(_on_salir_casa)
 	
 	# Mobles
 	item_list.clear()
-	var noms_mobles = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira"]
+	var noms_mobles = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola"]
 	for nom in noms_mobles:
 		item_list.add_item(nom)
 	
 	panel_ui.visible = false
 	item_list.item_selected.connect(_on_moble_seleccionat)
+	material_hover.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material_hover.albedo_color = Color(1, 0, 0, 0.8)
 
 func crear_interior():
 	# Sòl
@@ -271,6 +277,7 @@ func _on_moble_seleccionat(index: int):
 
 func col_locar_moble():
 	print("Col·locar moble")
+
 	if moble_preview == null:
 		return
 
@@ -279,22 +286,33 @@ func col_locar_moble():
 
 	var pos = moble_preview.global_position
 
-	var moble_vell = buscar_moble_a_posicio(pos)
+	# Instància temporal per saber de quin grup és el moble nou
+	var moble_nou = mobles_disponibles[index_preview].instantiate()
+
+	var grup = ""
+	if moble_nou.is_in_group("mobles_base"):
+		grup = "mobles_base"
+	elif moble_nou.is_in_group("cadires"):
+		grup = "cadires"
+	elif moble_nou.is_in_group("decoracio"):
+		grup = "decoracio"
+
+	# Busca només un moble del mateix grup
+	var moble_vell = buscar_moble_a_posicio(pos, grup)
+
 	if moble_vell:
 		moble_vell.queue_free()
 
-	var moble = mobles_disponibles[index_preview].instantiate()
-	moble.add_to_group("mobles")
-	add_child(moble)
+	add_child(moble_nou)
 
-	moble.global_position = pos
-	moble.rotation = moble_preview.rotation
+	moble_nou.global_position = pos
+	moble_nou.rotation = moble_preview.rotation
 
 	print("Moble col·locat")
-	
-func buscar_moble_a_posicio(posicio: Vector3) -> Node3D:
+		
+func buscar_moble_a_posicio(posicio: Vector3, grup: String) -> Node3D:
 
-	for moble in get_tree().get_nodes_in_group("mobles"):
+	for moble in get_tree().get_nodes_in_group(grup):
 
 		if round(moble.global_position.x / grid_size) == round(posicio.x / grid_size) \
 		and round(moble.global_position.z / grid_size) == round(posicio.z / grid_size):
@@ -305,15 +323,20 @@ func buscar_moble_a_posicio(posicio: Vector3) -> Node3D:
 	
 func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 	var node = collider
+
 	while node and node != self:
-		if node.is_in_group("mobles"):
+		if node.is_in_group("mobles_base") \
+		or node.is_in_group("cadires") \
+		or node.is_in_group("decoracio"):
 			return node
+
 		node = node.get_parent()
+
 	return null
 
 func deseleccionar_moble():
 	if moble_seleccionat:
-		canviar_color_moble(moble_seleccionat, Color.WHITE)
+		restaurar_materials(moble_hovered)
 		moble_seleccionat = null
 
 func activar_mode_eliminacio():
@@ -323,7 +346,7 @@ func activar_mode_eliminacio():
 	if moble_preview:
 		moble_preview.visible = false
 	if moble_hovered:
-		canviar_color_moble(moble_hovered, Color.WHITE)
+		restaurar_materials(moble_hovered)
 		moble_hovered = null
 
 func desactivar_mode_eliminacio():
@@ -331,28 +354,42 @@ func desactivar_mode_eliminacio():
 	if moble_preview:
 		moble_preview.visible = true
 	if moble_hovered:
-		canviar_color_moble(moble_hovered, Color.WHITE)
+		restaurar_materials(moble_hovered)
 		moble_hovered = null
 
 func actualitzar_hover_eliminacio():
 	var ratoli = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
+
 	var origen = camera.project_ray_origin(ratoli)
 	var direccio = camera.project_ray_normal(ratoli)
+
 	var query = PhysicsRayQueryParameters3D.create(
 		origen,
 		origen + direccio * 100
 	)
+
 	var resultat = get_world_3d().direct_space_state.intersect_ray(query)
+
 	var moble = null
-	if resultat and resultat.collider:
+
+	if resultat:
+		print("Collider:", resultat.collider.name)
+
 		moble = obtenir_moble_desde_collider(resultat.collider)
+
+		if moble:
+			print("Moble detectat:", moble.name)
+		else:
+			print("No pertany a cap grup")
+
 	if moble_hovered and moble_hovered != moble:
-		canviar_color_moble(moble_hovered, Color.WHITE)
+		restaurar_materials(moble_hovered)
 		moble_hovered = null
+
 	if moble and moble != moble_preview:
 		moble_hovered = moble
-		canviar_color_moble(moble_hovered, Color.RED)
+		canviar_color_moble(moble_hovered)
 
 func obtenir_posicio_grid() -> Vector3:
 	var ratolí_pos = get_viewport().get_mouse_position()
@@ -377,20 +414,36 @@ func validar_posicio(moble: Node3D) -> bool:
 	# Comprova si hi ha col·lisió amb altres objectes
 	return true
 
-func canviar_color_moble(moble:Node3D, color:Color):
-	for child in moble.get_children():
-		if child is MeshInstance3D:
-			var material = StandardMaterial3D.new()
-			material.albedo_color = color
-			child.set_surface_override_material(0, material)
+func canviar_color_moble(moble: Node3D):
 
+	for child in moble.get_children():
+
+		if child is MeshInstance3D:
+			child.material_override = material_hover
+
+		elif child is Node3D:
+			canviar_color_moble(child)
+			
+func restaurar_materials(moble: Node3D):
+
+	if moble == null:
+		return
+
+	for child in moble.get_children():
+
+		if child is MeshInstance3D:
+			child.material_override = null
+
+		elif child is Node3D:
+			restaurar_materials(child)
+			
 func eliminar_moble(moble: Node3D):
 	if moble == null:
 		return
 	if moble_seleccionat and moble_seleccionat != moble:
-		canviar_color_moble(moble_seleccionat, Color.WHITE)
+		restaurar_materials(moble_hovered)
 	moble_seleccionat = moble
-	canviar_color_moble(moble_seleccionat, Color.RED)
+	canviar_color_moble(moble_seleccionat)
 
 	print("Eliminant moble: ", moble.name)
 	moble.queue_free()
@@ -417,10 +470,10 @@ func seleccionar_moble():
 		return
 	
 	if moble_seleccionat and moble_seleccionat != moble:
-		canviar_color_moble(moble_seleccionat, Color.WHITE)
+		restaurar_materials(moble_hovered)
 	
 	moble_seleccionat = moble
-	canviar_color_moble(moble_seleccionat, Color.RED)
+	canviar_color_moble(moble_seleccionat)
 	
 func _on_salir_casa():
 	print("Sortint de la casa")

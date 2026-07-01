@@ -1,3 +1,5 @@
+SpotLight3D
+PointLight2D
 Node3D
 CollisionShape3D
 Area3D
@@ -11,4 +13,3 @@ SubViewportContainer
 SubViewport
 CharacterBody3D
 RigidBody3D
-Sprite3D

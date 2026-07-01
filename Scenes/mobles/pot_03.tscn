@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://queer2hi6c22"]
+
+[ext_resource type="PackedScene" uid="uid://ckvdnnxhge8qd" path="res://Models/pot-03.glb" id="1_gpfth"]
+[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_ba736"]
+
+[node name="pot-03" unique_id=413043786 instance=ExtResource("1_gpfth")]
+script = ExtResource("2_ba736")
+model_path = "res://Models/pot-03.glb"
