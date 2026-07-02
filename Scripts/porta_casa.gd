@@ -32,5 +32,6 @@ func entrar_casa():
 		return
 	
 	print("Entrant a ", nom_casa)
+	GestorPartida.guardar_mundo()
 	EventBus.request_player_spawn(sortida_world)
 	get_tree().change_scene_to_file("res://Scenes/CasaInterior.tscn")

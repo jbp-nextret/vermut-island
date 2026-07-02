@@ -38,7 +38,11 @@ func passar_dia():
 			actualitzar_sprite()
 
 func actualitzar_sprite():
+	if textures.size() == 0:
+		print("ERROR: No hi ha textures assignades al cultiu")
+		return
 	if textures.size() <= estat_actual:
+		print("ERROR: estat_actual (", estat_actual, ") fora de rang de textures (", textures.size(), ")")
 		return
 	
 	var material = sprite.get_surface_override_material(0)
@@ -53,6 +57,7 @@ func actualitzar_sprite():
 	material = material.duplicate()
 	material.albedo_texture = textures[estat_actual]
 	sprite.set_surface_override_material(0, material)
+	print("Sprite actualitzat a estat ", estat_actual, " amb textura: ", textures[estat_actual].resource_path)
 
 func _process(delta):
 	if recollit or estat_actual != Estat.MADUR:
@@ -83,6 +88,7 @@ func _process(delta):
 				generar_llavor_drop()
 			
 			EventBus.emit_signal("cultiu_recollit", global_position)
+			GestorPartida.guardar_mundo()
 			queue_free()
 	else:
 		# Torna a mida normal quan s'allunya

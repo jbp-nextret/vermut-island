@@ -42,6 +42,8 @@ func _ready():
 	
 	panel_ui.visible = false
 	item_list.item_selected.connect(_on_moble_seleccionat)
+	# CARREGA LA DECORACIÓ GUARDADA
+	carregar_decoracio()
 	material_hover.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material_hover.albedo_color = Color(1, 0, 0, 0.8)
 
@@ -223,6 +225,7 @@ func sortir_mode_construccio():
 	desactivar_mode_eliminacio()
 	index_preview = -1
 	rotacio_preview = 0
+	guardar_decoracio()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)  # Restaura el ratolí
 	
 func _process(delta):
@@ -496,8 +499,125 @@ func seleccionar_moble():
 	moble_seleccionat = moble
 	canviar_color_moble(moble_seleccionat)
 	
+func guardar_decoracio():
+	var mobles_data = []
+	
+	# Guarda tots els mobles del grup mobles_base
+	for moble in get_tree().get_nodes_in_group("mobles_base"):
+		mobles_data.append({
+			"index": obtenir_index_moble(moble),
+			"posicio": {"x": moble.global_position.x, "y": moble.global_position.y, "z": moble.global_position.z},
+			"rotacio": {"x": moble.rotation.x, "y": moble.rotation.y, "z": moble.rotation.z},
+			"tipus": "mobles_base"
+		})
+	
+	# Guarda tota la decoracio
+	for planta in get_tree().get_nodes_in_group("decoracio"):
+		mobles_data.append({
+			"index": obtenir_index_moble(planta),
+			"posicio": {"x": planta.global_position.x, "y": planta.global_position.y, "z": planta.global_position.z},
+			"rotacio": {"x": planta.rotation.x, "y": planta.rotation.y, "z": planta.rotation.z},
+			"tipus": "decoracio"
+		})
+	
+	# Guarda a un fitxer JSON
+	var json = JSON.stringify(mobles_data)
+	var fitxer = FileAccess.open("user://casa_interior_mobles.save", FileAccess.WRITE)
+	if fitxer:
+		fitxer.store_string(json)
+		print("Decoració guardada!")
+	else:
+		print("Error: No es pot guardar la decoració")
+
+func carregar_decoracio():
+	var fitxer = FileAccess.open("user://casa_interior_mobles.save", FileAccess.READ)
+	if not fitxer:
+		print("Cap decoració guardada prèviament")
+		return
+	
+	var json_string = fitxer.get_as_text()
+	if json_string.is_empty():
+		print("Fitxer buit")
+		return
+	
+	var json = JSON.new()
+	var error = json.parse(json_string)
+	
+	if error != OK:
+		print("Error al parsejar JSON: ", error)
+		return
+	
+	var mobles_data = json.data
+	
+	if mobles_data == null:
+		print("Error: Dades nules")
+		return
+	
+	if not mobles_data is Array:
+		print("Error: Dades no és Array")
+		return
+	
+	print("Carregant ", mobles_data.size(), " mobles")
+	
+	# Carrega cada moble
+	for data in mobles_data:
+		if not data is Dictionary:
+			print("Error: data no és Dictionary")
+			continue
+		
+		var index = data.get("index", 0)
+		if index >= mobles_disponibles.size():
+			print("Error: index fora de rang - ", index)
+			continue
+		
+		var moble = mobles_disponibles[index].instantiate()
+		
+		# Afegeix al grup corresponent
+		if data.get("tipus") == "decoracio":
+			moble.add_to_group("decoracio")
+		else:
+			moble.add_to_group("mobles_base")
+			if "barra" in moble.name.to_lower():
+				moble.add_to_group("barres")
+			else:
+				moble.add_to_group("mobles_reposats")
+		
+		add_child(moble)
+		
+		# Convierte diccionari a Vector3 amb més cura
+		var posicio_data = data.get("posicio")
+		var rotacio_data = data.get("rotacio")
+		
+		if posicio_data is Dictionary and rotacio_data is Dictionary:
+			var posicio = Vector3(posicio_data.get("x", 0), posicio_data.get("y", 0), posicio_data.get("z", 0))
+			var rotacio = Vector3(rotacio_data.get("x", 0), rotacio_data.get("y", 0), rotacio_data.get("z", 0))
+			
+			moble.global_position = posicio
+			moble.rotation = rotacio
+			print("Moble carregat: ", moble.name)
+		else:
+			print("Error: posicio o rotacio no són diccionaris")
+	
+	print("Decoració carregada!")
+
+func obtenir_index_moble(moble: Node3D) -> int:
+	# Busca l'índex del moble a mobles_disponibles
+	var nom = moble.name.split("@")[0]  # Treu el sufijo de Godot
+	
+	for i in range(mobles_disponibles.size()):
+		if mobles_disponibles[i].resource_path.contains(nom.to_lower()):
+			return i
+	
+	return 0  # Per defecte el primer
+
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		guardar_decoracio()
+		get_tree().quit()
+	
 func _on_salir_casa():
 	print("Sortint de la casa")
+	guardar_decoracio()
 	call_deferred("change_scene_to_world")
 
 func change_scene_to_world():

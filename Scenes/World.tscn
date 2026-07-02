@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
 [ext_resource type="PackedScene" uid="uid://cxg75mbja24wq" path="res://Scenes/Personatge.tscn" id="3_waglr"]
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
+[ext_resource type="PackedScene" uid="uid://bmh1le3cvej85" path="res://Scenes/RellotgeHUD.tscn" id="6_rwt1y"]
 [ext_resource type="Script" uid="uid://dnrxbp0qfcc02" path="res://Scripts/cicle_dia_nit.gd" id="7_y7y61"]
 [ext_resource type="Shader" uid="uid://cx3i4u7wq417k" path="res://Shaders/river_water.gdshader" id="8_waglr"]
 [ext_resource type="Texture2D" uid="uid://7uwx15ejs7n6" path="res://sprites/water-0.png" id="9_op4cu"]
@@ -188,17 +189,8 @@ draw_pass_1 = SubResource("SphereMesh_45d1s")
 
 [node name="CicleDiaNit" type="Node3D" parent="SubViewport/World" unique_id=1634308306]
 script = ExtResource("7_y7y61")
-durada_dia = 5.0
 
-[node name="CanvasLayer" type="CanvasLayer" parent="SubViewport/World" unique_id=2078583627]
-
-[node name="Rellotge" type="Label" parent="SubViewport/World/CanvasLayer" unique_id=1159634005]
-offset_right = 40.0
-offset_bottom = 55.0
-theme_override_colors/font_color = Color(0, 0.45502484, 0.9414053, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.61960787)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 40
+[node name="CanvasLayer" parent="SubViewport/World" unique_id=331932237 instance=ExtResource("6_rwt1y")]
 
 [node name="Sea" type="MeshInstance3D" parent="SubViewport/World" unique_id=622112960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79888964, 0.46128106, -0.55045605)

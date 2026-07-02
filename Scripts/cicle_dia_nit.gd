@@ -1,14 +1,11 @@
 extends Node
 
-# Durada d'un dia complet en segons reals
-@export var durada_dia: float = 120.0
+var hora_actual: float = 6.0  # comença a les 8 del matí (0-24)
 
-var hora_actual: float = 8.0  # comença a les 8 del matí (0-24)
-
-@onready var llum_principal = get_node("../GridMap/DirectionalLight3D")
-@onready var llum_rebliment = get_node("../GridMap/DirectionalLight3D/DirectionalLight3D")
-@onready var entorn = get_node("../WorldEnvironment")
-@onready var rellotge = get_node("../CanvasLayer/Rellotge")
+var llum_principal: Node3D
+var llum_rebliment: Node3D
+var entorn: WorldEnvironment
+var rellotge: Label
 
 # Dies de la setmana
 const DIES = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"]
@@ -21,18 +18,23 @@ const COLORS = {
 	"capvespre":{ "llum": Color(0.8, 0.3, 0.1), "cel": Color(0.2, 0.1, 0.3), "horitzó": Color(0.8, 0.3, 0.1) },
 	"nit":      { "llum": Color(0.1, 0.1, 0.3), "cel": Color(0.02, 0.02, 0.08), "horitzó": Color(0.05, 0.05, 0.15) }
 }
+
 func _ready():
-	#rellotge.add_theme_font_size_override("font_size", 32)
-	#rellotge.add_theme_color_override("font_color", Color(1, 0.85, 0, 1))
-	#rellotge.position = Vector2(20, 20)
-	rellotge.text = "00:00"
+	llum_principal = get_node_or_null("../GridMap/DirectionalLight3D")
+	llum_rebliment = get_node_or_null("../GridMap/DirectionalLight3D/DirectionalLight3D")
+	entorn = get_node_or_null("../WorldEnvironment")
+	rellotge = get_node_or_null("../CanvasLayer/Rellotge") as Label
+	
+	if rellotge:
+		rellotge.text = "00:00"
 	print("Rellotge node: ", rellotge)
 	
 func _process(delta):
-	hora_actual += (24.0 / durada_dia) * delta
-	if hora_actual >= 24.0:
-		hora_actual -= 24.0
-		GestorTemps.passar_dia()
+	if not llum_principal or not entorn or not rellotge:
+		return
+	
+	# Llegeix l'hora del GestorTemps autoload
+	hora_actual = GestorTemps.hora_actual
 	
 	actualitzar_llum()
 	actualitzar_cel()
@@ -40,6 +42,9 @@ func _process(delta):
 	actualitzar_rellotge()
 	
 func actualitzar_rellotge():
+	if not rellotge:
+		return
+	
 	var hores = int(hora_actual)
 	var minuts = int((hora_actual - hores) * 60)
 	var periode = "AM" if hores < 12 else "PM"
@@ -60,7 +65,6 @@ func actualitzar_rellotge():
 		icona = "🌙"
 	var dia_setmana = DIES[(GestorTemps.dia_actual - 1) % 7]
 	rellotge.text = "%s %02d:%02d\n%s" % [icona, hores, minuts, dia_setmana]
-	#print("Hora actual: ", hora_actual)
 
 func _get_colors_per_hora() -> Array:
 	# Retorna [color_actual, color_seguent, t] per interpolar
@@ -78,6 +82,9 @@ func _get_colors_per_hora() -> Array:
 		return [COLORS["capvespre"], COLORS["nit"], (hora_actual - 20.0) / 4.0]
 
 func actualitzar_llum():
+	if not llum_principal or not llum_rebliment:
+		return
+	
 	var cols = _get_colors_per_hora()
 	var color_actual = cols[0]["llum"]
 	var color_seguent = cols[1]["llum"]
@@ -91,6 +98,9 @@ func actualitzar_llum():
 	llum_rebliment.light_energy = intensitat * 0.2
 
 func actualitzar_cel():
+	if not entorn:
+		return
+	
 	var cols = _get_colors_per_hora()
 	var t = cols[2]
 	
@@ -102,6 +112,9 @@ func actualitzar_cel():
 	sky_mat.sky_horizon_color = cols[0]["horitzó"].lerp(cols[1]["horitzó"], t)
 
 func actualitzar_angle_llum():
+	if not llum_principal:
+		return
+	
 	# El sol gira 360° en 24 hores
 	var angle = (hora_actual / 24.0) * 360.0 - 90.0
 	llum_principal.rotation_degrees.x = -angle
