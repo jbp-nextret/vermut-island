@@ -277,37 +277,65 @@ func _on_moble_seleccionat(index: int):
 
 func col_locar_moble():
 	print("Col·locar moble")
-
 	if moble_preview == null:
 		return
-
 	if index_preview < 0 or index_preview >= mobles_disponibles.size():
 		return
-
+	
 	var pos = moble_preview.global_position
-
-	# Instància temporal per saber de quin grup és el moble nou
-	var moble_nou = mobles_disponibles[index_preview].instantiate()
-
-	var grup = ""
-	if moble_nou.is_in_group("mobles_base"):
-		grup = "mobles_base"
-	elif moble_nou.is_in_group("cadires"):
-		grup = "cadires"
-	elif moble_nou.is_in_group("decoracio"):
-		grup = "decoracio"
-
-	# Busca només un moble del mateix grup
-	var moble_vell = buscar_moble_a_posicio(pos, grup)
-
-	if moble_vell:
-		moble_vell.queue_free()
-
-	add_child(moble_nou)
-
-	moble_nou.global_position = pos
-	moble_nou.rotation = moble_preview.rotation
-
+	
+	# Determina quin tipus és el moble que vols col·locar
+	var es_barra = "barra" in moble_preview.name.to_lower()
+	var es_decoracio = moble_preview.is_in_group("decoracio")
+	
+	# Busca QUALSEVOL moble a aquesta posició
+	var moble_vell_barra = buscar_moble_a_posicio(pos, "barres")
+	var moble_vell_cadira = buscar_moble_a_posicio(pos, "mobles_reposats")
+	var moble_vell_deco = buscar_moble_a_posicio(pos, "decoracio")
+	
+	# Si és decoració (planta)
+	if es_decoracio:
+		# No es pot col·locar si hi ha cadira
+		if moble_vell_cadira:
+			print("No pots col·locar una planta aquí, hi ha una cadira")
+			return
+		# Només esborra altra decoració
+		if moble_vell_deco:
+			moble_vell_deco.queue_free()
+	else:
+		# Si és barra, no es pot col·locar si hi ha cadira
+		if es_barra and moble_vell_cadira:
+			print("No pots col·locar una barra aquí, hi ha una cadira")
+			return
+		
+		# Si és cadira, no es pot col·locar si hi ha barra o planta
+		if not es_barra and (moble_vell_barra or moble_vell_deco):
+			print("No pots col·locar una cadira aquí")
+			return
+		
+		# Esborra el moble vell del MATEIX tipus
+		if es_barra and moble_vell_barra:
+			moble_vell_barra.queue_free()
+		elif not es_barra and moble_vell_cadira:
+			moble_vell_cadira.queue_free()
+	
+	var moble = mobles_disponibles[index_preview].instantiate()
+	
+	# Afegeix als grups corresponents
+	if es_decoracio:
+		moble.add_to_group("decoracio")
+		print("Planta afegida al grup decoracio: ", moble.is_in_group("decoracio"))
+	else:
+		moble.add_to_group("mobles_base")
+		if es_barra:
+			moble.add_to_group("barres")
+		else:
+			moble.add_to_group("mobles_reposats")
+	
+	add_child(moble)
+	moble.global_position = pos
+	moble.rotation = moble_preview.rotation
+	
 	print("Moble col·locat")
 		
 func buscar_moble_a_posicio(posicio: Vector3, grup: String) -> Node3D:
@@ -323,15 +351,19 @@ func buscar_moble_a_posicio(posicio: Vector3, grup: String) -> Node3D:
 	
 func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 	var node = collider
-
 	while node and node != self:
-		if node.is_in_group("mobles_base") \
-		or node.is_in_group("cadires") \
-		or node.is_in_group("decoracio"):
+		# Ignora elements de la sala
+		if node.name in ["Sol", "Paret Fons", "Paret Esquerra", "Paret Dreta", "Finestra", "PortaVisual"]:
+			return null
+		
+		# Busca els grups "mobles_base" o "decoracio"
+		if node.is_in_group("mobles_base") or node.is_in_group("decoracio"):
+			print("Moble/Planta trobat: ", node.name, " - Grups: ", node.get_groups())
 			return node
-
+		
+		print("Node verificat: ", node.name, " - Grups: ", node.get_groups())
 		node = node.get_parent()
-
+	
 	return null
 
 func deseleccionar_moble():
@@ -360,34 +392,23 @@ func desactivar_mode_eliminacio():
 func actualitzar_hover_eliminacio():
 	var ratoli = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
-
 	var origen = camera.project_ray_origin(ratoli)
 	var direccio = camera.project_ray_normal(ratoli)
-
 	var query = PhysicsRayQueryParameters3D.create(
 		origen,
 		origen + direccio * 100
 	)
-
 	var resultat = get_world_3d().direct_space_state.intersect_ray(query)
-
 	var moble = null
-
-	if resultat:
-		print("Collider:", resultat.collider.name)
-
+	if resultat and resultat.collider:
 		moble = obtenir_moble_desde_collider(resultat.collider)
-
-		if moble:
-			print("Moble detectat:", moble.name)
-		else:
-			print("No pertany a cap grup")
-
+	
 	if moble_hovered and moble_hovered != moble:
 		restaurar_materials(moble_hovered)
 		moble_hovered = null
-
-	if moble and moble != moble_preview:
+	
+	# Detecta mobles_base o decoracio
+	if moble and moble != moble_preview and (moble.is_in_group("mobles_base") or moble.is_in_group("decoracio")):
 		moble_hovered = moble
 		canviar_color_moble(moble_hovered)
 
