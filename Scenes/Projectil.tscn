@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource path="res://Scripts/projectil.gd" type="Script" id=1]
+
+[node name="Projectil" type="Area3D"]
+script = ExtResource( 1 )
+monitoring = true
+monitorable = true
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Projectil"]
+shape = SubResource( 1 )
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Projectil"]
+mesh = SubResource( 2 )
+material_override = SubResource( 3 )
+
+[sub_resource type="SphereShape3D" id=1]
+radius = 0.15
+
+[sub_resource type="SphereMesh" id=2]
+radius = 0.1
+radial_segments = 12
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id=3]
+albedo_color = Color(1, 0.8, 0.2)
+emission = Color(1, 0.8, 0.2)
+emission_energy_multiplier = 1.5

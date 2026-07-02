@@ -20,3 +20,6 @@ func passar_dia():
 	# Avisa tots els cultius
 	get_tree().call_group("cultius", "passar_dia")
 	GestorPartida.guardar_mundo()  # Guarda després de cada dia
+
+func es_nit() -> bool:
+	return hora_actual < 6.0 or hora_actual >= 20.0

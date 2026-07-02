@@ -4,11 +4,21 @@ enum Estat { LLAVOR, CREIXENT, MIG, GRAN, MADUR }
 @export var dies_per_fase = 2
 @export var textures: Array[Texture2D] = []
 @export var llavor_drop_escena: PackedScene  # Assigna a l'Inspector
+@export var projectil_escena: PackedScene  # Assigna a l'Inspector o es carregarà de Scenes/Projectil.tscn
+@export var defensa_range: float = 5.0
+@export var defensa_cooldown: float = 1.2
+@export var defensa_dany: int = 8
+@export var defensa_velocitat: float = 18.0
+@export var defensa_abast: float = 12.0
+@export var vida_maxima: int = 10
+@export var es_torre: bool = true
 
 var estat_actual = Estat.LLAVOR
 var dies_passats = 0
 var recollit = false
 var jugador_a_prop = false
+var temps_darrer_defensa: float = 0.0
+var vida_actual: int = 0
 
 @onready var sprite = $Sprite
 @onready var area = $Area3D
@@ -21,6 +31,10 @@ func _ready():
 	icona.font_size = 32
 	icona.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_to_group("cultius")
+	vida_actual = vida_maxima
+
+	if not projectil_escena and ResourceLoader.exists("res://Scenes/Projectil.tscn"):
+		projectil_escena = load("res://Scenes/Projectil.tscn")
 	
 	var quad = $Sprite.mesh
 	actualitzar_sprite()
@@ -77,15 +91,26 @@ func _index_visual_per_estat(estat: int) -> int:
 			return clamp(estat, 0, textures.size() - 1)
 
 func _process(delta):
-	if recollit or estat_actual != Estat.MADUR:
+	if recollit:
 		return
-	
+
+	if es_torre and GestorTemps.es_nit() and estat_actual == Estat.MADUR:
+		temps_darrer_defensa += delta
+		atacar_enemic_proper()
+		return
+
+	if es_torre:
+		return
+
+	if estat_actual != Estat.MADUR:
+		return
+
 	var personatge = get_node("../Personatge")
 	if personatge == null:
 		return
-	
+
 	var distancia = global_position.distance_to(personatge.global_position)
-	
+
 	# Feedback visual quan el jugador és a prop
 	if distancia < 1.5:
 		icona.visible = true
@@ -127,3 +152,42 @@ func generar_llavor_drop():
 	drop.global_position = global_position + offset
 	drop.tipus_llavor = "llavor_raim"
 	drop.quantitat = 1
+
+func atacar_enemic_proper():
+	if temps_darrer_defensa < defensa_cooldown:
+		return
+
+	var millor: Node3D = null
+	var millor_dist = INF
+	for enemic in get_tree().get_nodes_in_group("enemics"):
+		if not is_instance_valid(enemic):
+			continue
+		var dist = global_position.distance_to(enemic.global_position)
+		if dist <= defensa_range and dist < millor_dist:
+			millor_dist = dist
+			millor = enemic
+
+	if millor:
+		temps_darrer_defensa = 0.0
+		disparar_projectil(millor)
+
+func disparar_projectil(objetiu: Node3D):
+	if not projectil_escena:
+		print("No hi ha escena de projectil assignada")
+		return
+
+	var projectil = projectil_escena.instantiate()
+	if not projectil:
+		print("No s'ha pogut instanciar el projectil")
+		return
+
+	get_parent().add_child(projectil)
+	projectil.global_position = global_position + Vector3(0, 0.5, 0)
+	if projectil.has_method("inicialitzar"):
+		projectil.inicialitzar(objetiu, defensa_dany, defensa_velocitat, defensa_abast, self)
+
+func prendre_dany(quantitat: int):
+	vida_actual -= quantitat
+	print("Cultiu rep ", quantitat, " dany. Vida: ", vida_actual)
+	if vida_actual <= 0:
+		queue_free()
