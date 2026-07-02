@@ -504,20 +504,26 @@ func guardar_decoracio():
 	
 	# Guarda tots els mobles del grup mobles_base
 	for moble in get_tree().get_nodes_in_group("mobles_base"):
+		var scene_path = obtenir_scene_path_moble(moble)
 		mobles_data.append({
 			"index": obtenir_index_moble(moble),
+			"scene_path": scene_path,
 			"posicio": {"x": moble.global_position.x, "y": moble.global_position.y, "z": moble.global_position.z},
 			"rotacio": {"x": moble.rotation.x, "y": moble.rotation.y, "z": moble.rotation.z},
-			"tipus": "mobles_base"
+			"tipus": "mobles_base",
+			"grup": obtenir_grup_moble(moble)
 		})
 	
 	# Guarda tota la decoracio
 	for planta in get_tree().get_nodes_in_group("decoracio"):
+		var scene_path = obtenir_scene_path_moble(planta)
 		mobles_data.append({
 			"index": obtenir_index_moble(planta),
+			"scene_path": scene_path,
 			"posicio": {"x": planta.global_position.x, "y": planta.global_position.y, "z": planta.global_position.z},
 			"rotacio": {"x": planta.rotation.x, "y": planta.rotation.y, "z": planta.rotation.z},
-			"tipus": "decoracio"
+			"tipus": "decoracio",
+			"grup": "decoracio"
 		})
 	
 	# Guarda a un fitxer JSON
@@ -530,6 +536,11 @@ func guardar_decoracio():
 		print("Error: No es pot guardar la decoració")
 
 func carregar_decoracio():
+	var mobles_existents = get_tree().get_nodes_in_group("mobles_base") + get_tree().get_nodes_in_group("decoracio")
+	for moble in mobles_existents:
+		if is_instance_valid(moble):
+			moble.queue_free()
+	
 	var fitxer = FileAccess.open("user://casa_interior_mobles.save", FileAccess.READ)
 	if not fitxer:
 		print("Cap decoració guardada prèviament")
@@ -565,22 +576,45 @@ func carregar_decoracio():
 			print("Error: data no és Dictionary")
 			continue
 		
-		var index = data.get("index", 0)
-		if index >= mobles_disponibles.size():
-			print("Error: index fora de rang - ", index)
+		var scene_path = data.get("scene_path", "")
+		var moble_scene: PackedScene = null
+		
+		if typeof(scene_path) == TYPE_STRING and not scene_path.is_empty() and ResourceLoader.exists(scene_path):
+			var recurso = load(scene_path)
+			if recurso is PackedScene:
+				moble_scene = recurso
+			else:
+				print("El recurs no és una escena: ", scene_path)
+		
+		if moble_scene == null:
+			var index = data.get("index", 0)
+			if index >= mobles_disponibles.size():
+				print("Error: index fora de rang - ", index)
+				continue
+			moble_scene = mobles_disponibles[index]
+		
+		if moble_scene == null:
+			print("No s'ha pogut crear el moble a partir de la informació guardada")
 			continue
 		
-		var moble = mobles_disponibles[index].instantiate()
+		var moble = moble_scene.instantiate()
 		
 		# Afegeix al grup corresponent
 		if data.get("tipus") == "decoracio":
 			moble.add_to_group("decoracio")
 		else:
+			var grup_guardat = data.get("grup", "")
 			moble.add_to_group("mobles_base")
-			if "barra" in moble.name.to_lower():
+			if grup_guardat == "barres":
 				moble.add_to_group("barres")
-			else:
+			elif grup_guardat == "mobles_reposats":
 				moble.add_to_group("mobles_reposats")
+			else:
+				# Compatibilitat amb fitxers antics: dedueix el grup si no hi ha dada guardada
+				if "barra" in moble.name.to_lower():
+					moble.add_to_group("barres")
+				else:
+					moble.add_to_group("mobles_reposats")
 		
 		add_child(moble)
 		
@@ -609,6 +643,26 @@ func obtenir_index_moble(moble: Node3D) -> int:
 			return i
 	
 	return 0  # Per defecte el primer
+
+func obtenir_grup_moble(moble: Node3D) -> String:
+	if moble.is_in_group("decoracio"):
+		return "decoracio"
+	if moble.is_in_group("barres"):
+		return "barres"
+	if moble.is_in_group("mobles_reposats"):
+		return "mobles_reposats"
+	return "mobles_base"
+
+func obtenir_scene_path_moble(moble: Node3D) -> String:
+	if not moble.scene_file_path.is_empty():
+		return moble.scene_file_path
+	
+	var nom = moble.name.to_lower()
+	for scene in mobles_disponibles:
+		if scene and scene.resource_path.to_lower().contains(nom):
+			return scene.resource_path
+	
+	return ""
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

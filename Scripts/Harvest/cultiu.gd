@@ -41,7 +41,9 @@ func actualitzar_sprite():
 	if textures.size() == 0:
 		print("ERROR: No hi ha textures assignades al cultiu")
 		return
-	if textures.size() <= estat_actual:
+	
+	var index_visual = _index_visual_per_estat(estat_actual)
+	if index_visual < 0 or index_visual >= textures.size():
 		print("ERROR: estat_actual (", estat_actual, ") fora de rang de textures (", textures.size(), ")")
 		return
 	
@@ -55,9 +57,24 @@ func actualitzar_sprite():
 		sprite.set_surface_override_material(0, material)
 	
 	material = material.duplicate()
-	material.albedo_texture = textures[estat_actual]
+	material.albedo_texture = textures[index_visual]
 	sprite.set_surface_override_material(0, material)
-	print("Sprite actualitzat a estat ", estat_actual, " amb textura: ", textures[estat_actual].resource_path)
+	print("Sprite actualitzat a estat ", estat_actual, " -> visual ", index_visual, " amb textura: ", textures[index_visual].resource_path)
+
+func _index_visual_per_estat(estat: int) -> int:
+	match estat:
+		Estat.LLAVOR:
+			return 0
+		Estat.CREIXENT:
+			return 1
+		Estat.MIG:
+			return 1
+		Estat.GRAN:
+			return 2
+		Estat.MADUR:
+			return 2
+		_:
+			return clamp(estat, 0, textures.size() - 1)
 
 func _process(delta):
 	if recollit or estat_actual != Estat.MADUR:

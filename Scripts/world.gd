@@ -367,7 +367,8 @@ func carregar_mundo():
 		
 		var posicio = Vector3(data.get("posicio")["x"], data.get("posicio")["y"], data.get("posicio")["z"])
 		cultiu.global_position = posicio
-		cultiu.estat_actual = data.get("estat", 0)
+		var estat_guardat = data.get("estat", 0)
+		cultiu.estat_actual = int(clamp(estat_guardat, 0, cultiu.Estat.MADUR))
 		cultiu.dies_passats = data.get("dies_passats", 0)
 		
 		print("Carregant cultiu: posicio=", posicio, " estat=", cultiu.estat_actual, " dies=", cultiu.dies_passats, " textures=", cultiu.textures.size())
