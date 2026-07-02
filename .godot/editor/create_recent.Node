@@ -1,7 +1,7 @@
+CollisionShape3D
 SpotLight3D
 PointLight2D
 Node3D
-CollisionShape3D
 Area3D
 ItemList
 Panel
@@ -12,4 +12,3 @@ MeshInstance3D
 SubViewportContainer
 SubViewport
 CharacterBody3D
-RigidBody3D
