@@ -15,8 +15,8 @@
 [ext_resource type="Texture2D" uid="uid://dmdln37pqvewt" path="res://sprites/arbres.png" id="11_ti1bm"]
 [ext_resource type="PackedScene" uid="uid://cjuavns4hlv0r" path="res://Scenes/GridMap.tscn" id="12_waglr"]
 [ext_resource type="Script" uid="uid://wvb1oedkxme" path="res://Scripts/weather_manager.gd" id="14_8l3nt"]
-[ext_resource type="PackedScene" uid="uid://5jy6a7016vyg" path="res://Scenes/EnemicVolador.tscn" id="16_rwt1y"]
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
+[ext_resource type="PackedScene" uid="uid://die76m4fw81yo" path="res://Scenes/Enemic.tscn" id="17_rwt1y"]
 [ext_resource type="PackedScene" uid="uid://cnqnfql0khi5f" path="res://Scenes/Casa.tscn" id="20_r0dna"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
@@ -284,11 +284,11 @@ data = {
 script = ExtResource("14_8l3nt")
 
 [node name="Spawner" type="Node3D" parent="SubViewport/World" unique_id=2121140639]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.246, 5.963, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2459946, 5.1631794, 0)
 script = ExtResource("16_waglr")
-escena_enemic = ExtResource("16_rwt1y")
-max_enemics = 10
-temps_spawn = 1.0
+escena_enemic = ExtResource("17_rwt1y")
+max_enemics = 4
+rango_spawn = 10.0
 
 [node name="Water" type="MeshInstance3D" parent="SubViewport/World" unique_id=656118576]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.586518, 1.5097125, 3.9963725)

@@ -1,14 +1,14 @@
+MeshInstance3D
 CollisionShape3D
+Area3D
 SpotLight3D
 PointLight2D
 Node3D
-Area3D
 ItemList
 Panel
 CanvasLayer
 Camera3D
 StaticBody3D
-MeshInstance3D
 SubViewportContainer
 SubViewport
 CharacterBody3D

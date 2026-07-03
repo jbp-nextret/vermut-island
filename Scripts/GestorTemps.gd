@@ -3,10 +3,10 @@ extends Node
 signal dia_nou
 
 # Durada d'un dia complet en segons reals
-@export var durada_dia: float = 3.0
+@export var durada_dia: float = 120.0
 
 var dia_actual = 1
-var hora_actual: float = 8.0  # comença a les 8 del matí (0-24)
+var hora_actual: float = 22.0  # comença a les 6 del matí (0-24)
 
 func _process(delta):
 	hora_actual += (24.0 / durada_dia) * delta

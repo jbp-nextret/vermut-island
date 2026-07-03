@@ -1,6 +1,6 @@
 extends Node
 
-var hora_actual: float = 6.0  # comença a les 8 del matí (0-24)
+var hora_actual: float = 6.0  # comença a les 6 del matí (0-24)
 
 var llum_principal: Node3D
 var llum_rebliment: Node3D

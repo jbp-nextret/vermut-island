@@ -7,18 +7,18 @@ extends Area3D
 var direction: Vector3 = Vector3.ZERO
 var travelled: float = 0.0
 var target: Node3D = null
-var owner: Node = null
+var shooter: Node = null
 
 func _ready():
 	connect("body_entered", Callable(self, "_on_body_entered"))
 	set_physics_process(true)
 
-func inicialitzar(target_node: Node3D, damage: int, speed_value: float = 18.0, range_value: float = 12.0, shooter: Node = null):
+func inicialitzar(target_node: Node3D, damage: int, speed_value: float = 18.0, range_value: float = 12.0, shooter_node: Node = null):
 	target = target_node
 	dany = damage
 	speed = speed_value
 	range = range_value
-	owner = shooter
+	shooter = shooter_node
 	if target and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
 	else:
@@ -39,7 +39,7 @@ func _process(delta):
 		queue_free()
 
 func _on_body_entered(body):
-	if body == owner:
+	if body == shooter:
 		return
 	if not body.is_in_group("enemics"):
 		return

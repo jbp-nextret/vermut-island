@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://die76m4fw81yo"]
+[gd_scene format=3 uid="uid://5jy6a7016vyg"]
 
-[ext_resource type="Script" uid="uid://bwb6kaplv7cmu" path="res://Scripts/enemic.gd" id="1_h3rpd"]
-[ext_resource type="Texture2D" uid="uid://dul5qbajcmvup" path="res://sprites/bat.PNG" id="2_tp23d"]
+[ext_resource type="Script" uid="uid://bwb6kaplv7cmu" path="res://Scripts/enemic.gd" id="1_4s8x1"]
+[ext_resource type="Texture2D" uid="uid://dul5qbajcmvup" path="res://sprites/bat.PNG" id="2_y3pyn"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_tp23d"]
 size = Vector2(1.53, 1)
@@ -17,10 +17,12 @@ billboard_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y206r"]
 
-[node name="Enemic" type="CharacterBody3D" unique_id=1467883497]
-script = ExtResource("1_h3rpd")
+[node name="EnemicVolador" type="CharacterBody3D" unique_id=1467883497]
+script = ExtResource("1_4s8x1")
 nom_enemic = "Ratpenat"
-textura_enemic = ExtResource("2_tp23d")
+vida_maxima = 60
+dany = 50
+textura_enemic = ExtResource("2_y3pyn")
 es_volador = true
 
 [node name="Sprite" type="MeshInstance3D" parent="." unique_id=1241104757]

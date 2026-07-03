@@ -4,7 +4,7 @@ enum Estat { LLAVOR, CREIXENT, MIG, GRAN, MADUR }
 @export var dies_per_fase = 2
 @export var textures: Array[Texture2D] = []
 @export var llavor_drop_escena: PackedScene  # Assigna a l'Inspector
-@export var projectil_escena: PackedScene  # Assigna a l'Inspector o es carregarà de Scenes/Projectil.tscn
+@export var projectil_escena: PackedScene
 @export var defensa_range: float = 5.0
 @export var defensa_cooldown: float = 1.2
 @export var defensa_dany: int = 8
@@ -33,8 +33,16 @@ func _ready():
 	add_to_group("cultius")
 	vida_actual = vida_maxima
 
-	if not projectil_escena and ResourceLoader.exists("res://Scenes/Projectil.tscn"):
-		projectil_escena = load("res://Scenes/Projectil.tscn")
+	if not projectil_escena:
+		var projectil_path := "res://Scenes/Projectil.tscn"
+		if ResourceLoader.exists(projectil_path):
+			var loaded_scene = ResourceLoader.load(projectil_path, "PackedScene")
+			if loaded_scene:
+				projectil_escena = loaded_scene
+			else:
+				push_error("No s'ha pogut carregar " + projectil_path + " com a PackedScene")
+		else:
+			push_error("No existeix " + projectil_path)
 	
 	var quad = $Sprite.mesh
 	actualitzar_sprite()

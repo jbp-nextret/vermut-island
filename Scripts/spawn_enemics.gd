@@ -16,7 +16,8 @@ func _process(delta):
 	
 	if temps_darrer_spawn >= temps_spawn:
 		if get_tree().get_nodes_in_group("enemics").size() < max_enemics:
-			spawnejar_enemic()
+			if GestorTemps.es_nit():
+				spawnejar_enemic()
 			temps_darrer_spawn = 0.0
 
 func spawnejar_enemic():

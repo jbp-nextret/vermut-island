@@ -79,6 +79,12 @@ func _on_cultiu_recollit(posicio: Vector3):
 func _exit_tree():
 	GestorPartida.desregistrar_mundo()
 
+func _has_property(obj: Object, name: String) -> bool:
+	for prop in obj.get_property_list():
+		if prop["name"] == name:
+			return true
+	return false
+
 func _on_player_spawn_requested(posicio: Vector3):
 	await get_tree().process_frame
 	aplicar_spawn_player(posicio)
@@ -283,7 +289,7 @@ func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: 
 	cultiu.add_to_group("cultius")
 	add_child(cultiu)
 	cultiu.global_position = posicio_cultiu
-	if cultiu.has_variable("es_torre"):
+	if _has_property(cultiu, "es_torre"):
 		cultiu.es_torre = true
 	llançar_particules(particules_plantar, posicio_cultiu)
 	Inventari.items["llavor_raim"] -= 1
@@ -314,8 +320,8 @@ func guardar_mundo():
 			"posicio": {"x": cultiu.global_position.x, "y": cultiu.global_position.y, "z": cultiu.global_position.z},
 			"estat": cultiu.estat_actual,
 			"dies_passats": cultiu.dies_passats,
-			"es_torre": cultiu.has_variable("es_torre") ? cultiu.es_torre : false,
-			"vida_actual": cultiu.has_variable("vida_actual") ? cultiu.vida_actual : 0
+			"es_torre": cultiu.es_torre if _has_property(cultiu, "es_torre") else false,
+			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0
 		})
 	
 	# Guarda totes les plantes (si n'hi ha al mundo)
@@ -374,9 +380,9 @@ func carregar_mundo():
 		var estat_guardat = data.get("estat", 0)
 		cultiu.estat_actual = int(clamp(estat_guardat, 0, cultiu.Estat.MADUR))
 		cultiu.dies_passats = data.get("dies_passats", 0)
-		if cultiu.has_variable("es_torre"):
+		if _has_property(cultiu, "es_torre"):
 			cultiu.es_torre = data.get("es_torre", true)
-		if cultiu.has_variable("vida_actual"):
+		if _has_property(cultiu, "vida_actual"):
 			cultiu.vida_actual = data.get("vida_actual", cultiu.vida_maxima)
 		
 		print("Carregant cultiu: posicio=", posicio, " estat=", cultiu.estat_actual, " dies=", cultiu.dies_passats, " textures=", cultiu.textures.size())
