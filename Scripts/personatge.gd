@@ -13,20 +13,29 @@ const GRAVITY = 20.0
 @export var jeans: AnimatedSprite3D
 @export var boots: AnimatedSprite3D
 
-var ultima_direccio = "down"
-@onready var sprites: Array[AnimatedSprite3D] = []
+@onready var sprites: Array[AnimatedSprite3D] = [
+	hair,
+	skin,
+	eyes,
+	tshirt,
+	jeans,
+	boots
+]
 
+var ultima_direccio = "down"
 
 func _ready():
+	Customization.aplicar_aparenca(_sprites())
 	for child in get_children():
 		if child is AnimatedSprite3D:
 			sprites.append(child)
 
 func play_anim(anim: String):
+	print(anim)
 	for sprite in sprites:
 		if sprite.sprite_frames.has_animation(anim):
-			if sprite.animation != anim:
-				sprite.play(anim)
+			sprite.play(anim)
+			print(hair.is_playing(), hair.frame)
 			
 func actualitza_animacio(input_dir: Vector2):
 	var anim = ""
@@ -61,7 +70,11 @@ func _sprites() -> Dictionary:
 
 func canviar_color(nom_part: String, nou_color: Color) -> void:
 	Customization.canviar_color(nom_part, nou_color, _sprites())
+
+func _process(delta):
+	print(hair.animation, hair.frame)
 	
+		
 func _physics_process(delta):
 	# Gravetat
 	if not is_on_floor():

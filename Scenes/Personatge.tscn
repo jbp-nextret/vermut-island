@@ -28,6 +28,11 @@ region = Rect2(96, 0, 32, 40)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_a8kkx"]
 animations = [{
+"frames": [],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_3uis0")
@@ -227,7 +232,7 @@ animations = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y7y61"]
-size = Vector3(2.5249512, 5.786167, 0.94448245)
+size = Vector3(2.5249512, 6.6635914, 0.94448245)
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
 dof_blur_far_enabled = true
@@ -250,6 +255,7 @@ shader_parameter/lineHighlight = 0.2
 shader_parameter/lineShadow = 0.55
 
 [node name="Personatge" type="CharacterBody3D" unique_id=1584712923 node_paths=PackedStringArray("hair", "skin", "eyes", "tshirt", "jeans", "boots")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20740926, 0)
 script = ExtResource("1_6e338")
 hair = NodePath("Skeleton/hair")
 skin = NodePath("Skeleton/skin")
@@ -267,7 +273,7 @@ billboard = 2
 shaded = true
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_a8kkx")
-animation = &"walk_down"
+animation = &"idle"
 
 [node name="skin" type="AnimatedSprite3D" parent="Skeleton" unique_id=689975587]
 pixel_size = 0.05
@@ -310,11 +316,11 @@ sprite_frames = SubResource("SpriteFrames_vyjnp")
 animation = &"walk_down"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=349418859]
-transform = Transform3D(0.235, 0, 0, 0, 0.235, 0, 0, 0, 0.235, -6.310642e-05, 0.6952073, 0.002)
+transform = Transform3D(0.235, 0, 0, 0, 0.235, 0, 0, 0, 0.235, -6.310642e-05, 0.5921099, 0.002)
 shape = SubResource("BoxShape3D_y7y61")
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=996099225]
-transform = Transform3D(0.64278764, 0.31157833, -0.6998164, 0, 0.9135454, 0.40673664, 0.76604444, -0.26144528, 0.5872157, 0, 0.5, 0)
+transform = Transform3D(0.64278764, 0.31157833, -0.6998164, 0, 0.9135454, 0.40673664, 0.76604444, -0.26144528, 0.5872157, 0, 1.0330832, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=98852084]
 keep_aspect = 0

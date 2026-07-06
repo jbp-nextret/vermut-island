@@ -30,14 +30,16 @@ func _preparar_material(nom_part: String, sprite: AnimatedSprite3D) -> void:
 	if nom_part == "eyes":
 		mat.set_shader_parameter("llindar_blanc", llindar_ulls)
 
-	# Assignem la textura inicial
 	_actualitzar_textura(sprite, mat)
 
-	# I ens connectem per refrescar-la cada cop que canviï de frame
-	if not sprite.frame_changed.is_connected(_on_frame_changed):
-		sprite.frame_changed.connect(_on_frame_changed.bind(sprite, mat))
+	var callable := Callable(self, "_on_frame_changed").bind(sprite, mat)
+
+	if not sprite.frame_changed.is_connected(callable):
+		sprite.frame_changed.connect(Callable(self, "_on_frame_changed").bind(sprite, mat)
+)
 
 func _on_frame_changed(sprite: AnimatedSprite3D, mat: ShaderMaterial) -> void:
+	print("Frame changed: ",sprite.name, sprite.frame)
 	_actualitzar_textura(sprite, mat)
 
 func _actualitzar_textura(sprite: AnimatedSprite3D, mat: ShaderMaterial) -> void:

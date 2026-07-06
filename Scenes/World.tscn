@@ -17,7 +17,7 @@
 [ext_resource type="Script" uid="uid://wvb1oedkxme" path="res://Scripts/weather_manager.gd" id="14_8l3nt"]
 [ext_resource type="PackedScene" uid="uid://5jy6a7016vyg" path="res://Scenes/EnemicVolador.tscn" id="16_rwt1y"]
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
-[ext_resource type="PackedScene" uid="uid://cnqnfql0khi5f" path="res://Scenes/Casa.tscn" id="20_r0dna"]
+[ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
 
@@ -78,7 +78,7 @@ noise = SubResource("FastNoiseLite_kwl8l")
 seamless = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7yo87"]
-render_priority = -1
+render_priority = 0
 shader = ExtResource("9_uo7di")
 shader_parameter/albedo = Color(0.93160194, 1.4771553, 1.4969462, 1)
 shader_parameter/water_texture1 = ExtResource("9_op4cu")
@@ -294,8 +294,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.586518, 1.5097125, 3.99637
 mesh = SubResource("BoxMesh_rwt1y")
 surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 
-[node name="Casa" parent="SubViewport/World" unique_id=2000112226 instance=ExtResource("20_r0dna")]
-transform = Transform3D(-0.048220586, 0, -6.2648144, 0, 6.264998, 0, 6.2648144, 0, -0.048220586, -1.8368902, 4.969103, -17.802212)
-
 [node name="SpawnCasa" type="Node3D" parent="SubViewport/World" unique_id=1056946412]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)
+
+[node name="Casa" parent="." unique_id=523738415 instance=ExtResource("18_rwt1y")]
+transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)

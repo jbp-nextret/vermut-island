@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://djg0q2wme880f" path="res://Scenes/CasaInterior.tscn" id="3_n08em"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ioxd8"]
-size = Vector3(0.7005615, 1.0490112, 0.86032104)
+size = Vector3(0.79444885, 1.0490112, 0.9175873)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_mmhxk"]
 size = Vector3(0.07754883, 0.33458984, 0.24)
@@ -15,7 +15,7 @@ size = Vector3(0.07754883, 0.33458984, 0.24)
 [node name="Collider" type="StaticBody3D" parent="." index="8" unique_id=169931092]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Collider" index="0" unique_id=448597267]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3496883, -0.12168935, -0.0061546564)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39663196, -0.12168935, 0.022478461)
 shape = SubResource("BoxShape3D_ioxd8")
 
 [node name="Porta" type="Area3D" parent="Collider" index="1" unique_id=728213141]
