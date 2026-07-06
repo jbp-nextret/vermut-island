@@ -6,10 +6,10 @@ const SHADER_TINT_ULLS: Shader = preload("res://shaders/tint_part_llindar.gdshad
 var colors_actuals: Dictionary = {
 	"hair": Color("cc9a13ff"),
 	"skin": Color("f2c9a1"),
-	"eyes": Color("4fdfffff"),
-	"tshirt": Color.DARK_RED,
-	"jeans": Color.CADET_BLUE,
-	"boots": Color.SADDLE_BROWN,
+	"eyes": Color("c4ae6aff"),
+	"tshirt": Color("61a86aff"),
+	"jeans": Color("255b5aff"),
+	"boots": Color("372805ff"),
 }
 
 var llindar_ulls: float = 0.9

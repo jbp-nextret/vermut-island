@@ -26,16 +26,17 @@ var ultima_direccio = "down"
 
 func _ready():
 	Customization.aplicar_aparenca(_sprites())
-	for child in get_children():
-		if child is AnimatedSprite3D:
-			sprites.append(child)
 
 func play_anim(anim: String):
-	print(anim)
 	for sprite in sprites:
+		if sprite == null:
+			continue
 		if sprite.sprite_frames.has_animation(anim):
-			sprite.play(anim)
-			print(hair.is_playing(), hair.frame)
+			if sprite.animation != anim or not sprite.is_playing():
+				sprite.stop()
+				sprite.animation = anim
+				sprite.frame = 0
+				sprite.play()
 			
 func actualitza_animacio(input_dir: Vector2):
 	var anim = ""
