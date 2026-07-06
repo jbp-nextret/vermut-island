@@ -1,3 +1,6 @@
+res://sprites/player/walk_down/
+res://autoloads/
+res://sprites/player/
 res://Scenes/
 res://Scripts/
 res://Scenes/mobles/
@@ -6,6 +9,5 @@ res://MeshLibrary/
 res://Shaders/
 res://sprites/
 res://Scripts/Harvest/
-res://autoloads/
 res://Resources/
 res://

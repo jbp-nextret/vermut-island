@@ -2,7 +2,7 @@ extends Camera3D
 
 const ZOOM_SPEED = 0.5
 const MIN_ZOOM = 6.0
-const MAX_ZOOM = 12.0
+const MAX_ZOOM = 11.0
 
 var target_zoom = 10.0
 var target_size = 7.0
