@@ -3,6 +3,12 @@ extends Node
 const SHADER_TINT: Shader = preload("res://shaders/tint_part.gdshader")
 const SHADER_TINT_ULLS: Shader = preload("res://shaders/tint_part_llindar.gdshader")
 
+var llindar_ulls: float = 0.9
+
+# Nom personatge
+var nom: String = "Keru"
+
+# Default colors
 var colors_actuals: Dictionary = {
 	"hair": Color("cc9a13ff"),
 	"skin": Color("f2c9a1"),
@@ -11,8 +17,42 @@ var colors_actuals: Dictionary = {
 	"jeans": Color("255b5aff"),
 	"boots": Color("372805ff"),
 }
-
-var llindar_ulls: float = 0.9
+# Skin tones
+var body_color_options = [
+	Color(0.96, 0.80, 0.69),
+	Color(0.72, 0.54, 0.39),
+	Color(0.45, 0.34, 0.27)
+]
+# Hair colors
+var hair_color_options = [
+	Color(0.341, 0.206, 0.061, 1.0),
+	Color(0.072, 0.074, 0.069, 1.0),
+	Color(1.0, 0.6, 0.0, 1.0)
+]
+# T-shirt colors
+var tshirt_color_options = [
+	Color(0.367, 0.521, 0.018, 1.0),
+	Color(0.417, 0.537, 0.998, 1.0),
+	Color(1.0, 0.347, 0.28, 1.0)
+]
+# Jeans colors
+var jeans_color_options = [
+	Color(0.169, 0.219, 0.64, 1.0),
+	Color(0.321, 0.131, 0.019, 1.0),
+	Color(0.367, 0.521, 0.018, 1.0)
+]
+# Boots color
+var boots_color_options = [
+	Color(0.063, 0.065, 0.065, 1.0),
+	Color(0.321, 0.131, 0.019, 1.0),
+	Color(0.737, 0.505, 0.267, 1.0)
+]
+# Selected values
+var selected_body = ""
+var selected_hair = ""
+var selected_tshirt = ""
+var selected_jeans = ""
+var selected_boots = ""
 
 func aplicar_aparenca(sprites: Dictionary) -> void:
 	for nom_part in sprites.keys():

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3m5ai21243bw"
-path.s3tc="res://.godot/imported/tshirt.png-bae5ed5906858e4d9ae6330c089ce988.s3tc.ctex"
+uid="uid://cu3sfqkkbw8ml"
+path.s3tc="res://.godot/imported/shoes.PNG-6789f6ee59b6cf6551d3ded661d08029.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/walk_sides/tshirt.png"
-dest_files=["res://.godot/imported/tshirt.png-bae5ed5906858e4d9ae6330c089ce988.s3tc.ctex"]
+source_file="res://sprites/player/walk_up/shoes.PNG"
+dest_files=["res://.godot/imported/shoes.PNG-6789f6ee59b6cf6551d3ded661d08029.s3tc.ctex"]
 
 [params]
 

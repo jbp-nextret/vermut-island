@@ -297,5 +297,5 @@ surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 [node name="SpawnCasa" type="Node3D" parent="SubViewport/World" unique_id=1056946412]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)
 
-[node name="Casa" parent="." unique_id=523738415 instance=ExtResource("18_rwt1y")]
+[node name="Casa" parent="SubViewport" unique_id=523738415 instance=ExtResource("18_rwt1y")]
 transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)

@@ -134,6 +134,9 @@ func _input(event):
 		if arrastrant:
 			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
 
+func _physics_process(delta: float) -> void:
+	var camera = get_viewport().get_camera_3d()
+	print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
 	if not mode_plantacio: return

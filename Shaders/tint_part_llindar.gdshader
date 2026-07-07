@@ -5,7 +5,7 @@ uniform sampler2D textura : source_color, filter_nearest;
 uniform vec4 color_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform float llindar_blanc : hint_range(0.0, 1.0) = 0.9;
 uniform float amplada_transicio : hint_range(0.0, 0.3) = 0.05;
-
+/*
 void vertex() {
 	vec3 escala = vec3(
 		length(MODEL_MATRIX[0].xyz),
@@ -20,7 +20,7 @@ void vertex() {
 		MODEL_MATRIX[3]
 	);
 }
-
+*/
 void fragment() {
 	vec4 tex = texture(textura, UV);
 	float lluminositat = tex.r;

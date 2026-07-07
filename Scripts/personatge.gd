@@ -25,19 +25,27 @@ var ultima_direccio = "down"
 var mirall_horitzontal = false
 
 func _ready():
+	sprites = [hair, skin, eyes, tshirt, jeans, boots]
 	Customization.aplicar_aparenca(_sprites())
-
-func play_anim(anim: String, flip: bool = false):
+	
+func _process(delta):
+	pass
+	for sprite in sprites:
+		if sprite == skin:
+			continue
+		sprite.frame = skin.frame
+		sprite.frame_progress = skin.frame_progress
+		sprite.flip_h = skin.flip_h
+		
+func play_anim(anim: String, flip := false):
 	for sprite in sprites:
 		if sprite == null:
 			continue
-		if sprite.sprite_frames.has_animation(anim):
-			sprite.flip_h = flip
-			if sprite.animation != anim or not sprite.is_playing():
-				sprite.stop()
-				sprite.animation = anim
-				sprite.frame = 0
-				sprite.play()
+
+		sprite.flip_h = flip
+
+		if sprite.animation != anim:
+			sprite.play(anim)
 
 func actualitza_animacio(input_dir: Vector2):
 	var anim = ""
