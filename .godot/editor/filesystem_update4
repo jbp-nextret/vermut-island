@@ -1,9 +1,0 @@
-res://Scenes/World.tscn
-res://Shaders/edge_shader.gdshader
-res://Shaders/river_water.gdshader
-res://Shaders/water.gdshader
-res://Shaders/vegetation_wind.gdshader
-res://MeshLibrary/terrain_mesh_lib.tres
-res://Shaders/tint_part.gdshader
-res://Shaders/tint_part_llindar.gdshader
-res://tools/generar_colors.gd

@@ -1,0 +1,14 @@
+Label
+VBoxContainer
+HBoxContainer
+MarginContainer
+Button
+ColorPickerButton
+ColorPicker
+LineEdit
+DirectionalLight3D
+Camera3D
+SubViewport
+SubViewportContainer
+Node3D
+AnimatedSprite3D

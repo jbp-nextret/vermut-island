@@ -1,0 +1,152 @@
+[gd_scene format=3 uid="uid://c0qupdm3u4y2v"]
+
+[ext_resource type="Script" uid="uid://gowijg34017" path="res://Scripts/utils/creador_personatge.gd" id="1_0hoby"]
+
+[node name="CreadorPersonatge" type="Control" unique_id=1770463126 node_paths=PackedStringArray("subviewport", "nom_input", "picker_hair", "picker_skin", "picker_eyes", "picker_tshirt", "picker_jeans", "picker_boots", "boto_confirmar", "nom_preview")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0hoby")
+subviewport = NodePath("HBoxContainer/VBoxContainer/SubViewportContainer/SubViewport")
+nom_input = NodePath("MarginContainer/PanelPersonalitzacio/nom_input")
+picker_hair = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer/picker_hair")
+picker_skin = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer2/picker_skin")
+picker_eyes = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer3/picker_eyes")
+picker_tshirt = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer4/picker_tshirt")
+picker_jeans = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer5/picker_jeans")
+picker_boots = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer6/picker_boots")
+boto_confirmar = NodePath("MarginContainer/PanelPersonalitzacio/boto_confirmar")
+nom_preview = NodePath("HBoxContainer/VBoxContainer/nom_preview")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=2135974786]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 498.0
+offset_top = 124.0
+offset_right = -135.0
+offset_bottom = -52.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer" unique_id=635445332]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 13.17
+alignment = 1
+
+[node name="nom_preview" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=1602821783]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="HBoxContainer/VBoxContainer" unique_id=1615489197]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 8.0
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="HBoxContainer/VBoxContainer/SubViewportContainer" unique_id=304223574]
+handle_input_locally = false
+size = Vector2i(519, 429)
+size_2d_override = Vector2i(512, 512)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="HBoxContainer/VBoxContainer/SubViewportContainer/SubViewport" unique_id=1980480941]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.825, 1.26)
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="HBoxContainer/VBoxContainer/SubViewportContainer/SubViewport" unique_id=1909698304]
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=584819642]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -155.0
+offset_right = 482.0
+offset_bottom = 155.0
+grow_vertical = 2
+theme_override_constants/margin_left = 220
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="PanelPersonalitzacio" type="VBoxContainer" parent="MarginContainer" unique_id=825799016]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="nom_input" type="LineEdit" parent="MarginContainer/PanelPersonalitzacio" unique_id=1909909393]
+layout_mode = 2
+placeholder_text = "Nom del personatge"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=128318843]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer" unique_id=1247787299]
+layout_mode = 2
+text = "Cabell"
+
+[node name="picker_hair" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer" unique_id=836245682]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=263576373]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer2" unique_id=355872994]
+layout_mode = 2
+text = "Pell"
+
+[node name="picker_skin" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer2" unique_id=637864538]
+layout_mode = 2
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=429721467]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer3" unique_id=1213139968]
+layout_mode = 2
+text = "Ulls"
+
+[node name="picker_eyes" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer3" unique_id=2131880953]
+layout_mode = 2
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=705137671]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer4" unique_id=612521898]
+layout_mode = 2
+text = "Samarreta"
+
+[node name="picker_tshirt" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer4" unique_id=664129605]
+layout_mode = 2
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=1689739778]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer5" unique_id=1117291271]
+layout_mode = 2
+text = "Pantalons"
+
+[node name="picker_jeans" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer5" unique_id=1693878911]
+layout_mode = 2
+
+[node name="HBoxContainer6" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=1498533370]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer6" unique_id=64178765]
+layout_mode = 2
+text = "Sabates"
+
+[node name="picker_boots" type="ColorPickerButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer6" unique_id=1767053285]
+layout_mode = 2
+
+[node name="boto_confirmar" type="Button" parent="MarginContainer/PanelPersonalitzacio" unique_id=1540761251]
+layout_mode = 2
+text = "Confirmar"

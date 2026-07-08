@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://die76m4fw81yo"]
+
+[ext_resource type="Script" uid="uid://bwb6kaplv7cmu" path="res://Scripts/enemic.gd" id="1_h3rpd"]
+[ext_resource type="Texture2D" uid="uid://dul5qbajcmvup" path="res://sprites/bat.PNG" id="2_tp23d"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_tp23d"]
+size = Vector2(1.53, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bb2lw"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+billboard_mode = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wqpy0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y206r"]
+
+[node name="Enemic" type="CharacterBody3D" unique_id=1467883497]
+script = ExtResource("1_h3rpd")
+nom_enemic = "Ratpenat"
+textura_enemic = ExtResource("2_tp23d")
+es_volador = true
+
+[node name="Sprite" type="MeshInstance3D" parent="." unique_id=1241104757]
+mesh = SubResource("QuadMesh_tp23d")
+surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=894949879]
+shape = SubResource("BoxShape3D_wqpy0")
+
+[node name="Area3D" type="Area3D" parent="." unique_id=2053513958]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1055663904]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+shape = SubResource("BoxShape3D_y206r")
