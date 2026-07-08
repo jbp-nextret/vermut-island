@@ -96,13 +96,10 @@ shader_parameter/FoamSize = 0.905
 shader_parameter/WaterOpacity = 0.9
 shader_parameter/FoamGlowIntensity = 0.94
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_kwl8l"]
-load_path = "res://.godot/imported/grass.png-1572a75374ab70eb30be63c3ab8a61c1.s3tc.ctex"
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_xiqgv"]
 render_priority = 0
 shader = ExtResource("11_kwl8l")
-shader_parameter/texture_albedo = SubResource("CompressedTexture2D_kwl8l")
+shader_parameter/texture_albedo = ExtResource("10_7yo87")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kwl8l"]
 render_priority = 0

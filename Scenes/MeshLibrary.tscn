@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://bdj3hyvguaox3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bprel"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_0oded"]
+material = SubResource("StandardMaterial3D_bprel")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0oded"]
+albedo_color = Color(0.527991, 0.678599, 0.26368764, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vf3am"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_udfbk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xgyi6"]
+albedo_color = Color(0, 1.3262677, 1.3262677, 0.17254902)
+roughness = 0.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nkgiv"]
+
+[node name="MeshLibrary" type="Node3D" unique_id=820176594]
+
+[node name="Bloc_Herba" type="StaticBody3D" parent="." unique_id=933984428]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Bloc_Herba" unique_id=1523442567]
+mesh = SubResource("BoxMesh_0oded")
+surface_material_override/0 = SubResource("StandardMaterial3D_0oded")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bloc_Herba" unique_id=2121788986]
+shape = SubResource("BoxShape3D_vf3am")
+
+[node name="Bloc_Aigua" type="StaticBody3D" parent="." unique_id=1681788159]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Bloc_Aigua" unique_id=1093281542]
+mesh = SubResource("BoxMesh_udfbk")
+surface_material_override/0 = SubResource("StandardMaterial3D_xgyi6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bloc_Aigua" unique_id=99694792]
+shape = SubResource("BoxShape3D_nkgiv")
