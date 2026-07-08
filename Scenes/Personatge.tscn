@@ -389,6 +389,12 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_0tm14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wflmf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0tm14")
 }],
 "loop": true,
 "name": &"walk_up",
@@ -842,7 +848,7 @@ billboard = 2
 shaded = true
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_pspb0")
-animation = &"idle"
+animation = &"walk_down"
 
 [node name="jeans" type="AnimatedSprite3D" parent="Skeleton" unique_id=923329292]
 pixel_size = 0.05
