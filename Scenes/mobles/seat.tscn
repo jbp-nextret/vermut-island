@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://bs6yl5va5swnv"]
-
-[ext_resource type="PackedScene" uid="uid://e118pq03ylxp" path="res://Models/Seat.glb" id="1_pnsdj"]
-[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_lpd76"]
-
-[node name="Seat" unique_id=1569698955 instance=ExtResource("1_pnsdj")]
-script = ExtResource("2_lpd76")
-model_path = "res://Models/Seat.glb"

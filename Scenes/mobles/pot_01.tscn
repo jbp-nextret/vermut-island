@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://la1fog7nyl6v"]
-
-[ext_resource type="PackedScene" uid="uid://ca6djrgfxoq8b" path="res://Models/pot-01.glb" id="1_akedp"]
-[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_a0jw0"]
-
-[node name="pot-01" unique_id=593877215 groups=["decoracio"] instance=ExtResource("1_akedp")]
-script = ExtResource("2_a0jw0")
-model_path = "res://Models/pot-01.glb"

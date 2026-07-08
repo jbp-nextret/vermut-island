@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://dbapbmg6fyhi6"]
-
-[ext_resource type="PackedScene" uid="uid://dm3i8i5w2fdyt" path="res://Models/barra.glb" id="1_r2qfo"]
-[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_fbxdd"]
-
-[node name="barra" unique_id=378462742 groups=["mobles_base"] instance=ExtResource("1_r2qfo")]
-script = ExtResource("2_fbxdd")
-model_path = "res://Models/barra.glb"
