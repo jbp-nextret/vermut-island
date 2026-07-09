@@ -1,7 +1,7 @@
+HBoxContainer
 OptionButton
 Label
 VBoxContainer
-HBoxContainer
 MarginContainer
 Button
 ColorPickerButton

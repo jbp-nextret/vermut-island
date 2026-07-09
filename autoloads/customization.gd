@@ -8,7 +8,14 @@ const VARIANTS := {
 	"jeans": ["blue", "brown", "green"],
 	"boots": ["black", "brown", "tan"],
 }
-
+const COLORS_UI := {
+	"hair": {"brown": Color("57350f"), "black": Color("1a1a1a"), "blonde": Color("d8b347")},
+	"eyes": {"blue": Color("00b4bb"), "green": Color("00b53a"), "ambar": Color("cf9514")},
+	"skin": {"light": Color("f2c9a1"), "tan": Color("b78963"), "dark": Color("725645")},
+	"tshirt": {"green": Color("61a86a"), "blue": Color("6a89ff"), "red": Color("ff5959")},
+	"jeans": {"blue": Color("255b5a"), "brown": Color("7d4621"), "green": Color("61a86a")},
+	"boots": {"black": Color("202020"), "brown": Color("5b3714"), "tan": Color("b68253")},
+}
 var nom: String = "Jugador"
 var variants_actuals: Dictionary = {
 	"hair": "brown",

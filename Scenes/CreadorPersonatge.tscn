@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://gowijg34017" path="res://Scripts/utils/creador_personatge.gd" id="1_0hoby"]
 
-[node name="CreadorPersonatge" type="Control" unique_id=1770463126 node_paths=PackedStringArray("subviewport", "nom_input", "picker_hair", "picker_skin", "picker_eyes", "picker_tshirt", "picker_jeans", "picker_boots", "boto_confirmar", "nom_preview")]
+[node name="CreadorPersonatge" type="Control" unique_id=1770463126 node_paths=PackedStringArray("subviewport", "nom_input", "swatches_hair", "swatches_skin", "swatches_eyes", "swatches_tshirt", "swatches_jeans", "swatches_boots", "boto_confirmar", "nom_preview")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,12 +12,12 @@ grow_vertical = 2
 script = ExtResource("1_0hoby")
 subviewport = NodePath("HBoxContainer/VBoxContainer/SubViewportContainer/SubViewport")
 nom_input = NodePath("MarginContainer/PanelPersonalitzacio/nom_input")
-picker_hair = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer/picker_hair")
-picker_skin = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer2/picker_skin")
-picker_eyes = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer3/picker_eyes")
-picker_tshirt = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer4/picker_tshirt")
-picker_jeans = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer5/picker_jeans")
-picker_boots = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer6/picker_boots")
+swatches_hair = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer/picker_hair")
+swatches_skin = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer2/picker_skin")
+swatches_eyes = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer3/picker_eyes")
+swatches_tshirt = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer4/picker_tshirt")
+swatches_jeans = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer5/picker_jeans")
+swatches_boots = NodePath("MarginContainer/PanelPersonalitzacio/HBoxContainer6/picker_boots")
 boto_confirmar = NodePath("MarginContainer/PanelPersonalitzacio/boto_confirmar")
 nom_preview = NodePath("HBoxContainer/VBoxContainer/nom_preview")
 
@@ -94,7 +94,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Cabell"
 
-[node name="picker_hair" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer" unique_id=34980273]
+[node name="picker_hair" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer" unique_id=523887291]
 layout_mode = 2
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=263576373]
@@ -104,7 +104,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Pell"
 
-[node name="picker_skin" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer2" unique_id=1574616841]
+[node name="picker_skin" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer2" unique_id=270603796]
 layout_mode = 2
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=429721467]
@@ -114,7 +114,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Ulls"
 
-[node name="picker_eyes" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer3" unique_id=2030486765]
+[node name="picker_eyes" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer3" unique_id=1833240771]
 layout_mode = 2
 
 [node name="HBoxContainer4" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=705137671]
@@ -124,7 +124,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Samarreta"
 
-[node name="picker_tshirt" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer4" unique_id=1559962955]
+[node name="picker_tshirt" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer4" unique_id=1468628342]
 layout_mode = 2
 
 [node name="HBoxContainer5" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=1689739778]
@@ -134,7 +134,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Pantalons"
 
-[node name="picker_jeans" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer5" unique_id=1520727549]
+[node name="picker_jeans" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer5" unique_id=1368447153]
 layout_mode = 2
 
 [node name="HBoxContainer6" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio" unique_id=1498533370]
@@ -144,7 +144,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Sabates"
 
-[node name="picker_boots" type="OptionButton" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer6" unique_id=1164244127]
+[node name="picker_boots" type="HBoxContainer" parent="MarginContainer/PanelPersonalitzacio/HBoxContainer6" unique_id=998956322]
 layout_mode = 2
 
 [node name="boto_confirmar" type="Button" parent="MarginContainer/PanelPersonalitzacio" unique_id=1540761251]

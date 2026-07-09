@@ -25,8 +25,13 @@ var ultima_direccio = "down"
 var mirall_horitzontal = false
 
 func _ready():
-	sprites = [hair, skin, eyes, tshirt, jeans, boots]
 	Customization.aplicar_aparenca(_sprites())
+	call_deferred("_reset_interpolacio")
+
+func _reset_interpolacio():
+	reset_physics_interpolation()
+	$CameraPivot.reset_physics_interpolation()
+	$CameraPivot/Camera3D.reset_physics_interpolation()
 	
 func _process(delta):
 	pass
