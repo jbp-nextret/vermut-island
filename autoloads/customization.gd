@@ -1,107 +1,132 @@
 extends Node
 
-const SHADER_TINT: Shader = preload("res://shaders/tint_part.gdshader")
-const SHADER_TINT_ULLS: Shader = preload("res://shaders/tint_part_llindar.gdshader")
-
-var llindar_ulls: float = 0.9
-
-# Nom personatge
-var nom: String = "Keru"
-
-# Default colors
-var colors_actuals: Dictionary = {
-	"hair": Color("cc9a13ff"),
-	"skin": Color("f2c9a1"),
-	"eyes": Color("c4ae6aff"),
-	"tshirt": Color("61a86aff"),
-	"jeans": Color("255b5aff"),
-	"boots": Color("372805ff"),
+const VARIANTS := {
+	"hair": ["brown", "black", "blonde"],
+	"eyes": ["blue", "green", "ambar"],
+	"skin": ["light", "tan", "dark"],
+	"tshirt": ["green", "blue", "red"],
+	"jeans": ["blue", "brown", "green"],
+	"boots": ["black", "brown", "tan"],
 }
-# Skin tones
-var body_color_options = [
-	Color(0.96, 0.80, 0.69),
-	Color(0.72, 0.54, 0.39),
-	Color(0.45, 0.34, 0.27)
-]
-# Hair colors
-var hair_color_options = [
-	Color(0.341, 0.206, 0.061, 1.0),
-	Color(0.072, 0.074, 0.069, 1.0),
-	Color(1.0, 0.6, 0.0, 1.0)
-]
-# T-shirt colors
-var tshirt_color_options = [
-	Color(0.367, 0.521, 0.018, 1.0),
-	Color(0.417, 0.537, 0.998, 1.0),
-	Color(1.0, 0.347, 0.28, 1.0)
-]
-# Jeans colors
-var jeans_color_options = [
-	Color(0.169, 0.219, 0.64, 1.0),
-	Color(0.321, 0.131, 0.019, 1.0),
-	Color(0.367, 0.521, 0.018, 1.0)
-]
-# Boots color
-var boots_color_options = [
-	Color(0.063, 0.065, 0.065, 1.0),
-	Color(0.321, 0.131, 0.019, 1.0),
-	Color(0.737, 0.505, 0.267, 1.0)
-]
-# Selected values
-var selected_body = ""
-var selected_hair = ""
-var selected_tshirt = ""
-var selected_jeans = ""
-var selected_boots = ""
+
+var nom: String = "Jugador"
+var variants_actuals: Dictionary = {
+	"hair": "brown",
+	"eyes": "blue",
+	"skin": "light",
+	"tshirt": "green",
+	"jeans": "blue",
+	"boots": "black",
+}
+
+var _originals: Dictionary = {}          # instance_id del sprite -> SpriteFrames original
+var _cache_sprite_frames: Dictionary = {} # "part:variant" -> SpriteFrames
+
+func canviar_variant(part: String, variant: String, sprites: Dictionary = {}) -> void:
+	if not VARIANTS.has(part):
+		push_warning("No existeix la part: " + part)
+		return
+	variants_actuals[part] = variant
+	if sprites.has(part):
+		_aplicar_variant(part, variant, sprites[part])
+	_resincronitzar(sprites)
 
 func aplicar_aparenca(sprites: Dictionary) -> void:
-	for nom_part in sprites.keys():
-		var sprite: AnimatedSprite3D = sprites[nom_part]
-		if sprite == null:
+	for part in sprites.keys():
+		_aplicar_variant(part, variants_actuals.get(part, VARIANTS[part][0]), sprites[part])
+
+func _aplicar_variant(part: String, variant: String, sprite: AnimatedSprite3D) -> void:
+	if sprite == null or sprite.sprite_frames == null:
+		return
+
+	# Guarda l'original NOMÉS la primera vegada, abans de tocar-lo
+	var id := sprite.get_instance_id()
+	if not _originals.has(id):
+		_originals[id] = sprite.sprite_frames
+
+	var original: SpriteFrames = _originals[id]
+
+	var clau := part + ":" + variant
+	if not _cache_sprite_frames.has(clau):
+		print("Construint SpriteFrames per part=", part, " variant=", variant)
+		_cache_sprite_frames[clau] = _construir_sprite_frames(original, variant)
+
+	var anim_actual := sprite.animation
+	var frame_actual := sprite.frame
+	var estava_reproduint := sprite.is_playing()
+
+	sprite.sprite_frames = _cache_sprite_frames[clau]
+
+	if sprite.sprite_frames.has_animation(anim_actual):
+		sprite.animation = anim_actual
+		sprite.frame = frame_actual
+		if estava_reproduint:
+			sprite.play()
+
+func _construir_sprite_frames(original: SpriteFrames, variant: String) -> SpriteFrames:
+	var nou := SpriteFrames.new()
+	for anim in original.get_animation_names():
+		nou.add_animation(anim)
+		nou.set_animation_speed(anim, original.get_animation_speed(anim))
+		nou.set_animation_loop(anim, original.get_animation_loop(anim))
+		for i in original.get_frame_count(anim):
+			var tex := original.get_frame_texture(anim, i)
+			var duracio := original.get_frame_duration(anim, i)
+			print("Construint frame: anim=", anim, " frame=", i, " tex_path=", tex.resource_path if not (tex is AtlasTexture) else (tex as AtlasTexture).atlas.resource_path)
+			var nova_tex := _construir_frame_texture(tex, variant)
+			nou.add_frame(anim, nova_tex, duracio)
+	return nou
+
+func _construir_frame_texture(tex: Texture2D, variant: String) -> Texture2D:
+	if tex is AtlasTexture:
+		var original_atlas: AtlasTexture = tex
+		var path_base := _path_original(original_atlas.atlas)
+		var nou_path := _path_variant(path_base, variant)
+		var nova_base: Texture2D = load(nou_path)
+		if nova_base == null:
+			push_warning("No trobat: " + nou_path + " (mantenint original)")
+			return tex
+		var nou_atlas := AtlasTexture.new()
+		nou_atlas.atlas = nova_base
+		nou_atlas.region = original_atlas.region
+		nou_atlas.margin = original_atlas.margin
+		return nou_atlas
+	else:
+		var path_base := _path_original(tex)
+		var nou_path := _path_variant(path_base, variant)
+		var nova_tex: Texture2D = load(nou_path)
+		if nova_tex == null:
+			push_warning("No trobat: " + nou_path + " (mantenint original)")
+			return tex
+		return nova_tex
+
+func _path_original(tex: Texture2D) -> String:
+	var actual: Texture2D = tex
+	var nivell := 0
+	while actual != null:
+		print("  Nivell ", nivell, ": tipus=", actual.get_class(), " path='", actual.resource_path, "'")
+		if actual is AtlasTexture:
+			var atlas_tex: AtlasTexture = actual
+			actual = atlas_tex.atlas
+		else:
+			break
+		nivell += 1
+	if actual == null:
+		return ""
+	return actual.resource_path
+
+func _path_variant(original_path: String, variant: String) -> String:
+	var directori := original_path.get_base_dir()
+	var fitxer := original_path.get_file()
+	return directori + "/variants/" + variant + "/" + fitxer
+	
+func _resincronitzar(sprites: Dictionary) -> void:
+	for part in sprites.keys():
+		var sprite: AnimatedSprite3D = sprites[part]
+		if sprite == null or sprite.sprite_frames == null:
 			continue
-		_preparar_material(nom_part, sprite)
-		_aplicar_color(nom_part, sprite)
-
-func _preparar_material(nom_part: String, sprite: AnimatedSprite3D) -> void:
-	var mat := ShaderMaterial.new()
-	mat.shader = SHADER_TINT_ULLS if nom_part == "eyes" else SHADER_TINT
-	sprite.material_override = mat
-
-	if nom_part == "eyes":
-		mat.set_shader_parameter("llindar_blanc", llindar_ulls)
-
-	_actualitzar_textura(sprite, mat)
-
-	var callable := Callable(self, "_on_frame_changed").bind(sprite, mat)
-
-	if not sprite.frame_changed.is_connected(callable):
-		sprite.frame_changed.connect(Callable(self, "_on_frame_changed").bind(sprite, mat)
-)
-
-func _on_frame_changed(sprite: AnimatedSprite3D, mat: ShaderMaterial) -> void:
-	print("Frame changed: ",sprite.name, sprite.frame)
-	_actualitzar_textura(sprite, mat)
-
-func _actualitzar_textura(sprite: AnimatedSprite3D, mat: ShaderMaterial) -> void:
-	if sprite.sprite_frames == null:
-		return
-	var tex := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
-	if tex:
-		mat.set_shader_parameter("textura", tex)
-
-func _aplicar_color(nom_part: String, sprite: AnimatedSprite3D) -> void:
-	if sprite.material_override and colors_actuals.has(nom_part):
-		sprite.material_override.set_shader_parameter("color_tint", colors_actuals[nom_part])
-
-func canviar_color(nom_part: String, nou_color: Color, sprites: Dictionary = {}) -> void:
-	if not colors_actuals.has(nom_part):
-		push_warning("No existeix la part: " + nom_part)
-		return
-	colors_actuals[nom_part] = nou_color
-	if sprites.has(nom_part):
-		_aplicar_color(nom_part, sprites[nom_part])
-
-func ajustar_llindar_ulls(valor: float, sprites: Dictionary = {}) -> void:
-	llindar_ulls = valor
-	if sprites.has("eyes") and sprites["eyes"].material_override:
-		sprites["eyes"].material_override.set_shader_parameter("llindar_blanc", valor)
+		var anim := sprite.animation
+		if sprite.sprite_frames.has_animation(anim):
+			sprite.stop()
+			sprite.frame = 0
+			sprite.play(anim)

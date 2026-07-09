@@ -37,15 +37,24 @@ func _process(delta):
 		sprite.frame_progress = skin.frame_progress
 		sprite.flip_h = skin.flip_h
 		
-func play_anim(anim: String, flip := false):
+func play_anim(anim: String, flip: bool = false):
 	for sprite in sprites:
 		if sprite == null:
 			continue
-
+		if not sprite.sprite_frames.has_animation(anim):
+			sprite.visible = false
+			continue
+		sprite.visible = true
 		sprite.flip_h = flip
-
-		if sprite.animation != anim:
-			sprite.play(anim)
+		if anim == "idle":
+			sprite.speed_scale = 0.6  # 60% de la velocitat normal, només per idle
+		else:
+			sprite.speed_scale = 1.0
+		if sprite.animation != anim or not sprite.is_playing():
+			sprite.stop()
+			sprite.animation = anim
+			sprite.frame = 0
+			sprite.play()
 
 func actualitza_animacio(input_dir: Vector2):
 	var anim = ""

@@ -10,7 +10,7 @@ var target_size = 7.0
 func _ready():
 	position.z = target_zoom
 
-func _process(delta):
+func _physics_process(delta: float) -> void:
 	size = lerp(size, target_size, delta * 8.0)
 
 func _input(event):

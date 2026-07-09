@@ -21,7 +21,6 @@
 [ext_resource type="Texture2D" uid="uid://11av0fgym7hb" path="res://sprites/player/walk_sides/jeans.PNG" id="11_ckqal"]
 [ext_resource type="Texture2D" uid="uid://cu5f5gjasoyqr" path="res://sprites/player/walk_sides/shoes.PNG" id="13_4ei40"]
 [ext_resource type="Texture2D" uid="uid://dw3rn7fubchge" path="res://sprites/player/idle/tshirt.PNG" id="13_4lvpi"]
-[ext_resource type="Texture2D" uid="uid://dxb668rssk1u7" path="res://sprites/player/walk_down.PNG" id="13_kmsn4"]
 [ext_resource type="Texture2D" uid="uid://ig3tyqq3ajt3" path="res://sprites/player/walk_up/tshirt.PNG" id="16_34teo"]
 [ext_resource type="Texture2D" uid="uid://d1tot82pwrcex" path="res://sprites/player/idle/jeans.PNG" id="17_elbda"]
 [ext_resource type="Texture2D" uid="uid://dbwro870rawwu" path="res://sprites/player/walk_up/jeans.PNG" id="20_etif0"]
@@ -322,14 +321,6 @@ region = Rect2(64, 0, 32, 40)
 atlas = ExtResource("7_yjbo7")
 region = Rect2(96, 0, 32, 40)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_wflmf"]
-atlas = ExtResource("13_kmsn4")
-region = Rect2(0, 0, 6, 10)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_0tm14"]
-atlas = ExtResource("13_kmsn4")
-region = Rect2(0, 10, 6, 10)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_k2cc3"]
 animations = [{
 "frames": [{
@@ -381,23 +372,6 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_right",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_wflmf")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_0tm14")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_wflmf")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_0tm14")
-}],
-"loop": true,
-"name": &"walk_up",
 "speed": 5.0
 }]
 
@@ -824,7 +798,7 @@ billboard = 2
 shaded = true
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_a8kkx")
-animation = &"idle"
+animation = &"walk_down"
 
 [node name="skin" type="AnimatedSprite3D" parent="Skeleton" unique_id=689975587]
 pixel_size = 0.05
@@ -840,7 +814,7 @@ billboard = 2
 shaded = true
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_k2cc3")
-animation = &"walk_up"
+animation = &"idle"
 
 [node name="tshirt" type="AnimatedSprite3D" parent="Skeleton" unique_id=1250305580]
 pixel_size = 0.05

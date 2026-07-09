@@ -5,23 +5,21 @@ const ESCENA_JOC := "res://Scenes/World.tscn"
 
 @export var subviewport: SubViewport
 @export var nom_input: LineEdit
-@export var picker_hair: ColorPickerButton
-@export var picker_skin: ColorPickerButton
-@export var picker_eyes: ColorPickerButton
-@export var picker_tshirt: ColorPickerButton
-@export var picker_jeans: ColorPickerButton
-@export var picker_boots: ColorPickerButton
+@export var picker_hair: OptionButton
+@export var picker_skin: OptionButton
+@export var picker_eyes: OptionButton
+@export var picker_tshirt: OptionButton
+@export var picker_jeans: OptionButton
+@export var picker_boots: OptionButton
 @export var boto_confirmar: Button
 @export var nom_preview: Label
 
-var preview: PersonatgePreview
+var preview: Node3D
 var pickers: Dictionary
 
 func _ready() -> void:
 	preview = ESCENA_PREVIEW.instantiate()
 	subviewport.add_child(preview)
-	print("Preview afegit? ", preview != null, " Fills del viewport: ", subviewport.get_children())
-	print("Posició preview: ", preview.global_position)
 
 	pickers = {
 		"hair": picker_hair,
@@ -33,24 +31,29 @@ func _ready() -> void:
 	}
 
 	for nom_part in pickers.keys():
-		var picker: ColorPickerButton = pickers[nom_part]
-		picker.color = Customization.colors_actuals.get(nom_part, Color.WHITE)
-		picker.color_changed.connect(_on_color_changed.bind(nom_part))
+		var picker: OptionButton = pickers[nom_part]
+		picker.clear()
+		var opcions: Array = Customization.VARIANTS[nom_part]
+		for opcio in opcions:
+			picker.add_item(opcio)
+
+		var variant_actual: String = Customization.variants_actuals.get(nom_part, opcions[0])
+		var index_actual := opcions.find(variant_actual)
+		picker.select(max(index_actual, 0))
+
+		picker.item_selected.connect(_on_variant_selected.bind(nom_part, picker))
 
 	boto_confirmar.pressed.connect(_on_confirmar_pressed)
-	
-	# Label nom
+
 	nom_input.text_changed.connect(_on_nom_changed)
 	_on_nom_changed(nom_input.text)
 
+func _on_variant_selected(index: int, nom_part: String, picker: OptionButton) -> void:
+	var variant := picker.get_item_text(index)
+	preview.canviar_color(nom_part, variant)
+
 func _on_nom_changed(nou_text: String) -> void:
-	if nou_text.strip_edges().is_empty():
-		nom_preview.text = "Jugador"
-	else:
-		nom_preview.text = nou_text
-		
-func _on_color_changed(color: Color, nom_part: String) -> void:
-	preview.canviar_color(nom_part, color)
+	nom_preview.text = "Jugador" if nou_text.strip_edges().is_empty() else nou_text
 
 func _on_confirmar_pressed() -> void:
 	var nom := nom_input.text.strip_edges()

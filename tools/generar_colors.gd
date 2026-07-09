@@ -2,6 +2,7 @@
 extends EditorScript
 
 const PLAYER_PATH := "res://sprites/player"
+const LLINDAR_BLANC := 0.85
 
 const COLORS := {
 	"hair": {
@@ -109,28 +110,22 @@ func _generate_variants(anim_path:String, file:String, part:String):
 		return
 
 	for variant in COLORS[part].keys():
-
 		var output := image.duplicate()
-
-		var tint : Color = COLORS[part][variant]
-
+		var tint: Color = COLORS[part][variant]
 		for y in output.get_height():
-
 			for x in output.get_width():
-
-				var p = output.get_pixel(x,y)
-
-				# Conservem transparència
+				var p = output.get_pixel(x, y)
 				if p.a == 0:
 					continue
-
 				var g = p.r
+
+				if part == "eyes" and g >= LLINDAR_BLANC:
+					continue
 
 				p.r = g * tint.r
 				p.g = g * tint.g
 				p.b = g * tint.b
-
-				output.set_pixel(x,y,p)
+				output.set_pixel(x, y, p)
 
 		var folder = anim_path + "/variants/" + variant
 		var  dir = DirAccess.open(anim_path)

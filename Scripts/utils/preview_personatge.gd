@@ -24,5 +24,5 @@ func _sprites() -> Dictionary:
 		"tshirt": tshirt, "jeans": jeans, "boots": boots,
 	}
 
-func canviar_color(part: String, color: Color) -> void:
-	Customization.canviar_color(part, color, _sprites())
+func canviar_color(part: String, variant: String) -> void:
+	Customization.canviar_variant(part, variant, _sprites())
