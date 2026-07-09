@@ -79,7 +79,7 @@ func _construir_sprite_frames(original: SpriteFrames, variant: String) -> Sprite
 		for i in original.get_frame_count(anim):
 			var tex := original.get_frame_texture(anim, i)
 			var duracio := original.get_frame_duration(anim, i)
-			print("Construint frame: anim=", anim, " frame=", i, " tex_path=", tex.resource_path if not (tex is AtlasTexture) else (tex as AtlasTexture).atlas.resource_path)
+			#print("Construint frame: anim=", anim, " frame=", i, " tex_path=", tex.resource_path if not (tex is AtlasTexture) else (tex as AtlasTexture).atlas.resource_path)
 			var nova_tex := _construir_frame_texture(tex, variant)
 			nou.add_frame(anim, nova_tex, duracio)
 	return nou
@@ -111,7 +111,7 @@ func _path_original(tex: Texture2D) -> String:
 	var actual: Texture2D = tex
 	var nivell := 0
 	while actual != null:
-		print("  Nivell ", nivell, ": tipus=", actual.get_class(), " path='", actual.resource_path, "'")
+		#print("  Nivell ", nivell, ": tipus=", actual.get_class(), " path='", actual.resource_path, "'")
 		if actual is AtlasTexture:
 			var atlas_tex: AtlasTexture = actual
 			actual = atlas_tex.atlas

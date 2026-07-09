@@ -136,7 +136,7 @@ func _input(event):
 
 func _physics_process(delta: float) -> void:
 	var camera = get_viewport().get_camera_3d()
-	print("Càmera actual: ", camera.name, " path: ", camera.get_path())
+	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
 	if not mode_plantacio: return

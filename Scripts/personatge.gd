@@ -24,79 +24,33 @@ const GRAVITY = 20.0
 var ultima_direccio = "down"
 var mirall_horitzontal = false
 
+# Variables combat
+enum Estat { NORMAL, COMBAT }
+var estat: Estat = Estat.NORMAL
+var atacant: bool = false
+
+@onready var skeleton: Node3D = $Skeleton
+@onready var pivot_espasa: Node3D = $Skeleton/PivotEspasa
+var te_espasa: bool = true
+
+
 func _ready():
+	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
+	pivot_espasa.atac_finalitzat.connect(_on_atac_finalitzat)
 	call_deferred("_reset_interpolacio")
 
 func _reset_interpolacio():
 	reset_physics_interpolation()
 	$CameraPivot.reset_physics_interpolation()
 	$CameraPivot/Camera3D.reset_physics_interpolation()
-	
-func _process(delta):
-	pass
-	for sprite in sprites:
-		if sprite == skin:
-			continue
-		sprite.frame = skin.frame
-		sprite.frame_progress = skin.frame_progress
-		sprite.flip_h = skin.flip_h
-		
-func play_anim(anim: String, flip: bool = false):
-	for sprite in sprites:
-		if sprite == null:
-			continue
-		if not sprite.sprite_frames.has_animation(anim):
-			sprite.visible = false
-			continue
-		sprite.visible = true
-		sprite.flip_h = flip
-		if anim == "idle":
-			sprite.speed_scale = 0.6  # 60% de la velocitat normal, només per idle
-		else:
-			sprite.speed_scale = 1.0
-		if sprite.animation != anim or not sprite.is_playing():
-			sprite.stop()
-			sprite.animation = anim
-			sprite.frame = 0
-			sprite.play()
-
-func actualitza_animacio(input_dir: Vector2):
-	var anim = ""
-	if input_dir.length() < 0.1:
-		anim = "idle"
-		# no toquem mirall_horitzontal: es manté l'última direcció horitzontal
-	else:
-		if abs(input_dir.x) > abs(input_dir.y):
-			if input_dir.x > 0:
-				ultima_direccio = "right"
-				mirall_horitzontal = false
-			else:
-				ultima_direccio = "right"
-				mirall_horitzontal = true
-		else:
-			if input_dir.y > 0:
-				ultima_direccio = "down"
-			else:
-				ultima_direccio = "up"
-			mirall_horitzontal = false
-		anim = "walk_" + ultima_direccio
-	play_anim(anim, mirall_horitzontal)
-
-func _sprites() -> Dictionary:
-	return {
-		"hair": hair,
-		"skin": skin,
-		"eyes": eyes,
-		"tshirt": tshirt,
-		"jeans": jeans,
-		"boots": boots,
-	}
-
-func canviar_color(nom_part: String, nou_color: Color) -> void:
-	Customization.canviar_color(nom_part, nou_color, _sprites())
 
 func _physics_process(delta):
+	if atacant:
+		velocity = Vector3.ZERO
+		move_and_slide()
+		return
+
 	# Gravetat
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -135,3 +89,96 @@ func _physics_process(delta):
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
 		get_tree().reload_current_scene()
+	
+func _process(delta):
+	for sprite in sprites:
+		if sprite == skin:
+			continue
+		sprite.frame = skin.frame
+		sprite.frame_progress = skin.frame_progress
+		sprite.flip_h = skin.flip_h
+		
+func play_anim(anim: String, flip: bool = false):
+	for sprite in sprites:
+		if sprite == null:
+			continue
+		if not sprite.sprite_frames.has_animation(anim):
+			sprite.visible = false
+			continue
+		sprite.visible = true
+		sprite.flip_h = flip
+		if anim == "idle":
+			sprite.speed_scale = 0.6
+		else:
+			sprite.speed_scale = 1.0
+		if sprite.animation != anim or not sprite.is_playing():
+			sprite.stop()
+			sprite.animation = anim
+			sprite.frame = 0
+			sprite.play()
+
+func actualitza_animacio(input_dir: Vector2):
+	var anim = ""
+	if input_dir.length() < 0.1:
+		anim = "idle"
+	else:
+		if abs(input_dir.x) > abs(input_dir.y):
+			if input_dir.x > 0:
+				ultima_direccio = "right"
+				mirall_horitzontal = false
+			else:
+				ultima_direccio = "right"
+				mirall_horitzontal = true
+		else:
+			if input_dir.y > 0:
+				ultima_direccio = "down"
+			else:
+				ultima_direccio = "up"
+			mirall_horitzontal = false
+		anim = "walk_" + ultima_direccio
+	play_anim(anim, mirall_horitzontal)
+
+func _sprites() -> Dictionary:
+	return {
+		"hair": hair,
+		"skin": skin,
+		"eyes": eyes,
+		"tshirt": tshirt,
+		"jeans": jeans,
+		"boots": boots,
+	}
+
+func canviar_color(nom_part: String, nou_color: Color) -> void:
+	Customization.canviar_color(nom_part, nou_color, _sprites())
+
+		
+func _unhandled_input(event):
+	if event.is_action_pressed("mode_combat"):
+		if not te_espasa:
+			return
+		toggle_mode_combat()
+
+	if estat == Estat.COMBAT and not atacant:
+		if event.is_action_pressed("accio_primaria"):
+			iniciar_atac()
+			pivot_espasa.atacar_rapid()
+		elif event.is_action_pressed("accio_secundaria"):
+			iniciar_atac()
+			pivot_espasa.atacar_fort()
+
+func toggle_mode_combat():
+	if estat == Estat.NORMAL:
+		estat = Estat.COMBAT
+		pivot_espasa.visible = true
+	else:
+		estat = Estat.NORMAL
+		pivot_espasa.visible = false
+
+func iniciar_atac():
+	atacant = true
+	skin.stop()
+	skin.frame = 0  # ajusta al frame que et quedi millor com a "pose d'atac"
+
+func _on_atac_finalitzat():
+	atacant = false
+	skin.play()
