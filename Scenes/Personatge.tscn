@@ -26,7 +26,7 @@
 [ext_resource type="Texture2D" uid="uid://dbwro870rawwu" path="res://sprites/player/walk_up/jeans.PNG" id="20_etif0"]
 [ext_resource type="Texture2D" uid="uid://c8tq1sq7j1lkg" path="res://sprites/player/idle/shoes.PNG" id="21_6p6kp"]
 [ext_resource type="Texture2D" uid="uid://cu3sfqkkbw8ml" path="res://sprites/player/walk_up/shoes.PNG" id="24_vyjnp"]
-[ext_resource type="Texture2D" uid="uid://dl448e3w1kd14" path="res://sprites/sword.png" id="27_kmsn4"]
+[ext_resource type="PackedScene" uid="uid://j50uir28wrbj" path="res://Scenes/Espasa.tscn" id="26_algbt"]
 [ext_resource type="Script" uid="uid://desbwubf3fciu" path="res://Scripts/espasa.gd" id="28_algbt"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_tduip"]
@@ -758,10 +758,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pspb0"]
-radius = 0.1
-height = 0.7513428
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_y7y61"]
 size = Vector3(2.5249512, 6.6635914, 0.94448245)
 
@@ -784,6 +780,165 @@ shader_parameter/lineAlpha = 0.7
 shader_parameter/useLighting = true
 shader_parameter/lineHighlight = 0.2
 shader_parameter/lineShadow = 0.55
+
+[sub_resource type="Animation" id="Animation_algbt"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Skeleton/PivotEspasa:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0.57595867)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Skeleton/PivotEspasa:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.08379918, -0.53800344, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_8kwp8"]
+resource_name = "sword_attack_estocada"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Skeleton/PivotEspasa:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Skeleton/PivotEspasa:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.04889443, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, -0.538, 0), Vector3(0.22734147, -0.53800344, 0), Vector3(0, -0.538, 0)]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Skeleton/PivotEspasa")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"activar_hitbox"
+}, {
+"args": [],
+"method": &"desactivar_hitbox"
+}]
+}
+tracks/3/type = "method"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Skeleton/PivotEspasa")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"mostrar_slash_estocada"
+}, {
+"args": [],
+"method": &"amagar_slash_estocada"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_pspb0"]
+resource_name = "sword_attack"
+length = 0.22025776
+step = 0.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Skeleton/PivotEspasa:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.22002493),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.41887903, -0.87266463, 0.57595867), Vector3(0, 0, -0.31415927), Vector3(0, 0, 0.57595867)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Skeleton/PivotEspasa:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.2197921),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0.08379918, -0.53800344, 0), Vector3(0.25516045, -0.6038348, 0), Vector3(0.08379918, -0.53800344, 0)]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Skeleton/PivotEspasa")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.22025776),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"activar_hitbox"
+}, {
+"args": [],
+"method": &"desactivar_hitbox"
+}]
+}
+tracks/3/type = "method"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Skeleton/PivotEspasa")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.22025776),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"mostrar_slash_tall"
+}, {
+"args": [],
+"method": &"amagar_slash_tall"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_8kwp8"]
+_data = {
+&"RESET": SubResource("Animation_algbt"),
+&"sword_attack_estocada": SubResource("Animation_8kwp8"),
+&"sword_attack_tall": SubResource("Animation_pspb0")
+}
 
 [node name="Personatge" type="CharacterBody3D" unique_id=1584712923 node_paths=PackedStringArray("hair", "skin", "eyes", "tshirt", "jeans", "boots")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20740926, 0)
@@ -849,24 +1004,11 @@ sprite_frames = SubResource("SpriteFrames_vyjnp")
 animation = &"idle"
 
 [node name="PivotEspasa" type="Node3D" parent="Skeleton" unique_id=1191017041]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.670105, -0.5751991, 0)
+transform = Transform3D(0.83867055, -0.54463905, 0, 0.54463905, 0.83867055, 0, 0, 0, 1, 0.08379918, -0.53800344, 0)
 script = ExtResource("28_algbt")
 
-[node name="EspasaOrientacio" type="Node3D" parent="Skeleton/PivotEspasa" unique_id=1930457087]
-transform = Transform3D(0.24619624, -0.6705553, -0.6998164, 0.9090285, -0.09073311, 0.40673664, -0.33623594, -0.7362901, 0.5872157, 0, 0, 0)
-
-[node name="EspasaSprite" type="Sprite3D" parent="Skeleton/PivotEspasa/EspasaOrientacio" unique_id=710213464]
-flip_v = true
-pixel_size = 0.04
-texture_filter = 0
-render_priority = 1
-texture = ExtResource("27_kmsn4")
-
-[node name="Hitbox" type="Area3D" parent="Skeleton/PivotEspasa/EspasaOrientacio/EspasaSprite" unique_id=1009660644]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Skeleton/PivotEspasa/EspasaOrientacio/EspasaSprite/Hitbox" unique_id=1095075050]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15118408, 0)
-shape = SubResource("CapsuleShape3D_pspb0")
+[node name="Espasa" parent="Skeleton/PivotEspasa" unique_id=879246653 instance=ExtResource("26_algbt")]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=349418859]
 transform = Transform3D(0.235, 0, 0, 0, 0.235, 0, 0, 0, 0.235, -6.310642e-05, 0.5921099, 0.002)
@@ -891,3 +1033,6 @@ visible = false
 extra_cull_margin = 16384.0
 mesh = SubResource("QuadMesh_r0dna")
 surface_material_override/0 = SubResource("ShaderMaterial_b5aes")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1998823053]
+libraries/ = SubResource("AnimationLibrary_8kwp8")

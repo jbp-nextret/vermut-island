@@ -37,6 +37,7 @@ enabled=PackedStringArray("res://addons/tile_to_gridmap/plugin.cfg")
 
 folder_colors={
 "res://Models/": "green",
+"res://Scenes/": "pink",
 "res://sprites/": "red"
 }
 

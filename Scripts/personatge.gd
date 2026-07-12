@@ -31,29 +31,49 @@ var atacant: bool = false
 
 @onready var skeleton: Node3D = $Skeleton
 @onready var pivot_espasa: Node3D = $Skeleton/PivotEspasa
+@onready var anim_player: AnimationPlayer = $AnimationPlayer
 var te_espasa: bool = true
+@onready var camera_pivot: Node3D = $CameraPivot
+var shake_intensitat: float = 0.0
+
+# Estocada (atac secundari)
+@export var dash_estocada_velocitat: float = 12.0
+@export var dash_estocada_durada: float = 0.15
+var dash_actiu: bool = false
+var dash_direccio: Vector3 = Vector3.ZERO
+var dash_temps_restant: float = 0.0
+# Trail
+@export var trail_interval: float = 0.03
+@export var trail_durada: float = 0.25
+@export var trail_color: Color = Color(1, 1, 1, 0.4)
+var trail_temps: float = 0.0
 
 
 func _ready():
 	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
-	pivot_espasa.atac_finalitzat.connect(_on_atac_finalitzat)
+	anim_player.animation_finished.connect(_on_animation_finished)
 	call_deferred("_reset_interpolacio")
-
-func _reset_interpolacio():
-	reset_physics_interpolation()
-	$CameraPivot.reset_physics_interpolation()
-	$CameraPivot/Camera3D.reset_physics_interpolation()
-
+	
 func _physics_process(delta):
-	if atacant:
-		velocity = Vector3.ZERO
-		move_and_slide()
-		return
-
 	# Gravetat
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
+
+	if dash_actiu:
+		dash_temps_restant -= delta
+		velocity.x = dash_direccio.x * dash_estocada_velocitat
+		velocity.z = dash_direccio.z * dash_estocada_velocitat
+		move_and_slide()
+		# Trail
+		trail_temps += delta
+		if trail_temps >= trail_interval:
+			trail_temps = 0.0
+			_crear_trail()
+		
+		if dash_temps_restant <= 0:
+			dash_actiu = false
+		return
 	# Salt
 	if is_on_floor() and Input.is_action_just_pressed("jump"):
 		velocity.y = JUMP_FORCE
@@ -67,25 +87,20 @@ func _physics_process(delta):
 		input_dir.y += 1
 	if Input.is_action_pressed("move_up"):
 		input_dir.y -= 1
-	# Convertim a Vector3
 	var direction = Vector3(input_dir.x, 0, input_dir.y)
 	if direction.length() > 0:
 		direction = direction.normalized()
-		# Rota segons la càmera
 		var camera = get_viewport().get_camera_3d()
 		var cam_angle = atan2(
 			camera.global_position.x - global_position.x,
 			camera.global_position.z - global_position.z
 		)
 		direction = direction.rotated(Vector3.UP, cam_angle)
-	# Velocitat
 	var current_speed = SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
 	move_and_slide()
-	# Actualitza les animacions
 	actualitza_animacio(input_dir)
-	# Mort
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
 		get_tree().reload_current_scene()
@@ -97,6 +112,17 @@ func _process(delta):
 		sprite.frame = skin.frame
 		sprite.frame_progress = skin.frame_progress
 		sprite.flip_h = skin.flip_h
+	# Camera shake
+	if shake_intensitat > 0:
+		camera_pivot.position = Vector3(
+			randf_range(-shake_intensitat, shake_intensitat),
+			randf_range(-shake_intensitat, shake_intensitat),
+			0
+		)
+		shake_intensitat = lerp(shake_intensitat, 0.0, delta * 10.0)
+		if shake_intensitat < 0.01:
+			shake_intensitat = 0.0
+			camera_pivot.position = Vector3.ZERO
 		
 func play_anim(anim: String, flip: bool = false):
 	for sprite in sprites:
@@ -137,6 +163,13 @@ func actualitza_animacio(input_dir: Vector2):
 			mirall_horitzontal = false
 		anim = "walk_" + ultima_direccio
 	play_anim(anim, mirall_horitzontal)
+	_actualitzar_orientacio_espasa()
+
+func _actualitzar_orientacio_espasa():
+	var pos := pivot_espasa.position
+	pos.x = abs(pos.x) * (-1 if mirall_horitzontal else 1)
+	pivot_espasa.position = pos
+	pivot_espasa.scale.x = -1 if mirall_horitzontal else 1
 
 func _sprites() -> Dictionary:
 	return {
@@ -150,8 +183,11 @@ func _sprites() -> Dictionary:
 
 func canviar_color(nom_part: String, nou_color: Color) -> void:
 	Customization.canviar_color(nom_part, nou_color, _sprites())
-
-		
+	
+# Funcions combat
+func camera_shake(intensitat: float = 0.15):
+	shake_intensitat = intensitat
+			
 func _unhandled_input(event):
 	if event.is_action_pressed("mode_combat"):
 		if not te_espasa:
@@ -160,11 +196,24 @@ func _unhandled_input(event):
 
 	if estat == Estat.COMBAT and not atacant:
 		if event.is_action_pressed("accio_primaria"):
-			iniciar_atac()
-			pivot_espasa.atacar_rapid()
+			iniciar_atac(1, "sword_attack_tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			iniciar_atac()
-			pivot_espasa.atacar_fort()
+			iniciar_atac(2, "sword_attack_estocada")
+
+func iniciar_atac(dany: int, nom_animacio: String):
+	atacant = true
+	pivot_espasa.dany_actual = dany
+	camera_shake(0.1)
+	anim_player.play(nom_animacio)
+
+	if nom_animacio == "sword_attack_estocada":
+		dash_actiu = true
+		dash_direccio = _direccio_mirada()
+		dash_temps_restant = dash_estocada_durada
+
+func _on_animation_finished(anim_name):
+	if anim_name in ["sword_attack_tall", "sword_attack_estocada"]:
+		atacant = false
 
 func toggle_mode_combat():
 	if estat == Estat.NORMAL:
@@ -174,11 +223,38 @@ func toggle_mode_combat():
 		estat = Estat.NORMAL
 		pivot_espasa.visible = false
 
-func iniciar_atac():
-	atacant = true
-	skin.stop()
-	skin.frame = 0  # ajusta al frame que et quedi millor com a "pose d'atac"
-
 func _on_atac_finalitzat():
 	atacant = false
-	skin.play()
+	
+# Estocada
+func _direccio_mirada() -> Vector3:
+	var dir := Vector3.ZERO
+	match ultima_direccio:
+		"down": dir = Vector3(0, 0, 1)
+		"up": dir = Vector3(0, 0, -1)
+		"right": dir = Vector3(1 if not mirall_horitzontal else -1, 0, 0)
+	# Rota segons la càmera, igual que fas amb el moviment normal
+	var camera = get_viewport().get_camera_3d()
+	var cam_angle = atan2(
+		camera.global_position.x - global_position.x,
+		camera.global_position.z - global_position.z
+	)
+	return dir.rotated(Vector3.UP, cam_angle)
+# Trail
+func _crear_trail():
+	var ghost := Sprite3D.new()
+	ghost.texture = skin.sprite_frames.get_frame_texture(skin.animation, skin.frame)
+	ghost.pixel_size = skin.pixel_size
+	ghost.billboard = skin.billboard
+	ghost.flip_h = skin.flip_h
+	ghost.modulate = trail_color
+	ghost.global_transform = skin.global_transform
+	get_tree().current_scene.add_child(ghost)
+
+	var tween = create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, trail_durada)
+	tween.tween_callback(ghost.queue_free)
+func _reset_interpolacio():
+	reset_physics_interpolation()
+	$CameraPivot.reset_physics_interpolation()
+	$CameraPivot/Camera3D.reset_physics_interpolation()

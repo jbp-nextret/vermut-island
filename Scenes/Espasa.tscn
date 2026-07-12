@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://j50uir28wrbj"]
+
+[ext_resource type="Texture2D" uid="uid://dl448e3w1kd14" path="res://sprites/sword.png" id="1_n1byc"]
+[ext_resource type="Texture2D" uid="uid://dev682131n81v" path="res://sprites/Misc/slash.PNG" id="2_kblc8"]
+[ext_resource type="Texture2D" uid="uid://c175ijq72rsys" path="res://sprites/Misc/stab.PNG" id="3_f68qi"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pspb0"]
+radius = 0.1
+height = 0.7513428
+
+[node name="Espasa" type="Node3D" unique_id=879246653]
+
+[node name="EspasaSprite" type="Sprite3D" parent="." unique_id=876428472]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.5879301, 0, 0)
+flip_v = true
+pixel_size = 0.04
+texture_filter = 0
+texture = ExtResource("1_n1byc")
+
+[node name="Hitbox" type="Area3D" parent="EspasaSprite" unique_id=1470665488]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EspasaSprite/Hitbox" unique_id=1110389703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15118408, 0)
+shape = SubResource("CapsuleShape3D_pspb0")
+
+[node name="SlashTall" type="Sprite3D" parent="." unique_id=314898670]
+transform = Transform3D(0.92371917, 0.3830704, 0, -0.2596797, 0.6261803, 0.7351631, 0.28161922, -0.67908424, 0.6778903, 1.2133808, 0, 0)
+pixel_size = 0.04
+texture_filter = 0
+render_priority = 1
+texture = ExtResource("2_kblc8")
+
+[node name="SlashEstocada" type="Sprite3D" parent="." unique_id=548849418]
+transform = Transform3D(0.92371917, 0.3830704, 0, -0.2596797, 0.6261803, 0.7351631, 0.28161922, -0.67908424, 0.6778903, 0.9583311, 0, 0)
+pixel_size = 0.04
+texture_filter = 0
+render_priority = 1
+texture = ExtResource("3_f68qi")
