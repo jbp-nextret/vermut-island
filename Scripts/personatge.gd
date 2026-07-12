@@ -166,9 +166,6 @@ func actualitza_animacio(input_dir: Vector2):
 	_actualitzar_orientacio_espasa()
 
 func _actualitzar_orientacio_espasa():
-	var pos := pivot_espasa.position
-	pos.x = abs(pos.x) * (-1 if mirall_horitzontal else 1)
-	pivot_espasa.position = pos
 	pivot_espasa.scale.x = -1 if mirall_horitzontal else 1
 
 func _sprites() -> Dictionary:
@@ -196,24 +193,28 @@ func _unhandled_input(event):
 
 	if estat == Estat.COMBAT and not atacant:
 		if event.is_action_pressed("accio_primaria"):
-			iniciar_atac(1, "sword_attack_tall")
+			iniciar_atac(1, "tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			iniciar_atac(2, "sword_attack_estocada")
+			iniciar_atac(2, "estocada")
 
-func iniciar_atac(dany: int, nom_animacio: String):
+func iniciar_atac(dany: int, tipus: String):
 	atacant = true
+	pivot_espasa.visible = true
 	pivot_espasa.dany_actual = dany
 	camera_shake(0.1)
+
+	var nom_animacio = "sword_attack_" + tipus + "_" + ultima_direccio
 	anim_player.play(nom_animacio)
 
-	if nom_animacio == "sword_attack_estocada":
+	if tipus == "estocada":
 		dash_actiu = true
 		dash_direccio = _direccio_mirada()
 		dash_temps_restant = dash_estocada_durada
 
 func _on_animation_finished(anim_name):
-	if anim_name in ["sword_attack_tall", "sword_attack_estocada"]:
+	if anim_name.begins_with("sword_attack_"):
 		atacant = false
+		pivot_espasa.visible = false
 
 func toggle_mode_combat():
 	if estat == Estat.NORMAL:
