@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bwb6kaplv7cmu" path="res://Scripts/enemic.gd" id="1_h3rpd"]
 [ext_resource type="Texture2D" uid="uid://dul5qbajcmvup" path="res://sprites/bat.PNG" id="2_tp23d"]
+[ext_resource type="Script" uid="uid://cwajcfw6dub7s" path="res://Scripts/utils/health.gd" id="3_y206r"]
+[ext_resource type="Script" uid="uid://r7m8ommd528v" path="res://Scripts/utils/hurtbox.gd" id="4_bv6dv"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_tp23d"]
 size = Vector2(1.53, 1)
@@ -17,6 +19,8 @@ billboard_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y206r"]
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_y206r"]
+
 [node name="Enemic" type="CharacterBody3D" unique_id=1467883497]
 script = ExtResource("1_h3rpd")
 nom_enemic = "Ratpenat"
@@ -30,8 +34,18 @@ surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=894949879]
 shape = SubResource("BoxShape3D_wqpy0")
 
-[node name="Area3D" type="Area3D" parent="." unique_id=2053513958]
+[node name="Hitbox" type="Area3D" parent="." unique_id=2053513958]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1055663904]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=1055663904]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
 shape = SubResource("BoxShape3D_y206r")
+
+[node name="Health" type="Node3D" parent="." unique_id=345739952]
+script = ExtResource("3_y206r")
+vida_maxima = 10
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=1084349192]
+script = ExtResource("4_bv6dv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=340748678]
+shape = SubResource("SphereShape3D_y206r")

@@ -11,8 +11,8 @@ func _ready():
 	slash_estocada.visible = false
 
 func _on_hitbox_body_entered(body):
-	if body.has_method("rebre_dany"):
-		body.rebre_dany(dany_actual)
+	if body.has_method("prendre_dany"):
+		body.prendre_dany(dany_actual)
 
 func activar_hitbox():
 	hitbox.monitoring = true

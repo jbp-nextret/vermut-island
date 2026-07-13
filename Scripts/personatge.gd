@@ -144,6 +144,8 @@ func play_anim(anim: String, flip: bool = false):
 			sprite.play()
 
 func actualitza_animacio(input_dir: Vector2):
+	if atacant:
+		return
 	var anim = ""
 	if input_dir.length() < 0.1:
 		anim = "idle"
@@ -204,6 +206,7 @@ func iniciar_atac(dany: int, tipus: String):
 	camera_shake(0.1)
 
 	var nom_animacio = "sword_attack_" + tipus + "_" + ultima_direccio
+	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
 	anim_player.play(nom_animacio)
 
 	if tipus == "estocada":

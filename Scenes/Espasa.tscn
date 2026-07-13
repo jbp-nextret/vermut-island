@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://j50uir28wrbj"]
 
 [ext_resource type="Texture2D" uid="uid://dl448e3w1kd14" path="res://sprites/sword.png" id="1_n1byc"]
+[ext_resource type="Script" uid="uid://c1k5lb4fil30o" path="res://Scripts/utils/hitbox.gd" id="2_dwor7"]
 [ext_resource type="Texture2D" uid="uid://dev682131n81v" path="res://sprites/Misc/slash.PNG" id="2_kblc8"]
 [ext_resource type="Texture2D" uid="uid://c175ijq72rsys" path="res://sprites/Misc/stab.PNG" id="3_f68qi"]
 
@@ -18,6 +19,9 @@ texture_filter = 0
 texture = ExtResource("1_n1byc")
 
 [node name="Hitbox" type="Area3D" parent="EspasaSprite" unique_id=1470665488]
+collision_layer = 0
+collision_mask = 32
+script = ExtResource("2_dwor7")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EspasaSprite/Hitbox" unique_id=1110389703]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15118408, 0)
