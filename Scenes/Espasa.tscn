@@ -19,9 +19,8 @@ texture_filter = 0
 texture = ExtResource("1_n1byc")
 
 [node name="Hitbox" type="Area3D" parent="EspasaSprite" unique_id=1470665488]
-collision_layer = 0
-collision_mask = 32
 script = ExtResource("2_dwor7")
+damage = 50
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EspasaSprite/Hitbox" unique_id=1110389703]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15118408, 0)

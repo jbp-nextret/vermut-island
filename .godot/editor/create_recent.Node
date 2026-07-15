@@ -1,7 +1,8 @@
+GPUParticles3D
 CollisionShape3D
+Sprite3D
 Area3D
 Node3D
-Sprite3D
 HBoxContainer
 OptionButton
 Label

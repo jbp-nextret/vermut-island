@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://ctejgorirlgtp"]
+
+[ext_resource type="Script" uid="uid://dhnvh5yv3jq78" path="res://Scripts/bola_foc.gd" id="1_n0au7"]
+[ext_resource type="Texture2D" uid="uid://cq7gjvtt842uo" path="res://sprites/Misc/fire_particles.PNG" id="2_unjdq"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_unjdq"]
+
+[node name="BolaFoc" type="Area3D" unique_id=1104709582]
+script = ExtResource("1_n0au7")
+dany = 50
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=199597355]
+pixel_size = 0.04
+billboard = 2
+texture_filter = 0
+texture = ExtResource("2_unjdq")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=907763382]
+shape = SubResource("SphereShape3D_unjdq")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=754631086]

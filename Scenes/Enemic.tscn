@@ -24,6 +24,8 @@ billboard_mode = 2
 [node name="Enemic" type="CharacterBody3D" unique_id=1467883497]
 script = ExtResource("1_h3rpd")
 nom_enemic = "Ratpenat"
+dany = 1
+cooldown_atac = 10.0
 textura_enemic = ExtResource("2_tp23d")
 es_volador = true
 

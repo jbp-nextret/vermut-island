@@ -1539,7 +1539,7 @@ _data = {
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_algbt"]
 height = 1.6296387
 
-[node name="Personatge" type="CharacterBody3D" unique_id=1584712923 node_paths=PackedStringArray("hair", "skin", "eyes", "tshirt", "jeans", "boots")]
+[node name="Personatge" type="CharacterBody3D" unique_id=1584712923 node_paths=PackedStringArray("hair", "skin", "eyes", "tshirt", "jeans", "boots") groups=["jugador"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20740926, 0)
 script = ExtResource("1_6e338")
 hair = NodePath("Skeleton/hair")

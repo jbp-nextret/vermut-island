@@ -47,7 +47,8 @@ var dash_temps_restant: float = 0.0
 @export var trail_durada: float = 0.25
 @export var trail_color: Color = Color(1, 1, 1, 0.4)
 var trail_temps: float = 0.0
-
+# Combat màgic
+@export var bola_foc_scene: PackedScene
 
 func _ready():
 	pivot_espasa.visible = false
@@ -192,12 +193,15 @@ func _unhandled_input(event):
 		if not te_espasa:
 			return
 		toggle_mode_combat()
-
+	
 	if estat == Estat.COMBAT and not atacant:
 		if event.is_action_pressed("accio_primaria"):
-			iniciar_atac(1, "tall")
+			iniciar_atac(20, "tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			iniciar_atac(2, "estocada")
+			iniciar_atac(50, "estocada")
+	# Atac màgic
+	if event.is_action_pressed("atac_magia"):  # crea aquesta input action
+		disparar_bola_foc()
 
 func iniciar_atac(dany: int, tipus: String):
 	atacant = true
@@ -258,6 +262,31 @@ func _crear_trail():
 	var tween = create_tween()
 	tween.tween_property(ghost, "modulate:a", 0.0, trail_durada)
 	tween.tween_callback(ghost.queue_free)
+
+func disparar_bola_foc():
+	var bola = bola_foc_scene.instantiate()
+	get_tree().current_scene.add_child(bola)
+	bola.global_position = global_position + Vector3(0, 1.0, 0)
+	bola.direccio = _direccio_cap_al_cursor()
+
+func _direccio_cap_al_cursor() -> Vector3:
+	var camera = get_viewport().get_camera_3d()
+	var mouse_pos = get_viewport().get_mouse_position()
+
+	var origen = camera.project_ray_origin(mouse_pos)
+	var direccio_ray = camera.project_ray_normal(mouse_pos)
+
+	# Interceptem un pla horitzontal a l'alçada del jugador (Y constant)
+	var pla = Plane(Vector3.UP, global_position.y + 1.0)
+	var punt_impacte = pla.intersects_ray(origen, direccio_ray)
+
+	if punt_impacte == null:
+		return _direccio_mirada()  # fallback si no intersecta (rar amb càmera fixa)
+
+	var direccio = (punt_impacte - global_position)
+	direccio.y = 0  # mantenim el tret horitzontal
+	return direccio.normalized()
+	
 func _reset_interpolacio():
 	reset_physics_interpolation()
 	$CameraPivot.reset_physics_interpolation()

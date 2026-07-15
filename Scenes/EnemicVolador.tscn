@@ -21,7 +21,8 @@ billboard_mode = 2
 script = ExtResource("1_4s8x1")
 nom_enemic = "Ratpenat"
 vida_maxima = 60
-dany = 50
+dany = 5
+cooldown_atac = 5.0
 textura_enemic = ExtResource("2_y3pyn")
 es_volador = true
 
