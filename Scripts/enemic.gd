@@ -189,9 +189,9 @@ func morir():
 
 func mostrar_particules_mort():
 	var particules = GPUParticles3D.new()
-	particules.global_position = global_position
 	get_parent().add_child(particules)
-	
+	particules.global_position = global_position
+
 	var process_mat = ParticleProcessMaterial.new()
 	process_mat.direction = Vector3(0, 1, 0)
 	process_mat.spread = 180.0
@@ -200,14 +200,28 @@ func mostrar_particules_mort():
 	process_mat.gravity = Vector3(0, -9.8, 0)
 	process_mat.scale_min = 0.1
 	process_mat.scale_max = 0.3
-	
+	process_mat.color = Color(1.0, 1.0, 0.059, 0.902)
+
 	particules.process_material = process_mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.30, 0.30)
+
+	var textura_mat := StandardMaterial3D.new()
+	textura_mat.albedo_texture = preload("res://sprites/Misc/particle_2.PNG")
+	textura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	textura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	textura_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	textura_mat.vertex_color_use_as_albedo = true
+
+	quad.material = textura_mat
+	particules.draw_pass_1 = quad
+
 	particules.one_shot = true
 	particules.explosiveness = 0.9
 	particules.amount = 30
 	particules.lifetime = 1.5
-	
 	particules.emitting = true
-	
+
 	await get_tree().create_timer(2.0).timeout
 	particules.queue_free()

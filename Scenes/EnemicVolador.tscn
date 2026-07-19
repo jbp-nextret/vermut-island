@@ -14,6 +14,7 @@ cull_mode = 2
 billboard_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wqpy0"]
+size = Vector3(1.5195313, 1.1206055, 1.5155029)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y206r"]
 
@@ -25,16 +26,18 @@ dany = 5
 cooldown_atac = 5.0
 textura_enemic = ExtResource("2_y3pyn")
 es_volador = true
+altura_vol = 4.0
 
 [node name="Sprite" type="MeshInstance3D" parent="." unique_id=1241104757]
 mesh = SubResource("QuadMesh_tp23d")
 surface_material_override/0 = SubResource("StandardMaterial3D_bb2lw")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=894949879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.005859375, -0.060302734, -6.1035156e-05)
 shape = SubResource("BoxShape3D_wqpy0")
 
 [node name="Area3D" type="Area3D" parent="." unique_id=2053513958]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1055663904]
-transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+transform = Transform3D(1.53, 0, 0, 0, 1.53, 0, 0, 0, 1.53, 0, 0, 0)
 shape = SubResource("BoxShape3D_y206r")

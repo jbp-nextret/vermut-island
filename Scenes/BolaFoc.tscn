@@ -2,8 +2,21 @@
 
 [ext_resource type="Script" uid="uid://dhnvh5yv3jq78" path="res://Scripts/bola_foc.gd" id="1_n0au7"]
 [ext_resource type="Texture2D" uid="uid://cq7gjvtt842uo" path="res://sprites/Misc/fire_particles.PNG" id="2_unjdq"]
+[ext_resource type="Texture2D" uid="uid://b05bdre44rflr" path="res://sprites/Misc/particle_3.PNG" id="3_sh2tw"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_unjdq"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sh2tw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l7fj0"]
+transparency = 1
+albedo_color = Color(1.0452659, 0.6618105, 0.29204994, 1)
+albedo_texture = ExtResource("3_sh2tw")
+texture_filter = 0
+
+[sub_resource type="QuadMesh" id="QuadMesh_u76vc"]
+material = SubResource("StandardMaterial3D_l7fj0")
+size = Vector2(0.5, 0.5)
 
 [node name="BolaFoc" type="Area3D" unique_id=1104709582]
 script = ExtResource("1_n0au7")
@@ -21,3 +34,5 @@ region_rect = Rect2(0, 0, 16, 16)
 shape = SubResource("SphereShape3D_unjdq")
 
 [node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=754631086]
+process_material = SubResource("ParticleProcessMaterial_sh2tw")
+draw_pass_1 = SubResource("QuadMesh_u76vc")

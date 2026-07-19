@@ -49,6 +49,10 @@ var dash_temps_restant: float = 0.0
 var trail_temps: float = 0.0
 # Combat màgic
 @export var bola_foc_scene: PackedScene
+@export var cooldown_magia: float = 0.8
+var temps_darrera_magia: float = 0.0
+@export var cercle_colors: Array[Color] = [Color(1.0, 0.5, 0.1), Color(1.0, 0.8, 0.2), Color(0.9, 0.2, 0.8)]
+@export var cercle_durada_visible: float = 1.5
 
 func _ready():
 	pivot_espasa.visible = false
@@ -105,6 +109,8 @@ func _physics_process(delta):
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
 		get_tree().reload_current_scene()
+	# Cooldown màgic
+	temps_darrera_magia += delta
 	
 func _process(delta):
 	for sprite in sprites:
@@ -217,7 +223,18 @@ func iniciar_atac(dany: int, tipus: String):
 		dash_actiu = true
 		dash_direccio = _direccio_mirada()
 		dash_temps_restant = dash_estocada_durada
-
+		
+func _test_cercle():
+	var cercle := Sprite3D.new()
+	cercle.texture = preload("res://sprites/Misc/magic-3.png")
+	cercle.pixel_size = 0.04
+	#cercle.billboard = SpriteBase3D.BILLBOARD_DISABLED
+	cercle.rotation_degrees.x = -90
+	get_tree().current_scene.add_child(cercle)
+	cercle.global_position = global_position
+	cercle.rotation_degrees.x = -90
+	print("Cercle creat a: ", cercle.global_position, " textura: ", cercle.texture)
+	
 func _on_animation_finished(anim_name):
 	if anim_name.begins_with("sword_attack_"):
 		atacant = false
@@ -264,10 +281,55 @@ func _crear_trail():
 	tween.tween_callback(ghost.queue_free)
 
 func disparar_bola_foc():
+	if temps_darrera_magia < cooldown_magia:
+		return
+	temps_darrera_magia = 0.0
+
+	_crear_cercle_alquimia()
+
 	var bola = bola_foc_scene.instantiate()
 	get_tree().current_scene.add_child(bola)
 	bola.global_position = global_position + Vector3(0, 1.0, 0)
 	bola.direccio = _direccio_cap_al_cursor()
+
+
+func _crear_cercle_alquimia():
+	var cercle := Sprite3D.new()
+	cercle.texture = preload("res://sprites/Misc/magic-3.png")
+	cercle.pixel_size = 0.04
+	cercle.scale = Vector3.ONE * 0.3
+	cercle.modulate = cercle_colors[0]
+	cercle.modulate.a = 0.0
+
+	add_child(cercle)  # fill del Personatge, es mou amb ell
+	cercle.position = Vector3(0, 0.05, 0)
+	cercle.rotation_degrees.x = -90
+
+	var tween_aparicio = create_tween()
+	tween_aparicio.set_parallel(true)
+	tween_aparicio.tween_property(cercle, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween_aparicio.tween_property(cercle, "modulate:a", 1.0, 0.15)
+
+	var tween_rotacio = create_tween()
+	tween_rotacio.set_loops()
+	tween_rotacio.tween_property(cercle, "rotation_degrees:y", 360.0, 2.0).as_relative()
+
+	var tween_colors = create_tween()
+	tween_colors.set_loops()
+	for color in cercle_colors:
+		tween_colors.tween_property(cercle, "modulate", Color(color.r, color.g, color.b, 1.0), 0.4)
+
+	var tween_final = create_tween()
+	tween_final.tween_interval(cercle_durada_visible)
+	tween_final.tween_callback(func():
+		tween_rotacio.kill()
+		tween_colors.kill()
+		var fade_out = create_tween()
+		fade_out.set_parallel(true)
+		fade_out.tween_property(cercle, "modulate:a", 0.0, 0.5)
+		fade_out.tween_property(cercle, "scale", Vector3.ONE * 1.3, 0.5)
+		fade_out.chain().tween_callback(cercle.queue_free)
+	)
 
 func _direccio_cap_al_cursor() -> Vector3:
 	var camera = get_viewport().get_camera_3d()
@@ -276,17 +338,16 @@ func _direccio_cap_al_cursor() -> Vector3:
 	var origen = camera.project_ray_origin(mouse_pos)
 	var direccio_ray = camera.project_ray_normal(mouse_pos)
 
-	# Interceptem un pla horitzontal a l'alçada del jugador (Y constant)
 	var pla = Plane(Vector3.UP, global_position.y + 1.0)
 	var punt_impacte = pla.intersects_ray(origen, direccio_ray)
 
 	if punt_impacte == null:
-		return _direccio_mirada()  # fallback si no intersecta (rar amb càmera fixa)
+		return _direccio_mirada()
 
 	var direccio = (punt_impacte - global_position)
-	direccio.y = 0  # mantenim el tret horitzontal
+	direccio.y = 0
 	return direccio.normalized()
-	
+
 func _reset_interpolacio():
 	reset_physics_interpolation()
 	$CameraPivot.reset_physics_interpolation()
