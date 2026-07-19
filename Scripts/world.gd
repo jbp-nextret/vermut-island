@@ -5,6 +5,7 @@ extends Node3D
 @onready var cursor = $CursorPlantacio
 @onready var particules_plantar = $ParticulesPlantar
 @onready var particules_collir = $ParticulesCollir
+@onready var spawn_casa = $SpawnCasa
 
 var mode_plantacio = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
@@ -15,6 +16,20 @@ var zone_seleccionada = []  # Llista de posicions a plantar
 
 func _ready():
 	cursor.visible = false
+	GestorPartida.registrar_mundo(self)
+	
+	if EventBus.has_signal("player_spawn_requested"):
+		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
+	else:
+		print("Signal player_spawn_requested no existeix a EventBus")
+	
+	if EventBus.has_pending_spawn:
+		var posicio = EventBus.consume_pending_spawn()
+		await get_tree().process_frame
+		aplicar_spawn_player(posicio)
+	elif is_instance_valid(spawn_casa):
+		await get_tree().process_frame
+		aplicar_spawn_player(spawn_casa.global_position)
 	
 	# Crea el material del cursor per codi
 	var material = StandardMaterial3D.new()
@@ -53,10 +68,37 @@ func _ready():
 		EventBus.cultiu_recollit.connect(_on_cultiu_recollit)
 	else:
 		print("Signal cultiu_recollit no existeix a EventBus")
-
+	
+	# CARREGA EL WORLD
+	carregar_mundo()
+	
 func _on_cultiu_recollit(posicio: Vector3):
 	print("Event rebut a posicio: ", posicio)
 	llançar_particules(particules_collir, posicio)
+
+func _exit_tree():
+	GestorPartida.desregistrar_mundo()
+
+func _has_property(obj: Object, name: String) -> bool:
+	for prop in obj.get_property_list():
+		if prop["name"] == name:
+			return true
+	return false
+
+func _on_player_spawn_requested(posicio: Vector3):
+	await get_tree().process_frame
+	aplicar_spawn_player(posicio)
+
+func aplicar_spawn_player(posicio: Vector3):
+	var player = get_node_or_null("Personatge")
+	if player and is_instance_valid(player) and player.is_inside_tree():
+		var spawn_pos = posicio
+		spawn_pos.y = max(posicio.y, 1.0)
+		player.global_position = spawn_pos
+		player.global_rotation = Vector3.ZERO
+		print("Personatge reposicionat a: ", spawn_pos)
+	else:
+		print("No s'ha trobat el Personatge o no està preparat")
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):
@@ -79,6 +121,7 @@ func _input(event):
 			plantar_zona_seleccionada()
 			zone_seleccionada.clear()
 			print("Plantació confirmada")
+			GestorPartida.guardar_mundo()  # Guarda després d'una plantació
 	
 	# Drag amb accio_primaria
 	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
@@ -91,6 +134,9 @@ func _input(event):
 		if arrastrant:
 			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
 
+func _physics_process(delta: float) -> void:
+	var camera = get_viewport().get_camera_3d()
+	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
 	if not mode_plantacio: return
@@ -223,6 +269,8 @@ func plantar_zona_seleccionada():
 	for data in zone_seleccionada:
 		plantar_en_posicio(data["posicio"], get_node("GridMap"), data["cell_coords"], data["item_name"])
 	
+	GestorPartida.guardar_mundo()
+	
 	# Desactiva el mode si no queden llavors
 	if Inventari.tenir("llavor_raim") <= 0:
 		mode_plantacio = false
@@ -241,8 +289,11 @@ func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: 
 		return
 	
 	var cultiu = cultiu_escena.instantiate()
+	cultiu.add_to_group("cultius")
 	add_child(cultiu)
 	cultiu.global_position = posicio_cultiu
+	if _has_property(cultiu, "es_torre"):
+		cultiu.es_torre = true
 	llançar_particules(particules_plantar, posicio_cultiu)
 	Inventari.items["llavor_raim"] -= 1
 	
@@ -261,3 +312,84 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 	
 func dins_zona_hort(posicio: Vector3) -> bool:
 	return zona_hort.conte_punt(posicio)
+	
+func guardar_mundo():
+	var cultius_data = []
+	var plantes_data = []
+	
+	# Guarda tots els cultius
+	for cultiu in get_tree().get_nodes_in_group("cultius"):
+		cultius_data.append({
+			"posicio": {"x": cultiu.global_position.x, "y": cultiu.global_position.y, "z": cultiu.global_position.z},
+			"estat": cultiu.estat_actual,
+			"dies_passats": cultiu.dies_passats,
+			"es_torre": cultiu.es_torre if _has_property(cultiu, "es_torre") else false,
+			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0
+		})
+	
+	# Guarda totes les plantes (si n'hi ha al mundo)
+	for planta in get_tree().get_nodes_in_group("decoracio"):
+		if planta.get_parent() == self:  # Només les del mundo
+			plantes_data.append({
+				"posicio": {"x": planta.global_position.x, "y": planta.global_position.y, "z": planta.global_position.z},
+				"rotacio": {"x": planta.rotation.x, "y": planta.rotation.y, "z": planta.rotation.z}
+			})
+	
+	var mundo_data = {
+		"cultius": cultius_data,
+		"plantes": plantes_data
+	}
+	
+	var json = JSON.stringify(mundo_data)
+	var fitxer = FileAccess.open("user://mundo_cultius.save", FileAccess.WRITE)
+	if fitxer:
+		fitxer.store_string(json)
+		print("Mundo guardat!")
+	else:
+		print("Error: No es pot guardar el mundo")
+
+func carregar_mundo():
+	var fitxer = FileAccess.open("user://mundo_cultius.save", FileAccess.READ)
+	if not fitxer:
+		print("Cap mundo guardat prèviament")
+		return
+	
+	var json_string = fitxer.get_as_text()
+	if json_string.is_empty():
+		print("Fitxer buit")
+		return
+	
+	var json = JSON.new()
+	var error = json.parse(json_string)
+	
+	if error != OK:
+		print("Error al parsejar JSON")
+		return
+	
+	var mundo_data = json.data
+	
+	if mundo_data == null:
+		print("Error: Dades nules")
+		return
+	
+	# Carrega cultius
+	var cultius_data = mundo_data.get("cultius", [])
+	for data in cultius_data:
+		var cultiu = cultiu_escena.instantiate()
+		add_child(cultiu)
+		
+		var posicio = Vector3(data.get("posicio")["x"], data.get("posicio")["y"], data.get("posicio")["z"])
+		cultiu.global_position = posicio
+		var estat_guardat = data.get("estat", 0)
+		cultiu.estat_actual = int(clamp(estat_guardat, 0, cultiu.Estat.MADUR))
+		cultiu.dies_passats = data.get("dies_passats", 0)
+		if _has_property(cultiu, "es_torre"):
+			cultiu.es_torre = data.get("es_torre", true)
+		if _has_property(cultiu, "vida_actual"):
+			cultiu.vida_actual = data.get("vida_actual", cultiu.vida_maxima)
+		
+		print("Carregant cultiu: posicio=", posicio, " estat=", cultiu.estat_actual, " dies=", cultiu.dies_passats, " textures=", cultiu.textures.size())
+		
+		cultiu.actualitzar_sprite()
+	
+	print("Cultius carregats!")

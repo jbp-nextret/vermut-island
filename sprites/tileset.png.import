@@ -3,20 +3,19 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cj7omdx5ixrrx"
-path.s3tc="res://.godot/imported/tileset.png-ea01ff149dac1b9c6b0d2d1c84c9f0ea.s3tc.ctex"
+path="res://.godot/imported/tileset.png-ea01ff149dac1b9c6b0d2d1c84c9f0ea.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
 source_file="res://sprites/tileset.png"
-dest_files=["res://.godot/imported/tileset.png-ea01ff149dac1b9c6b0d2d1c84c9f0ea.s3tc.ctex"]
+dest_files=["res://.godot/imported/tileset.png-ea01ff149dac1b9c6b0d2d1c84c9f0ea.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

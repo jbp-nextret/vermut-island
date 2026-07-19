@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bmh1le3cvej85"]
+
+[node name="CanvasLayer" type="CanvasLayer" unique_id=331932237]
+
+[node name="Rellotge" type="Label" parent="." unique_id=1324005026]
+offset_right = 40.0
+offset_bottom = 55.0
+theme_override_colors/font_color = Color(0, 0.45502484, 0.9414053, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.61960787)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 20

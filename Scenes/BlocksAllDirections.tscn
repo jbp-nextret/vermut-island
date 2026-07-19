@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://drgwpt7yl7bp1"]
+
+[ext_resource type="PackedScene" uid="uid://cipkuh6m8umpy" path="res://Models/TerrainMeshesAllDirections.glb" id="1_70pj4"]
+
+[node name="TerrainMeshesAllDirections" unique_id=2021605215 instance=ExtResource("1_70pj4")]

@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://biks54yyvxtwg"]
+
+[ext_resource type="PackedScene" uid="uid://cmbgi33vtml8b" path="res://Models/pot-02.glb" id="1_x7noi"]
+[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_gww6v"]
+
+[node name="pot-02" unique_id=779901381 groups=["decoracio"] instance=ExtResource("1_x7noi")]
+script = ExtResource("2_gww6v")
+model_path = "res://Models/pot-02.glb"

@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://csp57we3o82i"]
+
+[ext_resource type="PackedScene" uid="uid://dpo7deqoq22pl" path="res://Models/barra_corner.glb" id="1_sposv"]
+[ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_dgf3c"]
+
+[node name="barra_corner" unique_id=1807125879 instance=ExtResource("1_sposv")]
+script = ExtResource("2_dgf3c")
+model_path = "res://Models/barra_corner.glb"
