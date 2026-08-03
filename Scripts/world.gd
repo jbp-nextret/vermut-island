@@ -7,7 +7,7 @@ extends Node3D
 @onready var particules_collir = $ParticulesCollir
 @onready var spawn_casa = $SpawnCasa
 
-var mode_plantacio = false
+var mode_plantar = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
 var arrastrant = false
 var posicio_drag_inici = Vector3.ZERO
@@ -102,20 +102,22 @@ func aplicar_spawn_player(posicio: Vector3):
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):
-		mode_plantacio = true
+		mode_plantar = true
 		cursor.visible = true
+		EventBus.activar_mode_plantar()
 		print("Mode plantació activat — clica i arrastra per seleccionar")
 	
 	# Cancel·la el mode plantació amb Escape
 	if Input.is_action_just_pressed("ui_cancel"):
-		mode_plantacio = false
+		mode_plantar = false
 		cursor.visible = false
 		arrastrant = false
 		zone_seleccionada.clear()
+		EventBus.desactivar_mode_plantar()
 		print("Mode plantació cancel·lat")
 	
 	# Confirma la selecció amb accio_secundaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_secundaria"):
+	if mode_plantar and Input.is_action_just_pressed("accio_secundaria"):
 		if arrastrant:
 			arrastrant = false
 			plantar_zona_seleccionada()
@@ -124,13 +126,13 @@ func _input(event):
 			GestorPartida.guardar_mundo()  # Guarda després d'una plantació
 	
 	# Drag amb accio_primaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
+	if mode_plantar and Input.is_action_just_pressed("accio_primaria"):
 		arrastrant = true
 		posicio_drag_inici = cursor.global_position
 		zone_seleccionada.clear()
 		print("Drag iniciat")
 	
-	if mode_plantacio and Input.is_action_just_released("accio_primaria"):
+	if mode_plantar and Input.is_action_just_released("accio_primaria"):
 		if arrastrant:
 			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
 
@@ -139,7 +141,7 @@ func _physics_process(delta: float) -> void:
 	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
-	if not mode_plantacio: return
+	if not mode_plantar: return
 	var espai = get_world_3d().direct_space_state
 	var camera = get_viewport().get_camera_3d()
 	var pos_ratolí = get_viewport().get_mouse_position()
@@ -273,8 +275,9 @@ func plantar_zona_seleccionada():
 	
 	# Desactiva el mode si no queden llavors
 	if Inventari.tenir("llavor_raim") <= 0:
-		mode_plantacio = false
+		mode_plantar = false
 		cursor.visible = false
+		EventBus.desactivar_mode_plantar()
 
 
 func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: Vector3i, item_name: String):
