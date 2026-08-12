@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
 [ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
+[ext_resource type="Texture2D" uid="uid://ci1v6rkxnpdfa" path="res://sprites/Crops/plant-3.png" id="3_r0dna"]
 [ext_resource type="PackedScene" uid="uid://cxg75mbja24wq" path="res://Scenes/Personatge.tscn" id="3_waglr"]
 [ext_resource type="PackedScene" uid="uid://ctejgorirlgtp" path="res://Scenes/BolaFoc.tscn" id="4_mvfa8"]
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
@@ -19,6 +20,7 @@
 [ext_resource type="PackedScene" uid="uid://5jy6a7016vyg" path="res://Scenes/EnemicVolador.tscn" id="16_rwt1y"]
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
 [ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
+[ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
 
@@ -151,6 +153,9 @@ render_target_update_mode = 4
 [node name="World" type="Node3D" parent="SubViewport" unique_id=59139261]
 script = ExtResource("1_45d1s")
 cultiu_escena = ExtResource("6_q2d71")
+cultius_disponibles = Array[PackedScene]([ExtResource("6_q2d71")])
+noms_cultius = Array[String](["Projectile Plant"])
+textures_cultius = Array[Texture2D]([ExtResource("3_r0dna")])
 
 [node name="Personatge" parent="SubViewport/World" unique_id=1584712923 instance=ExtResource("3_waglr")]
 bola_foc_scene = ExtResource("4_mvfa8")
@@ -296,6 +301,10 @@ surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 
 [node name="SpawnCasa" type="Node3D" parent="SubViewport/World" unique_id=1056946412]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)
+
+[node name="RodaSeleccio" parent="SubViewport/World" unique_id=524196177 instance=ExtResource("20_b5aes")]
+radi_roda = 60.0
+mida_icona = 12.0
 
 [node name="Casa" parent="SubViewport" unique_id=523738415 instance=ExtResource("18_rwt1y")]
 transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)

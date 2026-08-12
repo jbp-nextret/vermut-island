@@ -13,6 +13,17 @@ var arrastrant = false
 var posicio_drag_inici = Vector3.ZERO
 var posicio_drag_actual = Vector3.ZERO
 var zone_seleccionada = []  # Llista de posicions a plantar
+# Variables roda plantació
+@export var llindar_hold: float = 0.25
+@export var cultius_disponibles: Array[PackedScene] = []  # assigna a l'Inspector: normal, defensa, vinyedo, flor...
+@export var noms_cultius: Array[String] = []  # noms per mostrar/debug, mateix ordre
+@export var textures_cultius: Array[Texture2D] = []
+@onready var roda_seleccio = $RodaSeleccio  # afegeix la instància de RodaSeleccio.tscn com a fill de World
+
+var temps_prement_plantar: float = 0.0
+var mantenint_plantar: bool = false
+var roda_oberta: bool = false
+var index_cultiu_seleccionat: int = 0  # últim triat, per defecte el primer
 
 func _ready():
 	cursor.visible = false
@@ -102,10 +113,16 @@ func aplicar_spawn_player(posicio: Vector3):
 
 func _input(event):
 	if Input.is_action_just_pressed("plantar"):
-		mode_plantar = true
-		cursor.visible = true
-		EventBus.activar_mode_plantar()
-		print("Mode plantació activat — clica i arrastra per seleccionar")
+		mantenint_plantar = true
+		temps_prement_plantar = 0.0
+
+	if Input.is_action_just_released("plantar"):
+		mantenint_plantar = false
+		if roda_oberta:
+			_confirmar_seleccio_roda()
+			_tancar_roda()
+		else:
+			_activar_mode_plantar_tap()
 	
 	# Cancel·la el mode plantació amb Escape
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -116,16 +133,14 @@ func _input(event):
 		EventBus.desactivar_mode_plantar()
 		print("Mode plantació cancel·lat")
 	
-	# Confirma la selecció amb accio_secundaria
 	if mode_plantar and Input.is_action_just_pressed("accio_secundaria"):
 		if arrastrant:
 			arrastrant = false
 			plantar_zona_seleccionada()
 			zone_seleccionada.clear()
 			print("Plantació confirmada")
-			GestorPartida.guardar_mundo()  # Guarda després d'una plantació
+			GestorPartida.guardar_mundo()
 	
-	# Drag amb accio_primaria
 	if mode_plantar and Input.is_action_just_pressed("accio_primaria"):
 		arrastrant = true
 		posicio_drag_inici = cursor.global_position
@@ -141,6 +156,10 @@ func _physics_process(delta: float) -> void:
 	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
+	if mantenint_plantar and not roda_oberta:
+		temps_prement_plantar += delta
+		if temps_prement_plantar >= llindar_hold:
+			_obrir_roda()
 	if not mode_plantar: return
 	var espai = get_world_3d().direct_space_state
 	var camera = get_viewport().get_camera_3d()
@@ -214,7 +233,32 @@ func _process(delta):
 	else:
 		cursor.visible = false
 
+func _activar_mode_plantar_tap():
+	mode_plantar = true
+	cursor.visible = true
+	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	EventBus.activar_mode_plantar()
+	print("Mode plantació activat (tap) amb: ", noms_cultius[index_cultiu_seleccionat] if noms_cultius.size() > index_cultiu_seleccionat else "?")
 
+func _obrir_roda():
+	roda_oberta = true
+	var opcions = []
+	for i in range(cultius_disponibles.size()):
+		opcions.append({"textura": textures_cultius[i], "nom": noms_cultius[i]})  # necessitaràs un array de textures/icones
+	roda_seleccio.obrir(opcions, index_cultiu_seleccionat)
+
+func _tancar_roda():
+	roda_oberta = false
+	roda_seleccio.tancar()
+
+func _confirmar_seleccio_roda():
+	index_cultiu_seleccionat = roda_seleccio.obtenir_seleccio()
+	mode_plantar = true
+	cursor.visible = true
+	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	EventBus.activar_mode_plantar()
+	print("Mode plantació activat (roda) amb: ", noms_cultius[index_cultiu_seleccionat])
+	
 func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
 	# Calcula el rectangle entre la posició inicial i l'actual
 	var min_x = mini(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
