@@ -303,8 +303,6 @@ surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)
 
 [node name="RodaSeleccio" parent="SubViewport/World" unique_id=524196177 instance=ExtResource("20_b5aes")]
-radi_roda = 60.0
-mida_icona = 12.0
 
 [node name="Casa" parent="SubViewport" unique_id=523738415 instance=ExtResource("18_rwt1y")]
 transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)

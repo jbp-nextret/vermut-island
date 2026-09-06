@@ -4,8 +4,6 @@
 
 [node name="RodaSeleccio" type="CanvasLayer" unique_id=524196177]
 script = ExtResource("1_7l4id")
-radi_roda = 50.0
-mida_icona = 12.0
 
 [node name="Control" type="Control" parent="." unique_id=1155145046]
 layout_mode = 3
