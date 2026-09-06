@@ -1,5 +1,7 @@
-Control
+PanelContainer
+TextureRect
 CanvasLayer
+Control
 GPUParticles3D
 CollisionShape3D
 Sprite3D
@@ -11,4 +13,3 @@ Label
 VBoxContainer
 MarginContainer
 Button
-ColorPickerButton
