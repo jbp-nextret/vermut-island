@@ -13,11 +13,13 @@
 [ext_resource type="Script" uid="uid://b6n0jv1rkdw86" path="res://Scripts/rellotge_hud.gd" id="9_casa1"]
 [ext_resource type="Script" uid="uid://4b7wumvfd7xa" path="res://Scripts/utils/test_spawner.gd" id="12_31vs8"]
 
+[ext_resource type="PackedScene" path="res://Scenes/mobles/barrica.tscn" id="13_barrica"]
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_xd4tj"]
 
 [node name="CasaInterior" type="Node3D" unique_id=2072462834]
 script = ExtResource("1_xd4tj")
-mobles_disponibles = Array[PackedScene]([ExtResource("2_jd2vp"), ExtResource("2_2qpbc"), ExtResource("4_otfw3"), ExtResource("3_jyd3f"), ExtResource("6_otfw3"), ExtResource("7_dlrah"), ExtResource("8_00ivp")])
+mobles_disponibles = Array[PackedScene]([ExtResource("2_jd2vp"), ExtResource("2_2qpbc"), ExtResource("4_otfw3"), ExtResource("3_jyd3f"), ExtResource("6_otfw3"), ExtResource("7_dlrah"), ExtResource("8_00ivp"), ExtResource("13_barrica")])
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=887685824]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 10, 9)

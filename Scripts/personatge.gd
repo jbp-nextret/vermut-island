@@ -56,6 +56,10 @@ var temps_darrera_magia: float = 0.0
 
 func _ready():
 	add_to_group("player")
+	# Interaccions (barrica, clients...) i objecte a la mà
+	var interaccio := InteraccioJugador.new()
+	interaccio.name = "Interaccio"
+	add_child(interaccio)
 	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
 	anim_player.animation_finished.connect(_on_animation_finished)

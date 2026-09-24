@@ -7,7 +7,7 @@ const DISTANCIA_ENTRADA := 0.9      # espai lliure davant la porta dels clients
 
 # Mobles
 @export var mobles_disponibles: Array[PackedScene]
-@export var noms_mobles: Array[String] = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola"]
+@export var noms_mobles: Array[String] = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola", "Barrica"]
 @export var grid_size: float = 1.0
 
 var mode_construccio := false
@@ -65,6 +65,7 @@ func _ready():
 	_configurar_llista_mobles()
 	_crear_hud()
 	_crear_gestor_servei()
+	add_child(HudDiners.new())
 
 	panel_ui.visible = false
 	item_list.visible = false
@@ -288,10 +289,13 @@ func _on_temps_servei(segons: float):
 func _on_servei_tancat():
 	_actualitzar_hud()
 	# Fos a negre curt: "Ha caigut la nit" i tornem a la casa
-	label_transicio.text = "Fi del servei\nHa caigut la nit..."
+	var resum := "%d clients servits   ·   +%d 🪙" % [gestor_servei.clients_servits, gestor_servei.guanys]
+	if gestor_servei.clients_enfadats > 0:
+		resum += "\n%d clients han marxat enfadats" % gestor_servei.clients_enfadats
+	label_transicio.text = "Fi del servei\n\n%s\n\nHa caigut la nit..." % resum
 	var t := create_tween()
 	t.tween_property(fos_negre, "modulate:a", 1.0, 0.6)
-	t.tween_interval(1.4)
+	t.tween_interval(2.8)
 	t.tween_property(fos_negre, "modulate:a", 0.0, 0.8)
 
 func _mostrar_avis(text: String):
@@ -532,7 +536,15 @@ func _motiu_bloqueig(pos: Vector3) -> String:
 	var hi_ha_barra := buscar_moble_a_posicio(pos, "barres") != null
 	var hi_ha_seient := buscar_moble_a_posicio(pos, "mobles_reposats") != null
 	var hi_ha_deco := buscar_moble_a_posicio(pos, "decoracio") != null
+	var hi_ha_barrica := buscar_moble_a_posicio(pos, "barriques") != null
 
+	match _tipus(moble_preview):
+		MobleBarra.Tipus.BARRICA:
+			if hi_ha_barra or hi_ha_seient or hi_ha_deco:
+				return "La barrica necessita la cel·la buida"
+		_:
+			if hi_ha_barrica:
+				return "Aquí hi ha una barrica"
 	match _tipus(moble_preview):
 		MobleBarra.Tipus.DECORACIO, MobleBarra.Tipus.BARRA:
 			if hi_ha_seient:
@@ -595,6 +607,8 @@ func _grup_principal(tipus: MobleBarra.Tipus) -> String:
 			return "barres"
 		MobleBarra.Tipus.DECORACIO:
 			return "decoracio"
+		MobleBarra.Tipus.BARRICA:
+			return "barriques"
 	return "mobles_reposats"
 
 func _afegir_grups(moble: Node, tipus: MobleBarra.Tipus):

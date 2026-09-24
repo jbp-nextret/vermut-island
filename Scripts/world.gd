@@ -28,6 +28,9 @@ var index_cultiu_seleccionat: int = 0  # últim triat, per defecte el primer
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
+	var hud_diners := HudDiners.new()
+	hud_diners.marge_superior = 70   # a sota del rellotge
+	add_child(hud_diners)
 	
 	if EventBus.has_signal("player_spawn_requested"):
 		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
@@ -342,7 +345,7 @@ func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: 
 	if _has_property(cultiu, "es_torre"):
 		cultiu.es_torre = true
 	llançar_particules(particules_plantar, posicio_cultiu)
-	Inventari.items["llavor_raim"] -= 1
+	Inventari.treure("llavor_raim")
 	
 	print("Cultiu plantat a: ", posicio_cultiu)
 	

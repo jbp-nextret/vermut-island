@@ -1,7 +1,7 @@
 extends Node3D
 class_name MobleBarra
 
-enum Tipus { SEIENT, BARRA, DECORACIO }
+enum Tipus { SEIENT, BARRA, DECORACIO, BARRICA }
 
 ## Quin tipus de moble és. Decideix les regles de col·locació i els grups.
 @export var tipus: Tipus = Tipus.SEIENT

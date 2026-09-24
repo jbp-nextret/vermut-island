@@ -4,3 +4,4 @@
 
 # Fitxers temporals de l'editor
 *.tmp
+*.patch

@@ -19,6 +19,11 @@ var obert := false
 var temps_restant := 0.0
 var temps_seguent_client := 0.0
 
+# Resum del servei actual (es mostra en tancar)
+var clients_servits := 0
+var clients_enfadats := 0
+var guanys := 0
+
 func alternar() -> void:
 	if obert:
 		tancar()
@@ -29,6 +34,9 @@ func obrir() -> void:
 	if obert or not GameState.pot_obrir_vermuteria():
 		return
 	obert = true
+	clients_servits = 0
+	clients_enfadats = 0
+	guanys = 0
 	temps_restant = durada
 	temps_seguent_client = 1.0   # el primer client arriba gairebé de seguida
 	GameState.mode = GameState.Mode.SERVEI
@@ -71,6 +79,18 @@ func _fer_entrar_client() -> void:
 	p.global_position = porta.global_position
 	p.setup(lliures.pick_random(), porta.global_position)
 	p.order_placed.connect(func(po, producte): comanda_feta.emit(po, producte))
+	p.ha_pagat.connect(_on_client_ha_pagat)
+	p.ha_marxat_enfadat.connect(func(_po): clients_enfadats += 1)
+	p.left.connect(func(_po): _avancar_seguent_client())
+
+func _on_client_ha_pagat(_poring: Poring, quantitat: int) -> void:
+	clients_servits += 1
+	guanys += quantitat
+
+# Quan un client marxa, el següent no tarda gaire a entrar
+func _avancar_seguent_client() -> void:
+	if obert:
+		temps_seguent_client = minf(temps_seguent_client, randf_range(1.5, 3.0))
 
 func _exit_tree() -> void:
 	# Si sortim de la casa amb el bar obert, que el joc no quedi en mode servei
