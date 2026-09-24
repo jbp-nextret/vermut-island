@@ -1,10 +1,10 @@
 extends Marker3D
 class_name Seat
 
-## Una barra a una cel·la de distància (no en diagonal) fa de taula
-const DISTANCIA_TAULA := 1.05
-
 var occupant: Node = null
+## La barra que fa de taula d'aquest seient. La reparteix CasaInterior
+## (cada barra només serveix un seient); null si no n'hi toca cap.
+var taula_assignada: Node3D = null
 var indicador: Label3D = null
 
 func _ready():
@@ -19,18 +19,10 @@ func is_free() -> bool:
 func get_sit_position() -> Vector3:
 	return global_position
 
-## La barra que fa de taula d'aquest seient, o null si no n'hi ha cap al costat.
 func taula() -> Node3D:
-	var millor: Node3D = null
-	var millor_distancia := DISTANCIA_TAULA
-	for barra in get_tree().get_nodes_in_group("barres"):
-		if barra.is_queued_for_deletion():
-			continue
-		var d := Vector2(barra.global_position.x - global_position.x, barra.global_position.z - global_position.z).length()
-		if d <= millor_distancia:
-			millor = barra
-			millor_distancia = d
-	return millor
+	if is_instance_valid(taula_assignada) and not taula_assignada.is_queued_for_deletion():
+		return taula_assignada
+	return null
 
 ## Sense taula no s'hi pot servir, així que cap client s'hi asseurà.
 func es_utilitzable() -> bool:

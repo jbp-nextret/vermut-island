@@ -73,6 +73,7 @@ func _ready():
 	item_list.visible = false
 	rellotge.visible = false   # dins de casa el temps està aturat
 	carregar_decoracio()
+	_actualitzar_taules()
 	_actualitzar_hud()
 
 func _exit_tree():
@@ -294,10 +295,24 @@ func _on_boto_vermuteria():
 func _seients_utilitzables() -> int:
 	return get_tree().get_nodes_in_group("seats").filter(func(s): return s.es_utilitzable()).size()
 
-## En mode construcció, marca els seients que no tenen taula
-func _actualitzar_avisos_seients():
-	for seient in get_tree().get_nodes_in_group("seats"):
+## Reparteix les barres entre els seients (una barra = una cadira)
+## i, en mode construcció, marca els seients que s'han quedat sense taula.
+func _actualitzar_taules():
+	var seients := _vius("seats")
+	var barres := _vius("barres")
+	var posicions := seients.map(func(s): return s.global_position)
+	var preferides := seients.map(func(s): return barres.find(s.taula()))
+	var assignacio := AssignadorTaules.assignar(posicions, preferides, barres)
+	for i in seients.size():
+		seients[i].taula_assignada = barres[assignacio[i]] if assignacio[i] != -1 else null
+	for seient in seients:
 		seient.mostrar_avis(mode_construccio and not seient.es_utilitzable())
+
+func _mateixa_cella(a: Vector3, b: Vector3) -> bool:
+	return round(a.x / grid_size) == round(b.x / grid_size) and round(a.z / grid_size) == round(b.z / grid_size)
+
+func _vius(grup: String) -> Array:
+	return get_tree().get_nodes_in_group(grup).filter(func(n): return not n.is_queued_for_deletion())
 
 func _on_temps_servei(segons: float):
 	var s := int(ceil(segons))
@@ -407,7 +422,7 @@ func entrar_mode_construccio():
 
 	if index_preview >= 0:
 		_crear_preview()
-	_actualitzar_avisos_seients()
+	_actualitzar_taules()
 	_actualitzar_hud()
 
 func sortir_mode_construccio():
@@ -426,7 +441,7 @@ func sortir_mode_construccio():
 
 	GameState.mode = GameState.Mode.EXPLORAR
 	guardar_decoracio()
-	_actualitzar_avisos_seients()
+	_actualitzar_taules()
 	_actualitzar_hud()
 
 func actualitzar_posicio_camera():
@@ -541,17 +556,20 @@ func _estat_col_locacio(pos: Vector3) -> EstatPreview:
 
 ## Es pot col·locar, però potser no és bona idea (groc)
 func _avis_col_locacio(pos: Vector3) -> String:
-	if _tipus(moble_preview) == MobleBarra.Tipus.SEIENT and not _hi_ha_barra_al_costat(pos):
-		return "Cadira sense taula: cap client s'hi asseurà"
+	if _tipus(moble_preview) == MobleBarra.Tipus.SEIENT and not _tindria_taula(pos):
+		return "Cap barra lliure al costat: cap client s'hi asseurà"
 	return ""
 
-func _hi_ha_barra_al_costat(pos: Vector3) -> bool:
-	for barra in get_tree().get_nodes_in_group("barres"):
-		if barra.is_queued_for_deletion():
-			continue
-		if Vector2(barra.global_position.x - pos.x, barra.global_position.z - pos.z).length() <= Seat.DISTANCIA_TAULA:
-			return true
-	return false
+## Si posem una cadira nova a `pos`, li tocaria alguna barra?
+## (fa el repartiment com si ja hi fos, sense treure la taula a cap altra cadira)
+func _tindria_taula(pos: Vector3) -> bool:
+	var seients := _vius("seats").filter(func(s): return not _mateixa_cella(s.global_position, pos))
+	var barres := _vius("barres")
+	var posicions := seients.map(func(s): return s.global_position)
+	var preferides := seients.map(func(s): return barres.find(s.taula()))
+	posicions.append(pos)
+	preferides.append(-1)
+	return AssignadorTaules.assignar(posicions, preferides, barres).back() != -1
 
 func obtenir_posicio_grid() -> Variant:
 	var ratoli := get_viewport().get_mouse_position()
@@ -630,7 +648,7 @@ func col_locar_moble(des_de_clic: bool):
 	add_child(moble)
 	moble.global_position = pos
 	moble.rotation_degrees.y = rotacio_preview
-	call_deferred("_actualitzar_avisos_seients")
+	call_deferred("_actualitzar_taules")
 
 	# Petit "pop" en aparèixer
 	moble.scale = Vector3.ONE * 0.8
@@ -723,7 +741,7 @@ func eliminar_moble(moble: Node3D):
 	if moble == moble_hovered:
 		moble_hovered = null
 	_treure_moble(moble)
-	call_deferred("_actualitzar_avisos_seients")
+	call_deferred("_actualitzar_taules")
 
 func canviar_color_moble(moble: Node3D):
 	_per_cada_malla(moble, func(m: GeometryInstance3D): m.material_override = material_hover)
