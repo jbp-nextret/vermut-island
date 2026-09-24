@@ -5,6 +5,12 @@ const CAPA_TERRA := 1 << 1          # capa de col·lisió 2 ("terra")
 const ALFA_PREVIEW := 0.45          # 0 = opac, 1 = invisible
 const DISTANCIA_ENTRADA := 0.9      # espai lliure davant la porta dels clients
 
+# Sala
+const MIDA_SALA := 10.0
+const ALCADA_PARET := 2.2
+const GRUIX_PARET := 0.2
+const ESCALA_PARET_BAIXADA := 0.08  # paret "abaixada" quan tapa la càmera (com als Sims)
+
 # Mobles
 @export var mobles_disponibles: Array[PackedScene]
 @export var noms_mobles: Array[String] = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola", "Barrica"]
@@ -48,6 +54,22 @@ var label_transicio: Label
 
 var gestor_servei: GestorServei
 
+# Parets: [{cos: StaticBody3D, visual: Node3D, normal: Vector3}]
+var parets: Array = []
+
+# Acabats (terra i parets)
+enum Pestanya { MOBLES, PARETS, TERRA }
+var pestanya := Pestanya.MOBLES
+var terra_actual := CatalegAcabats.TERRA_PER_DEFECTE
+var parets_actual := CatalegAcabats.PARET_PER_DEFECTE
+var acabats_comprats: Array = []
+var acabat_provant: AcabatInterior = null   # el que s'està provant, encara sense comprar
+var acabats_llista: Array = []              # els acabats que mostra ara la llista
+var pestanyes: TabBar
+var boto_comprar: Button
+var material_terra := StandardMaterial3D.new()
+var material_parets := StandardMaterial3D.new()
+
 # Materials
 var material_hover := StandardMaterial3D.new()
 var material_preview_ok := StandardMaterial3D.new()
@@ -73,6 +95,7 @@ func _ready():
 	item_list.visible = false
 	rellotge.visible = false   # dins de casa el temps està aturat
 	carregar_decoracio()
+	_aplicar_acabats_actuals()
 	_actualitzar_taules()
 	_actualitzar_hud()
 
@@ -93,14 +116,33 @@ func _configurar_materials():
 	material_grid.albedo_color = Color(1, 1, 1, 0.35)
 
 func _configurar_llista_mobles():
-	item_list.clear()
-	for nom in noms_mobles:
-		item_list.add_item(nom)
+	var capa: CanvasLayer = $CanvasLayer
+
+	pestanyes = TabBar.new()
+	pestanyes.add_tab("Mobles")
+	pestanyes.add_tab("Parets")
+	pestanyes.add_tab("Terra")
+	pestanyes.focus_mode = Control.FOCUS_NONE
+	pestanyes.position = Vector2(12, 52)
+	pestanyes.size = Vector2(240, 32)
+	pestanyes.visible = false
+	pestanyes.tab_changed.connect(_canviar_pestanya)
+	capa.add_child(pestanyes)
+
 	# Sense focus: si no, la llista es "menja" la Q i la E (cerca per lletra)
 	item_list.focus_mode = Control.FOCUS_NONE
-	item_list.position = Vector2(12, 70)
-	item_list.size = Vector2(200, 230)
-	item_list.item_selected.connect(_on_moble_seleccionat)
+	item_list.position = Vector2(12, 88)
+	item_list.size = Vector2(240, 250)
+	item_list.item_selected.connect(_on_item_seleccionat)
+
+	boto_comprar = _crear_boto("")
+	boto_comprar.position = Vector2(12, 346)
+	boto_comprar.size = Vector2(240, 44)
+	boto_comprar.visible = false
+	boto_comprar.pressed.connect(_comprar_acabat_provant)
+	capa.add_child(boto_comprar)
+
+	_omplir_llista()
 
 func _crear_gestor_servei():
 	gestor_servei = GestorServei.new()
@@ -114,6 +156,8 @@ func _crear_gestor_servei():
 # ─────────────────────────────────────────────── Sala
 
 func crear_interior():
+	var m := MIDA_SALA / 2.0
+
 	# Sòl
 	var sol_static = StaticBody3D.new()
 	sol_static.name = "Sol"
@@ -123,76 +167,102 @@ func crear_interior():
 
 	var sol_mesh = MeshInstance3D.new()
 	sol_mesh.mesh = PlaneMesh.new()
-	sol_mesh.mesh.size = Vector2(10, 10)
+	sol_mesh.mesh.size = Vector2(MIDA_SALA, MIDA_SALA)
+	sol_mesh.material_override = material_terra
 	sol_static.add_child(sol_mesh)
-
-	var material_sol = StandardMaterial3D.new()
-	material_sol.albedo_color = Color(0.8, 0.7, 0.6)
-	sol_mesh.set_surface_override_material(0, material_sol)
 
 	var collision = CollisionShape3D.new()
 	collision.shape = BoxShape3D.new()
-	collision.shape.size = Vector3(10, 0.2, 10)
+	collision.shape.size = Vector3(MIDA_SALA, 0.2, MIDA_SALA)
 	collision.position.y = -0.1
 	sol_static.add_child(collision)
 
-	# Parets
-	crear_paret("Paret Fons", Vector3(0, 0, -5), Vector3(10, 3, 0.2))
-	crear_paret("Paret Esquerra", Vector3(-5, 0, 0), Vector3(0.2, 3, 10))
-	crear_paret("Paret Dreta", Vector3(5, 0, 0), Vector3(0.2, 3, 10))
+	# Quatre parets tancades: ja no es pot caure de l'habitació.
+	# La que queda entre la càmera i la sala s'abaixa sola (_actualitzar_parets).
+	var ample := MIDA_SALA + GRUIX_PARET
+	var fons := crear_paret("Paret Fons", Vector3(0, 0, -m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, -1))
+	crear_paret("Paret Davant", Vector3(0, 0, m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, 1))
+	crear_paret("Paret Esquerra", Vector3(-m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(-1, 0, 0))
+	var dreta := crear_paret("Paret Dreta", Vector3(m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(1, 0, 0))
 
-	crear_finestra(Vector3(0, 1.5, -5), Vector3(2, 1.5, 0.1))
-	crear_porta_visual(Vector3(5, 0, 2), Vector3(0.1, 2, 1))
+	crear_finestra(fons, Vector3(0, 1.3, 0), Vector3(2, 1.0, GRUIX_PARET + 0.04))
+	crear_porta_visual(dreta, Vector3(0, 0.95, 2), Vector3(GRUIX_PARET + 0.04, 1.9, 1))
 
-func crear_paret(nom: String, posicio: Vector3, mida: Vector3):
+## Retorna el node visual de la paret (per penjar-hi porta o finestra)
+func crear_paret(nom: String, posicio: Vector3, mida: Vector3, normal: Vector3) -> Node3D:
 	var paret_static = StaticBody3D.new()
 	paret_static.position = posicio
 	paret_static.name = nom
 	add_child(paret_static)
 
+	# Tot el que es veu penja d'aquest node: escalant-lo en Y la paret "baixa" des de terra
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	paret_static.add_child(visual)
+
 	var paret_mesh = MeshInstance3D.new()
 	var box = BoxMesh.new()
 	box.size = mida
 	paret_mesh.mesh = box
-	paret_static.add_child(paret_mesh)
+	paret_mesh.position.y = mida.y / 2.0
+	paret_mesh.material_override = material_parets
+	visual.add_child(paret_mesh)
 
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(0.9, 0.85, 0.8)
-	paret_mesh.set_surface_override_material(0, material)
-
+	# La col·lisió no baixa mai
 	var collision = CollisionShape3D.new()
 	collision.shape = BoxShape3D.new()
-	collision.shape.size = mida
+	collision.shape.size = Vector3(mida.x, 3.0, mida.z)
+	collision.position.y = 1.5
 	paret_static.add_child(collision)
 
-func crear_finestra(posicio: Vector3, mida: Vector3):
+	parets.append({"cos": paret_static, "visual": visual, "normal": normal})
+	return visual
+
+func crear_finestra(paret: Node3D, posicio: Vector3, mida: Vector3):
 	var finestra = MeshInstance3D.new()
 	var box = BoxMesh.new()
 	box.size = mida
 	finestra.mesh = box
 	finestra.position = posicio
 	finestra.name = "Finestra"
-	add_child(finestra)
+	paret.add_child(finestra)
 
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(0.5, 0.7, 1.0)
+	material.albedo_color = Color(0.5, 0.7, 1.0, 0.8)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	finestra.set_surface_override_material(0, material)
+	finestra.material_override = material
 
-func crear_porta_visual(posicio: Vector3, mida: Vector3):
+func crear_porta_visual(paret: Node3D, posicio: Vector3, mida: Vector3):
 	var porta = MeshInstance3D.new()
 	var box = BoxMesh.new()
 	box.size = mida
 	porta.mesh = box
 	porta.position = posicio
 	porta.name = "PortaVisual"
-	add_child(porta)
+	paret.add_child(porta)
 
 	var material = StandardMaterial3D.new()
 	material.albedo_color = Color(1.0, 0.8, 0.0)
+	material.emission_enabled = true
 	material.emission = Color(0.8, 0.6, 0.0)
-	material.emission_energy_multiplier = 2.0
-	porta.set_surface_override_material(0, material)
+	material.emission_energy_multiplier = 0.6
+	porta.material_override = material
+
+## Abaixa les parets que queden entre la càmera i la sala, i aixeca les altres
+func _actualitzar_parets(delta: float):
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	for paret in parets:
+		var tapa: bool = (camera.global_position - paret.cos.global_position).dot(paret.normal) > 0.0
+		var objectiu := ESCALA_PARET_BAIXADA if tapa else 1.0
+		paret.visual.scale.y = move_toward(paret.visual.scale.y, objectiu, delta * 4.0)
+
+func _rids_parets() -> Array[RID]:
+	var rids: Array[RID] = []
+	for paret in parets:
+		rids.append(paret.cos.get_rid())
+	return rids
 
 # ─────────────────────────────────────────────── HUD
 
@@ -281,6 +351,8 @@ func _actualitzar_hud():
 
 	if not mode_construccio:
 		label_ajuda.text = ""
+	elif pestanya != Pestanya.MOBLES:
+		label_ajuda.text = "Tria un acabat per provar com queda   ·   Roda: zoom   ·   Botó central: girar càmera   ·   Esc: desfer / sortir"
 	elif mode_eliminacio:
 		label_ajuda.text = "Clic esquerre: esborrar   ·   Clic dret / Esc: tornar a col·locar"
 	else:
@@ -351,7 +423,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_ESCAPE:
-				if mode_eliminacio:
+				if acabat_provant:
+					_restaurar_acabats()
+				elif mode_eliminacio:
 					desactivar_mode_eliminacio()
 				elif moble_preview:
 					_cancelar_preview()
@@ -383,7 +457,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				else:
 					pintant = false
 			MOUSE_BUTTON_RIGHT:
-				if event.pressed:
+				if event.pressed and pestanya == Pestanya.MOBLES:
 					if mode_eliminacio:
 						desactivar_mode_eliminacio()
 					else:
@@ -413,6 +487,8 @@ func entrar_mode_construccio():
 	GameState.mode = GameState.Mode.CONSTRUIR
 	panel_ui.visible = true
 	item_list.visible = true
+	pestanyes.visible = true
+	_omplir_llista()
 	mostrar_grid()
 
 	# Càmera pròpia, perquè no toqui la del jugador
@@ -430,8 +506,10 @@ func sortir_mode_construccio():
 	pintant = false
 	desactivar_mode_eliminacio()
 	_eliminar_preview()
+	_restaurar_acabats()
 	panel_ui.visible = false
 	item_list.visible = false
+	pestanyes.visible = false
 	amagar_grid()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -452,6 +530,7 @@ func actualitzar_posicio_camera():
 	camera_construccio.look_at(Vector3.ZERO, Vector3.UP)
 
 func _process(delta):
+	_actualitzar_parets(delta)
 	if not mode_construccio:
 		return
 	if mode_eliminacio:
@@ -483,6 +562,100 @@ func amagar_grid():
 		if is_instance_valid(punt):
 			punt.queue_free()
 	punts_grid.clear()
+
+# ─────────────────────────────────────────────── Pestanyes i acabats
+
+func _canviar_pestanya(index: int):
+	_restaurar_acabats()
+	pintant = false
+	if mode_eliminacio:
+		desactivar_mode_eliminacio()
+	if pestanya == Pestanya.MOBLES:
+		_cancelar_preview()
+	pestanya = index as Pestanya
+	_omplir_llista()
+	_actualitzar_hud()
+
+func _omplir_llista():
+	item_list.clear()
+	acabats_llista.clear()
+	if pestanya == Pestanya.MOBLES:
+		for nom in noms_mobles:
+			item_list.add_item(nom)
+		return
+
+	var superficie := AcabatInterior.Superficie.PARET if pestanya == Pestanya.PARETS else AcabatInterior.Superficie.TERRA
+	var actual := parets_actual if superficie == AcabatInterior.Superficie.PARET else terra_actual
+	for acabat in CatalegAcabats.de_superficie(superficie):
+		var text: String = acabat.nom
+		if acabat.id == actual:
+			text += "   ✓"
+		elif not _es_meu(acabat):
+			text += "   %d 🪙" % acabat.preu
+		var i := item_list.add_item(text, acabat.icona())
+		if acabat.textura:
+			item_list.set_item_icon_modulate(i, acabat.color)
+		acabats_llista.append(acabat)
+
+func _on_item_seleccionat(index: int):
+	if pestanya == Pestanya.MOBLES:
+		_on_moble_seleccionat(index)
+	else:
+		_provar_acabat(acabats_llista[index])
+
+func _es_meu(acabat: AcabatInterior) -> bool:
+	return acabat.es_gratuit() or acabats_comprats.has(acabat.id)
+
+## Es veu a la sala de seguida. Si ja és teu, queda posat; si no, cal comprar-lo.
+func _provar_acabat(acabat: AcabatInterior):
+	_restaurar_acabats()
+	acabat.aplicar(_material_de(acabat.superficie))
+	if _es_meu(acabat):
+		_fixar_acabat(acabat)
+		return
+	acabat_provant = acabat
+	boto_comprar.visible = true
+	if Inventari.diners >= acabat.preu:
+		boto_comprar.text = "Comprar per %d 🪙" % acabat.preu
+		boto_comprar.disabled = false
+	else:
+		boto_comprar.text = "Et falten %d 🪙" % (acabat.preu - Inventari.diners)
+		boto_comprar.disabled = true
+
+func _comprar_acabat_provant():
+	var acabat := acabat_provant
+	if acabat == null or not Inventari.gastar_diners(acabat.preu):
+		return
+	acabats_comprats.append(acabat.id)
+	_fixar_acabat(acabat)
+	_mostrar_avis("Comprat: " + acabat.nom)
+	guardar_decoracio()
+
+func _fixar_acabat(acabat: AcabatInterior):
+	if acabat.superficie == AcabatInterior.Superficie.PARET:
+		parets_actual = acabat.id
+	else:
+		terra_actual = acabat.id
+	acabat_provant = null
+	boto_comprar.visible = false
+	_omplir_llista()
+
+## Desfà la prova d'un acabat no comprat i torna a posar els que tens
+func _restaurar_acabats():
+	acabat_provant = null
+	if boto_comprar:
+		boto_comprar.visible = false
+	_aplicar_acabats_actuals()
+
+func _aplicar_acabats_actuals():
+	CatalegAcabats.per_id(terra_actual).aplicar(material_terra)
+	CatalegAcabats.per_id(parets_actual).aplicar(material_parets)
+
+func _material_de(superficie: AcabatInterior.Superficie) -> StandardMaterial3D:
+	return material_parets if superficie == AcabatInterior.Superficie.PARET else material_terra
+
+func _id_valid(id, per_defecte: String) -> String:
+	return id if id is String and CatalegAcabats.per_id(id) != null else per_defecte
 
 # ─────────────────────────────────────────────── Preview
 
@@ -713,6 +886,7 @@ func actualitzar_hover_eliminacio():
 	var camera := get_viewport().get_camera_3d()
 	var origen := camera.project_ray_origin(ratoli)
 	var query := PhysicsRayQueryParameters3D.create(origen, origen + camera.project_ray_normal(ratoli) * 100.0)
+	query.exclude = _rids_parets()
 	var resultat := get_world_3d().direct_space_state.intersect_ray(query)
 
 	var moble: Node3D = null
@@ -779,9 +953,15 @@ func guardar_decoracio():
 			"rotacio": {"x": moble.rotation.x, "y": moble.rotation.y, "z": moble.rotation.z},
 		})
 
+	var dades := {
+		"mobles": mobles_data,
+		"terra": terra_actual,
+		"parets": parets_actual,
+		"acabats_comprats": acabats_comprats,
+	}
 	var fitxer = FileAccess.open("user://casa_interior_mobles.save", FileAccess.WRITE)
 	if fitxer:
-		fitxer.store_string(JSON.stringify(mobles_data))
+		fitxer.store_string(JSON.stringify(dades))
 		print("Decoració guardada! (", mobles_data.size(), " mobles)")
 	else:
 		push_error("No es pot guardar la decoració")
@@ -792,8 +972,16 @@ func carregar_decoracio():
 		print("Cap decoració guardada prèviament")
 		return
 
-	var mobles_data = JSON.parse_string(fitxer.get_as_text())
-	if not mobles_data is Array:
+	var dades = JSON.parse_string(fitxer.get_as_text())
+	var mobles_data = []
+	if dades is Array:
+		mobles_data = dades   # format antic: només mobles
+	elif dades is Dictionary:
+		mobles_data = dades.get("mobles", [])
+		terra_actual = _id_valid(dades.get("terra", ""), CatalegAcabats.TERRA_PER_DEFECTE)
+		parets_actual = _id_valid(dades.get("parets", ""), CatalegAcabats.PARET_PER_DEFECTE)
+		acabats_comprats = dades.get("acabats_comprats", [])
+	else:
 		push_error("El fitxer de decoració està malmès")
 		return
 

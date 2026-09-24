@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AcabatInterior" format=3]
+
+[ext_resource type="Script" path="res://Scripts/casa/acabat_interior.gd" id="1_acabat"]
+
+[resource]
+script = ExtResource("1_acabat")
+id = "paret_blau"
+nom = "Blau cel"
+superficie = 1
+color = Color(0.62, 0.78, 0.9, 1)
+preu = 25

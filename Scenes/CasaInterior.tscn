@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/mobles/barrica.tscn" id="13_barrica"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_xd4tj"]
+size = Vector3(0.8, 2, 1.2)
 
 [node name="CasaInterior" type="Node3D" unique_id=2072462834]
 script = ExtResource("1_xd4tj")
@@ -53,11 +54,11 @@ theme_override_font_sizes/font_size = 40
 script = ExtResource("9_casa1")
 
 [node name="PortaSortida" type="Area3D" parent="." unique_id=1105138131]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.077105, 0, 6.56415)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.55, 0, 2)
 script = ExtResource("3_fapeo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PortaSortida" unique_id=854634030]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.305176, 0.45703125, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("BoxShape3D_xd4tj")
 
 [node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1377652277]
