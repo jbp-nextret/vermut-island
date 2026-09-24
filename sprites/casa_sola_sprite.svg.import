@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6e4crh5yuhvb"
-path="res://.godot/imported/casa_sola_sprite.svg-2535def0fdec2f70c201c1f143956033.ctex"
+path="res://.godot/imported/casa_sola_sprite.svg-202a21935da7d85d7939ce05e93ee439.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/casa_sola_sprite.svg"
-dest_files=["res://.godot/imported/casa_sola_sprite.svg-2535def0fdec2f70c201c1f143956033.ctex"]
+source_file="res://Sprites/casa_sola_sprite.svg"
+dest_files=["res://.godot/imported/casa_sola_sprite.svg-202a21935da7d85d7939ce05e93ee439.ctex"]
 
 [params]
 

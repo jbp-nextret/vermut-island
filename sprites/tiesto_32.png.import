@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://eflydags0yvf"
-path.s3tc="res://.godot/imported/tiesto_32.png-e7cfcf9c98e4e5479511a7e38957dc40.s3tc.ctex"
+path.s3tc="res://.godot/imported/tiesto_32.png-9d3daf9e84c186b110357db79a21d5d1.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/tiesto_32.png"
-dest_files=["res://.godot/imported/tiesto_32.png-e7cfcf9c98e4e5479511a7e38957dc40.s3tc.ctex"]
+source_file="res://Sprites/tiesto_32.png"
+dest_files=["res://.godot/imported/tiesto_32.png-9d3daf9e84c186b110357db79a21d5d1.s3tc.ctex"]
 
 [params]
 

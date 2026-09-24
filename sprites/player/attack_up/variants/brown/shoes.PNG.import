@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cim1hx0eiy522"
-path="res://.godot/imported/shoes.PNG-da9ce2f3f86e01c92c397c691c3bbf3f.ctex"
+path="res://.godot/imported/shoes.PNG-342532008535e47e0ffcab2f0ccb208f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/attack_up/variants/brown/shoes.PNG"
-dest_files=["res://.godot/imported/shoes.PNG-da9ce2f3f86e01c92c397c691c3bbf3f.ctex"]
+source_file="res://Sprites/player/attack_up/variants/brown/shoes.PNG"
+dest_files=["res://.godot/imported/shoes.PNG-342532008535e47e0ffcab2f0ccb208f.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct2a3rkans7al"
-path="res://.godot/imported/eyes.PNG-87312b1765524008ebb3cbfef9f27279.ctex"
+path="res://.godot/imported/eyes.PNG-105f626521b8ace03c5414764e463c6f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/attack_sides/variants/ambar/eyes.PNG"
-dest_files=["res://.godot/imported/eyes.PNG-87312b1765524008ebb3cbfef9f27279.ctex"]
+source_file="res://Sprites/player/attack_sides/variants/ambar/eyes.PNG"
+dest_files=["res://.godot/imported/eyes.PNG-105f626521b8ace03c5414764e463c6f.ctex"]
 
 [params]
 

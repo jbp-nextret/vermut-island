@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ci1v6rkxnpdfa"
-path.s3tc="res://.godot/imported/plant-3.png-8d1410fa7ddc7b8a8812f8f51a11693b.s3tc.ctex"
+path.s3tc="res://.godot/imported/plant-3.png-e7c5105bd3437873af1d570ddfaa279b.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/Crops/plant-3.png"
-dest_files=["res://.godot/imported/plant-3.png-8d1410fa7ddc7b8a8812f8f51a11693b.s3tc.ctex"]
+source_file="res://Sprites/Crops/plant-3.png"
+dest_files=["res://.godot/imported/plant-3.png-e7c5105bd3437873af1d570ddfaa279b.s3tc.ctex"]
 
 [params]
 

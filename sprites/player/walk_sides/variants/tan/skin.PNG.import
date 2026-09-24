@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ck5bpibk8hk0j"
-path="res://.godot/imported/skin.PNG-ef8feb67957b2ba01387bf68cd8ceeb3.ctex"
+path="res://.godot/imported/skin.PNG-8d4f6f3696b3e2fec02577534039cc94.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/walk_sides/variants/tan/skin.PNG"
-dest_files=["res://.godot/imported/skin.PNG-ef8feb67957b2ba01387bf68cd8ceeb3.ctex"]
+source_file="res://Sprites/player/walk_sides/variants/tan/skin.PNG"
+dest_files=["res://.godot/imported/skin.PNG-8d4f6f3696b3e2fec02577534039cc94.ctex"]
 
 [params]
 

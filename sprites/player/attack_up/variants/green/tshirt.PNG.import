@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bs8g8bh60pmjc"
-path="res://.godot/imported/tshirt.PNG-5c4ff052f21d00151ce300b5f29bbf43.ctex"
+path="res://.godot/imported/tshirt.PNG-8ebfd42acde8becc10d58044bfd10dc6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/attack_up/variants/green/tshirt.PNG"
-dest_files=["res://.godot/imported/tshirt.PNG-5c4ff052f21d00151ce300b5f29bbf43.ctex"]
+source_file="res://Sprites/player/attack_up/variants/green/tshirt.PNG"
+dest_files=["res://.godot/imported/tshirt.PNG-8ebfd42acde8becc10d58044bfd10dc6.ctex"]
 
 [params]
 

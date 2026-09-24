@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blq7iwjwapm1o"
-path="res://.godot/imported/hair.PNG-7447d681c1805e7585e6499781db23e1.ctex"
+path="res://.godot/imported/hair.PNG-b15e072dee944adc55dc4d6458981726.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/attack_down/variants/blonde/hair.PNG"
-dest_files=["res://.godot/imported/hair.PNG-7447d681c1805e7585e6499781db23e1.ctex"]
+source_file="res://Sprites/player/attack_down/variants/blonde/hair.PNG"
+dest_files=["res://.godot/imported/hair.PNG-b15e072dee944adc55dc4d6458981726.ctex"]
 
 [params]
 

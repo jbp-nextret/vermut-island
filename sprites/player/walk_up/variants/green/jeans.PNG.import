@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8t0xp3bcb4l1"
-path="res://.godot/imported/jeans.PNG-aea478a545237a3c5a8e0819fa043165.ctex"
+path="res://.godot/imported/jeans.PNG-03d2bbd82b112b30f1c5e09ea142ca42.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/walk_up/variants/green/jeans.PNG"
-dest_files=["res://.godot/imported/jeans.PNG-aea478a545237a3c5a8e0819fa043165.ctex"]
+source_file="res://Sprites/player/walk_up/variants/green/jeans.PNG"
+dest_files=["res://.godot/imported/jeans.PNG-03d2bbd82b112b30f1c5e09ea142ca42.ctex"]
 
 [params]
 

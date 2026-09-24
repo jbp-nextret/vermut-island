@@ -10,7 +10,7 @@ func _ready():
 		add_child(instance)
 		
 		# Aplica escala
-		scale = Vector3.ONE * escala_model
+		instance.scale = Vector3.ONE * escala_model   # en lloc de: scale = Vector3.ONE * escala_model
 		
 		print("Model carregat: ", model_path)
 		print("Escala aplicada: ", scale)

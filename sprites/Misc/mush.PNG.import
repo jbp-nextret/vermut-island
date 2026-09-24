@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dd2rnab2gynmb"
-path="res://.godot/imported/mush.PNG-262a21d8420e9b81640f6d8be2ea28ba.ctex"
+path="res://.godot/imported/mush.PNG-026e2da2f894b5167ff49292b3b4bec7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/Misc/mush.PNG"
-dest_files=["res://.godot/imported/mush.PNG-262a21d8420e9b81640f6d8be2ea28ba.ctex"]
+source_file="res://Sprites/Misc/mush.PNG"
+dest_files=["res://.godot/imported/mush.PNG-026e2da2f894b5167ff49292b3b4bec7.ctex"]
 
 [params]
 

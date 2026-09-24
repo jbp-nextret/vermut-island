@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://db047oeth7iim"
-path.s3tc="res://.godot/imported/jeans.PNG-7bb8de1ef84ca195e61de9189e52df55.s3tc.ctex"
+path.s3tc="res://.godot/imported/jeans.PNG-9f3beb29f1c32a647c64cacd16867d64.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/attack_down/jeans.PNG"
-dest_files=["res://.godot/imported/jeans.PNG-7bb8de1ef84ca195e61de9189e52df55.s3tc.ctex"]
+source_file="res://Sprites/player/attack_down/jeans.PNG"
+dest_files=["res://.godot/imported/jeans.PNG-9f3beb29f1c32a647c64cacd16867d64.s3tc.ctex"]
 
 [params]
 

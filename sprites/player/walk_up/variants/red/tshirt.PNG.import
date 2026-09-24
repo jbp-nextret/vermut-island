@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cjfg12ep3mbtm"
-path="res://.godot/imported/tshirt.PNG-3a4941f47447e77bd1d48a4f8fcff088.ctex"
+path="res://.godot/imported/tshirt.PNG-fc7e9d23a740254c8eb1c463944869f8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/walk_up/variants/red/tshirt.PNG"
-dest_files=["res://.godot/imported/tshirt.PNG-3a4941f47447e77bd1d48a4f8fcff088.ctex"]
+source_file="res://Sprites/player/walk_up/variants/red/tshirt.PNG"
+dest_files=["res://.godot/imported/tshirt.PNG-fc7e9d23a740254c8eb1c463944869f8.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbx3ls1yqw2gt"
-path="res://.godot/imported/poring_idle.png-026a7bdb3e074b460e9882b9f012b51d.ctex"
+path="res://.godot/imported/poring_idle.png-56c3a12a58d3d36506fa0beb1e48bf81.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/poring/poring_idle.png"
-dest_files=["res://.godot/imported/poring_idle.png-026a7bdb3e074b460e9882b9f012b51d.ctex"]
+source_file="res://Sprites/poring/poring_idle.png"
+dest_files=["res://.godot/imported/poring_idle.png-56c3a12a58d3d36506fa0beb1e48bf81.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -37,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

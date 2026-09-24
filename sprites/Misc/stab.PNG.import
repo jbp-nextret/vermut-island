@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c175ijq72rsys"
-path.s3tc="res://.godot/imported/stab.PNG-2ef978267b233aa764dcfd12594a47a9.s3tc.ctex"
+path.s3tc="res://.godot/imported/stab.PNG-9a14f32d360b9206548675210d3ab779.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/Misc/stab.PNG"
-dest_files=["res://.godot/imported/stab.PNG-2ef978267b233aa764dcfd12594a47a9.s3tc.ctex"]
+source_file="res://Sprites/Misc/stab.PNG"
+dest_files=["res://.godot/imported/stab.PNG-9a14f32d360b9206548675210d3ab779.s3tc.ctex"]
 
 [params]
 

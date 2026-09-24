@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hn4wxrxmyged"
-path="res://.godot/imported/Darts.PNG-f8e5fe0f46ee3d4a06464a35b42df773.ctex"
+path="res://.godot/imported/Darts.PNG-a36c6be3fec244e0aa9d8d12d57dce12.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/Misc/Darts.PNG"
-dest_files=["res://.godot/imported/Darts.PNG-f8e5fe0f46ee3d4a06464a35b42df773.ctex"]
+source_file="res://Sprites/Misc/Darts.PNG"
+dest_files=["res://.godot/imported/Darts.PNG-a36c6be3fec244e0aa9d8d12d57dce12.ctex"]
 
 [params]
 

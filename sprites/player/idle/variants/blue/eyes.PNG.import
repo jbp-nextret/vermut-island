@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckmpit0emi0eg"
-path="res://.godot/imported/eyes.PNG-aaa2bacee3855617b4c46e081541b0ab.ctex"
+path="res://.godot/imported/eyes.PNG-68806e13893cf0ba4a576f3ecd6be14c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/idle/variants/blue/eyes.PNG"
-dest_files=["res://.godot/imported/eyes.PNG-aaa2bacee3855617b4c46e081541b0ab.ctex"]
+source_file="res://Sprites/player/idle/variants/blue/eyes.PNG"
+dest_files=["res://.godot/imported/eyes.PNG-68806e13893cf0ba4a576f3ecd6be14c.ctex"]
 
 [params]
 

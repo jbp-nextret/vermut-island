@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cdtf425pyplxm"
-path="res://.godot/imported/campfire.PNG-bdcc6f0806a60f288ec8f2c6a6d5269b.ctex"
+path="res://.godot/imported/campfire.PNG-843b75af84e04c4ceafa9acf847a092a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/Misc/campfire.PNG"
-dest_files=["res://.godot/imported/campfire.PNG-bdcc6f0806a60f288ec8f2c6a6d5269b.ctex"]
+source_file="res://Sprites/Misc/campfire.PNG"
+dest_files=["res://.godot/imported/campfire.PNG-843b75af84e04c4ceafa9acf847a092a.ctex"]
 
 [params]
 

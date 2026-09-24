@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cefty8ahxf2i0"
-path="res://.godot/imported/shoes.PNG-e4d6e485660f9277064944b021d58a22.ctex"
+path="res://.godot/imported/shoes.PNG-7ff9e7abe8ffa42a75e5f347ff82b2c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/walk_down/variants/brown/shoes.PNG"
-dest_files=["res://.godot/imported/shoes.PNG-e4d6e485660f9277064944b021d58a22.ctex"]
+source_file="res://Sprites/player/walk_down/variants/brown/shoes.PNG"
+dest_files=["res://.godot/imported/shoes.PNG-7ff9e7abe8ffa42a75e5f347ff82b2c9.ctex"]
 
 [params]
 

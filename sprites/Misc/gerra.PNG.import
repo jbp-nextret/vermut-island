@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8b8oldm5yu5g"
-path="res://.godot/imported/gerra.PNG-2538b00915a56b73e38afe5e3caba641.ctex"
+path="res://.godot/imported/gerra.PNG-b61358c730382750ef7a12ba55517c93.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/Misc/gerra.PNG"
-dest_files=["res://.godot/imported/gerra.PNG-2538b00915a56b73e38afe5e3caba641.ctex"]
+source_file="res://Sprites/Misc/gerra.PNG"
+dest_files=["res://.godot/imported/gerra.PNG-b61358c730382750ef7a12ba55517c93.ctex"]
 
 [params]
 

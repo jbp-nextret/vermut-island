@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://611nw4hd5pq7"
-path="res://.godot/imported/skin.PNG-f7cf0688349a196d275df793cae7020e.ctex"
+path="res://.godot/imported/skin.PNG-f27f19f361c8f1763d99d295c1bfae87.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/idle/variants/tan/skin.PNG"
-dest_files=["res://.godot/imported/skin.PNG-f7cf0688349a196d275df793cae7020e.ctex"]
+source_file="res://Sprites/player/idle/variants/tan/skin.PNG"
+dest_files=["res://.godot/imported/skin.PNG-f27f19f361c8f1763d99d295c1bfae87.ctex"]
 
 [params]
 

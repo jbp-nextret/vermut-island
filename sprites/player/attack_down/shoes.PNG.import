@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://o1a4watcstcw"
-path.s3tc="res://.godot/imported/shoes.PNG-75a1d6bd880aa73e24e9e9b28153e7d2.s3tc.ctex"
+path.s3tc="res://.godot/imported/shoes.PNG-b712daff15bc9905309c60acecc0fbcb.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/attack_down/shoes.PNG"
-dest_files=["res://.godot/imported/shoes.PNG-75a1d6bd880aa73e24e9e9b28153e7d2.s3tc.ctex"]
+source_file="res://Sprites/player/attack_down/shoes.PNG"
+dest_files=["res://.godot/imported/shoes.PNG-b712daff15bc9905309c60acecc0fbcb.s3tc.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yfse02gbdy3c"
-path="res://.godot/imported/hair.PNG-6a73d722421fc40875d30f10bb818ccc.ctex"
+path="res://.godot/imported/hair.PNG-381a6e9023c5152a1ab005868e3006ba.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/idle/variants/brown/hair.PNG"
-dest_files=["res://.godot/imported/hair.PNG-6a73d722421fc40875d30f10bb818ccc.ctex"]
+source_file="res://Sprites/player/idle/variants/brown/hair.PNG"
+dest_files=["res://.godot/imported/hair.PNG-381a6e9023c5152a1ab005868e3006ba.ctex"]
 
 [params]
 

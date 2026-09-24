@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cos84ra103uy0"
-path.s3tc="res://.godot/imported/casa_sprite.png-af973cfebcdf5f899eae7a85be1aeb05.s3tc.ctex"
+path.s3tc="res://.godot/imported/casa_sprite.png-7383c1315a56f64998e82372f590e785.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/casa_sprite.png"
-dest_files=["res://.godot/imported/casa_sprite.png-af973cfebcdf5f899eae7a85be1aeb05.s3tc.ctex"]
+source_file="res://Sprites/casa_sprite.png"
+dest_files=["res://.godot/imported/casa_sprite.png-7383c1315a56f64998e82372f590e785.s3tc.ctex"]
 
 [params]
 

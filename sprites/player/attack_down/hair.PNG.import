@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6yo2u6b40dce"
-path.s3tc="res://.godot/imported/hair.PNG-253c03fae4e94a566a9966ded389edd9.s3tc.ctex"
+path.s3tc="res://.godot/imported/hair.PNG-e6374b59c3725163e64d202db67455e9.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/attack_down/hair.PNG"
-dest_files=["res://.godot/imported/hair.PNG-253c03fae4e94a566a9966ded389edd9.s3tc.ctex"]
+source_file="res://Sprites/player/attack_down/hair.PNG"
+dest_files=["res://.godot/imported/hair.PNG-e6374b59c3725163e64d202db67455e9.s3tc.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://i34f2xwh2xe6"
-path="res://.godot/imported/hook.PNG-26eca80e36eaf0957cc885d4899e0caf.ctex"
+path="res://.godot/imported/hook.PNG-b9cefc3e57e52bac9fe26566603aedb0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/Misc/hook.PNG"
-dest_files=["res://.godot/imported/hook.PNG-26eca80e36eaf0957cc885d4899e0caf.ctex"]
+source_file="res://Sprites/Misc/hook.PNG"
+dest_files=["res://.godot/imported/hook.PNG-b9cefc3e57e52bac9fe26566603aedb0.ctex"]
 
 [params]
 

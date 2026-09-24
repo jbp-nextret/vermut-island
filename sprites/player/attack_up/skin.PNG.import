@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bia115dq3aqoc"
-path.s3tc="res://.godot/imported/skin.PNG-bd867372c7412f1c006fe141250d1ba8.s3tc.ctex"
+path.s3tc="res://.godot/imported/skin.PNG-539cf8f485fb12d02e7cf537c99230fa.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/attack_up/skin.PNG"
-dest_files=["res://.godot/imported/skin.PNG-bd867372c7412f1c006fe141250d1ba8.s3tc.ctex"]
+source_file="res://Sprites/player/attack_up/skin.PNG"
+dest_files=["res://.godot/imported/skin.PNG-539cf8f485fb12d02e7cf537c99230fa.s3tc.ctex"]
 
 [params]
 

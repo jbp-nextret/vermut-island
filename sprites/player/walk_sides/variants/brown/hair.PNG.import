@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqqmhthfvf4kq"
-path="res://.godot/imported/hair.PNG-1dcdd7d5d56e3cefb662dd4e2e87037f.ctex"
+path="res://.godot/imported/hair.PNG-d86fba2c660638e140484449ea321ea3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player/walk_sides/variants/brown/hair.PNG"
-dest_files=["res://.godot/imported/hair.PNG-1dcdd7d5d56e3cefb662dd4e2e87037f.ctex"]
+source_file="res://Sprites/player/walk_sides/variants/brown/hair.PNG"
+dest_files=["res://.godot/imported/hair.PNG-d86fba2c660638e140484449ea321ea3.ctex"]
 
 [params]
 

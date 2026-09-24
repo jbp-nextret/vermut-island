@@ -1,11 +1,14 @@
+res://sprites/poring/
+res://sprites/drinks/vermut/
+res://Scripts/
+res://Sprites/drinks/vermut/
+res://Scripts/utils/
 res://sprites/Crops/
 res://Scripts/ui/
 res://Scenes/
 res://sprites/Misc/
-res://Scripts/
 res://sprites/player/attack_down/
 res://sprites/player/attack_up/
-res://Scripts/utils/
 res://sprites/player/attack_sides/
 res://sprites/
 res://sprites/player/idle/

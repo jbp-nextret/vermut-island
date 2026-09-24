@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brsxcbt55bdbh"
-path="res://.godot/imported/F1.png-fe56bbbfa8435a31835ce0da55480a94.ctex"
+uid="uid://cqpyj4dk3tpms"
+path="res://.godot/imported/vermut.png-c6d7964fd2aca3c9aa87cc395dbd6657.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/drinks/vermut/F1.png"
-dest_files=["res://.godot/imported/F1.png-fe56bbbfa8435a31835ce0da55480a94.ctex"]
+source_file="res://Sprites/drinks/vermut/vermut.png"
+dest_files=["res://.godot/imported/vermut.png-c6d7964fd2aca3c9aa87cc395dbd6657.ctex"]
 
 [params]
 
@@ -37,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

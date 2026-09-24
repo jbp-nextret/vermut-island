@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://co5m8ju3dbxio"
-path.s3tc="res://.godot/imported/tshirt.PNG-6bde1321e99879c6a30fc3115f8ab4cd.s3tc.ctex"
+path.s3tc="res://.godot/imported/tshirt.PNG-af45ec2c134dad818c77cf5adcec27d7.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/walk_down/tshirt.PNG"
-dest_files=["res://.godot/imported/tshirt.PNG-6bde1321e99879c6a30fc3115f8ab4cd.s3tc.ctex"]
+source_file="res://Sprites/player/walk_down/tshirt.PNG"
+dest_files=["res://.godot/imported/tshirt.PNG-af45ec2c134dad818c77cf5adcec27d7.s3tc.ctex"]
 
 [params]
 

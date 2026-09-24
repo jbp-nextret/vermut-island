@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1tot82pwrcex"
-path.s3tc="res://.godot/imported/jeans.PNG-622e4c8cd4bd725dd98a6dfae62bd0e6.s3tc.ctex"
+path.s3tc="res://.godot/imported/jeans.PNG-ec46ee463eb27f8ff652ad7b4073ae58.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://sprites/player/idle/jeans.PNG"
-dest_files=["res://.godot/imported/jeans.PNG-622e4c8cd4bd725dd98a6dfae62bd0e6.s3tc.ctex"]
+source_file="res://Sprites/player/idle/jeans.PNG"
+dest_files=["res://.godot/imported/jeans.PNG-ec46ee463eb27f8ff652ad7b4073ae58.s3tc.ctex"]
 
 [params]
 
