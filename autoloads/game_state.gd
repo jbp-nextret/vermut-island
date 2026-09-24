@@ -25,4 +25,4 @@ func pot_construir() -> bool:
 	return dins_casa and mode == Mode.EXPLORAR
 
 func pot_obrir_vermuteria() -> bool:
-	return dins_casa and mode == Mode.EXPLORAR
+	return dins_casa and mode == Mode.EXPLORAR and GestorTemps.es_hora_de_servei()

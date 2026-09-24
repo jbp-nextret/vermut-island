@@ -42,6 +42,8 @@ func tancar() -> void:
 	for p in get_tree().get_nodes_in_group("porings"):
 		p.marxar()
 	GameState.mode = GameState.Mode.EXPLORAR
+	# Com a Dave the Diver: després del servei ja és de nit
+	GestorTemps.avancar_fins(GestorTemps.hora_nit)
 	servei_tancat.emit()
 
 func _process(delta: float) -> void:

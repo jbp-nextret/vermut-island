@@ -34,6 +34,7 @@ var camera_anterior: Camera3D = null
 @onready var porta_sortida = $PortaSortida
 @onready var camera_construccio: Camera3D = $Camera3D
 @onready var porta_clients: Marker3D = $Door
+@onready var rellotge: Label = $CanvasLayer/Rellotge
 
 # HUD (es crea per codi)
 var boto_construir: Button
@@ -41,6 +42,8 @@ var boto_vermuteria: Button
 var label_ajuda: Label
 var label_avis: Label
 var tween_avis: Tween
+var fos_negre: ColorRect
+var label_transicio: Label
 
 var gestor_servei: GestorServei
 
@@ -65,6 +68,7 @@ func _ready():
 
 	panel_ui.visible = false
 	item_list.visible = false
+	rellotge.visible = false   # dins de casa el temps està aturat
 	carregar_decoracio()
 	_actualitzar_hud()
 
@@ -99,7 +103,7 @@ func _crear_gestor_servei():
 	gestor_servei.porta = porta_clients
 	add_child(gestor_servei)
 	gestor_servei.servei_obert.connect(_actualitzar_hud)
-	gestor_servei.servei_tancat.connect(_actualitzar_hud)
+	gestor_servei.servei_tancat.connect(_on_servei_tancat)
 	gestor_servei.temps_actualitzat.connect(_on_temps_servei)
 
 # ─────────────────────────────────────────────── Sala
@@ -227,6 +231,19 @@ func _crear_hud():
 	label_avis.offset_bottom = -52
 	label_avis.modulate.a = 0.0
 
+	# Fos a negre per a la transició a la nit
+	fos_negre = ColorRect.new()
+	fos_negre.color = Color(0.02, 0.02, 0.06)
+	fos_negre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fos_negre.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fos_negre.modulate.a = 0.0
+	capa.add_child(fos_negre)
+
+	label_transicio = _crear_label(Color(0.85, 0.85, 1.0), 36)
+	label_transicio.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label_transicio.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	fos_negre.add_child(label_transicio)
+
 func _crear_boto(text: String) -> Button:
 	var b := Button.new()
 	b.text = text
@@ -251,6 +268,8 @@ func _actualitzar_hud():
 
 	if gestor_servei.obert:
 		_on_temps_servei(gestor_servei.temps_restant)
+	elif not GestorTemps.es_hora_de_servei():
+		boto_vermuteria.text = "Tancat fins demà"
 	else:
 		boto_vermuteria.text = "Obrir vermuteria"
 	boto_vermuteria.disabled = not gestor_servei.obert and not GameState.pot_obrir_vermuteria()
@@ -265,6 +284,15 @@ func _actualitzar_hud():
 func _on_temps_servei(segons: float):
 	var s := int(ceil(segons))
 	boto_vermuteria.text = "Tancar vermuteria  %d:%02d" % [floori(s / 60.0), s % 60]
+
+func _on_servei_tancat():
+	_actualitzar_hud()
+	# Fos a negre curt: "Ha caigut la nit" i tornem a la casa
+	label_transicio.text = "Fi del servei\nHa caigut la nit..."
+	var t := create_tween()
+	t.tween_property(fos_negre, "modulate:a", 1.0, 0.6)
+	t.tween_interval(1.4)
+	t.tween_property(fos_negre, "modulate:a", 0.0, 0.8)
 
 func _mostrar_avis(text: String):
 	label_avis.text = text
