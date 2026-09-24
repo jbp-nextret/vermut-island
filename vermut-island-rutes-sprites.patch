@@ -1,0 +1,109 @@
+From 607e92d6901d1f0665bf7447e7f972877ffe191b Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Thu, 24 Sep 2026 10:42:53 +0000
+Subject: [PATCH] Rutes res://sprites/ -> res://Sprites/
+
+---
+ Scenes/Poring.tscn      | 4 ++--
+ Scenes/Vermut.tscn      | 2 +-
+ Scripts/bola_foc.gd     | 4 ++--
+ Scripts/enemic.gd       | 2 +-
+ Scripts/personatge.gd   | 4 ++--
+ tools/generar_colors.gd | 2 +-
+ 6 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/Scenes/Poring.tscn b/Scenes/Poring.tscn
+index c6ac111..f32b3b9 100644
+--- a/Scenes/Poring.tscn
++++ b/Scenes/Poring.tscn
+@@ -2,9 +2,9 @@
+ 
+ [ext_resource type="Script" uid="uid://lbc55ohb55da" path="res://Scripts/poring.gd" id="1_2gd0a"]
+ [ext_resource type="Texture2D" uid="uid://cbx3ls1yqw2gt" path="res://Sprites/poring/poring_idle.png" id="2_2gd0a"]
+-[ext_resource type="Texture2D" uid="uid://cbdlfu2jnhddg" path="res://sprites/poring/poring_eating.png" id="2_th7t3"]
++[ext_resource type="Texture2D" uid="uid://cbdlfu2jnhddg" path="res://Sprites/poring/poring_eating.png" id="2_th7t3"]
+ [ext_resource type="Texture2D" uid="uid://pnx5ayj5enr6" path="res://Sprites/drinks/vermut/vermut_icon.tres" id="3_t0rjg"]
+-[ext_resource type="Texture2D" uid="uid://c7xcj3jatyvmu" path="res://sprites/poring/poring_walk.png" id="4_bqaw2"]
++[ext_resource type="Texture2D" uid="uid://c7xcj3jatyvmu" path="res://Sprites/poring/poring_walk.png" id="4_bqaw2"]
+ 
+ [sub_resource type="AtlasTexture" id="AtlasTexture_oswqv"]
+ atlas = ExtResource("2_th7t3")
+diff --git a/Scenes/Vermut.tscn b/Scenes/Vermut.tscn
+index 72a5ca6..c19b646 100644
+--- a/Scenes/Vermut.tscn
++++ b/Scenes/Vermut.tscn
+@@ -1,7 +1,7 @@
+ [gd_scene format=3 uid="uid://c33cl61yav456"]
+ 
+ [ext_resource type="Script" uid="uid://dwqp6u2kl5xgs" path="res://Scripts/drink.gd" id="1_jb67n"]
+-[ext_resource type="Texture2D" uid="uid://cqpyj4dk3tpms" path="res://sprites/drinks/vermut/vermut.png" id="2_6xsug"]
++[ext_resource type="Texture2D" uid="uid://cqpyj4dk3tpms" path="res://Sprites/drinks/vermut/vermut.png" id="2_6xsug"]
+ 
+ [sub_resource type="AtlasTexture" id="AtlasTexture_vw1ar"]
+ atlas = ExtResource("2_6xsug")
+diff --git a/Scripts/bola_foc.gd b/Scripts/bola_foc.gd
+index dc18b27..e5ef4b6 100644
+--- a/Scripts/bola_foc.gd
++++ b/Scripts/bola_foc.gd
+@@ -5,8 +5,8 @@ extends Area3D
+ @onready var particules: GPUParticles3D = $GPUParticles3D
+ var direccio: Vector3 = Vector3.ZERO
+ var temps_viu: float = 0.0
+-const TEXTURA_TRAIL := preload("res://sprites/Misc/particle_3.PNG")
+-const TEXTURA_EXPLOSIO := preload("res://sprites/Misc/particle_0.PNG")
++const TEXTURA_TRAIL := preload("res://Sprites/Misc/particle_3.PNG")
++const TEXTURA_EXPLOSIO := preload("res://Sprites/Misc/particle_0.PNG")
+ 
+ func _ready():
+ 	body_entered.connect(_on_body_entered)
+diff --git a/Scripts/enemic.gd b/Scripts/enemic.gd
+index a621574..e46e87c 100644
+--- a/Scripts/enemic.gd
++++ b/Scripts/enemic.gd
+@@ -208,7 +208,7 @@ func mostrar_particules_mort():
+ 	quad.size = Vector2(0.30, 0.30)
+ 
+ 	var textura_mat := StandardMaterial3D.new()
+-	textura_mat.albedo_texture = preload("res://sprites/Misc/particle_2.PNG")
++	textura_mat.albedo_texture = preload("res://Sprites/Misc/particle_2.PNG")
+ 	textura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ 	textura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ 	textura_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+diff --git a/Scripts/personatge.gd b/Scripts/personatge.gd
+index 40bb281..f2e8369 100644
+--- a/Scripts/personatge.gd
++++ b/Scripts/personatge.gd
+@@ -234,7 +234,7 @@ func iniciar_atac(dany: int, tipus: String):
+ 		
+ func _test_cercle():
+ 	var cercle := Sprite3D.new()
+-	cercle.texture = preload("res://sprites/Misc/magic-3.png")
++	cercle.texture = preload("res://Sprites/Misc/magic-3.png")
+ 	cercle.pixel_size = 0.04
+ 	#cercle.billboard = SpriteBase3D.BILLBOARD_DISABLED
+ 	cercle.rotation_degrees.x = -90
+@@ -303,7 +303,7 @@ func disparar_bola_foc():
+ 
+ func _crear_cercle_alquimia():
+ 	var cercle := Sprite3D.new()
+-	cercle.texture = preload("res://sprites/Misc/magic-3.png")
++	cercle.texture = preload("res://Sprites/Misc/magic-3.png")
+ 	cercle.pixel_size = 0.04
+ 	cercle.scale = Vector3.ONE * 0.3
+ 	cercle.modulate = cercle_colors[0]
+diff --git a/tools/generar_colors.gd b/tools/generar_colors.gd
+index 2d353ad..f034407 100644
+--- a/tools/generar_colors.gd
++++ b/tools/generar_colors.gd
+@@ -1,7 +1,7 @@
+ @tool
+ extends EditorScript
+ 
+-const PLAYER_PATH := "res://sprites/player"
++const PLAYER_PATH := "res://Sprites/player"
+ const LLINDAR_BLANC := 0.85
+ 
+ const COLORS := {
+-- 
+2.43.0
+
