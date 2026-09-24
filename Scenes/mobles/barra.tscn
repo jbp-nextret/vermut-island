@@ -5,4 +5,4 @@
 
 [node name="barra" unique_id=378462742 groups=["mobles_base"] instance=ExtResource("1_r2qfo")]
 script = ExtResource("2_fbxdd")
-model_path = "res://Models/barra.glb"
+tipus = 1

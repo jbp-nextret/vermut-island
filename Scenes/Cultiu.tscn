@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://hy803sjilf54"]
 
 [ext_resource type="Script" uid="uid://c3qmnue2qrfij" path="res://Scripts/Harvest/cultiu.gd" id="1_fgd7j"]
-[ext_resource type="Texture2D" uid="uid://dawgolgr4yrxl" path="res://sprites/Crops/plant-0.png" id="2_bb2lw"]
-[ext_resource type="Texture2D" uid="uid://cxwr2dfhy4q3q" path="res://sprites/Crops/plant-1.png" id="3_sntq1"]
-[ext_resource type="Texture2D" uid="uid://ci1v6rkxnpdfa" path="res://sprites/Crops/plant-3.png" id="4_eew2j"]
+[ext_resource type="Texture2D" uid="uid://dawgolgr4yrxl" path="res://Sprites/Crops/plant-0.png" id="2_bb2lw"]
+[ext_resource type="Texture2D" uid="uid://cxwr2dfhy4q3q" path="res://Sprites/Crops/plant-1.png" id="3_sntq1"]
+[ext_resource type="Texture2D" uid="uid://ci1v6rkxnpdfa" path="res://Sprites/Crops/plant-3.png" id="4_eew2j"]
 [ext_resource type="PackedScene" uid="uid://dseups6wj7tx6" path="res://Scenes/Llavors.tscn" id="5_sntq1"]
 [ext_resource type="PackedScene" uid="uid://dwqm7e7wlqfh8" path="res://Scenes/Projectil.tscn" id="6_eew2j"]
 

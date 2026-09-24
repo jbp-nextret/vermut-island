@@ -208,7 +208,7 @@ func mostrar_particules_mort():
 	quad.size = Vector2(0.30, 0.30)
 
 	var textura_mat := StandardMaterial3D.new()
-	textura_mat.albedo_texture = preload("res://sprites/Misc/particle_2.PNG")
+	textura_mat.albedo_texture = preload("res://Sprites/Misc/particle_2.PNG")
 	textura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	textura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	textura_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES

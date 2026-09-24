@@ -7,16 +7,30 @@ extends Node3D
 @onready var particules_collir = $ParticulesCollir
 @onready var spawn_casa = $SpawnCasa
 
-var mode_plantacio = false
+var mode_plantar = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
 var arrastrant = false
 var posicio_drag_inici = Vector3.ZERO
 var posicio_drag_actual = Vector3.ZERO
 var zone_seleccionada = []  # Llista de posicions a plantar
+# Variables roda plantació
+@export var llindar_hold: float = 0.25
+@export var cultius_disponibles: Array[PackedScene] = []  # assigna a l'Inspector: normal, defensa, vinyedo, flor...
+@export var noms_cultius: Array[String] = []  # noms per mostrar/debug, mateix ordre
+@export var textures_cultius: Array[Texture2D] = []
+@onready var roda_seleccio = $RodaSeleccio  # afegeix la instància de RodaSeleccio.tscn com a fill de World
+
+var temps_prement_plantar: float = 0.0
+var mantenint_plantar: bool = false
+var roda_oberta: bool = false
+var index_cultiu_seleccionat: int = 0  # últim triat, per defecte el primer
 
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
+	var hud_diners := HudDiners.new()
+	hud_diners.marge_superior = 70   # a sota del rellotge
+	add_child(hud_diners)
 	
 	if EventBus.has_signal("player_spawn_requested"):
 		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
@@ -101,36 +115,42 @@ func aplicar_spawn_player(posicio: Vector3):
 		print("No s'ha trobat el Personatge o no està preparat")
 
 func _input(event):
-	if Input.is_action_just_pressed("plantar"):
-		mode_plantacio = true
-		cursor.visible = true
-		print("Mode plantació activat — clica i arrastra per seleccionar")
+	if event.is_action_pressed("plantar"):
+		mantenint_plantar = true
+		temps_prement_plantar = 0.0
+
+	if event.is_action_released("plantar"):
+		mantenint_plantar = false
+		if roda_oberta:
+			_confirmar_seleccio_roda()
+			_tancar_roda()
+		else:
+			_activar_mode_plantar_tap()
 	
 	# Cancel·la el mode plantació amb Escape
-	if Input.is_action_just_pressed("ui_cancel"):
-		mode_plantacio = false
+	if event.is_action_pressed("ui_cancel"):
+		mode_plantar = false
 		cursor.visible = false
 		arrastrant = false
 		zone_seleccionada.clear()
+		EventBus.desactivar_mode_plantar()
 		print("Mode plantació cancel·lat")
 	
-	# Confirma la selecció amb accio_secundaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_secundaria"):
+	if mode_plantar and event.is_action_pressed("accio_secundaria"):
 		if arrastrant:
 			arrastrant = false
 			plantar_zona_seleccionada()
 			zone_seleccionada.clear()
 			print("Plantació confirmada")
-			GestorPartida.guardar_mundo()  # Guarda després d'una plantació
+			GestorPartida.guardar_mundo()
 	
-	# Drag amb accio_primaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
+	if mode_plantar and event.is_action_pressed("accio_primaria"):
 		arrastrant = true
 		posicio_drag_inici = cursor.global_position
 		zone_seleccionada.clear()
 		print("Drag iniciat")
 	
-	if mode_plantacio and Input.is_action_just_released("accio_primaria"):
+	if mode_plantar and event.is_action_released("accio_primaria"):
 		if arrastrant:
 			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
 
@@ -139,7 +159,11 @@ func _physics_process(delta: float) -> void:
 	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
-	if not mode_plantacio: return
+	if mantenint_plantar and not roda_oberta:
+		temps_prement_plantar += delta
+		if temps_prement_plantar >= llindar_hold:
+			_obrir_roda()
+	if not mode_plantar: return
 	var espai = get_world_3d().direct_space_state
 	var camera = get_viewport().get_camera_3d()
 	var pos_ratolí = get_viewport().get_mouse_position()
@@ -212,7 +236,32 @@ func _process(delta):
 	else:
 		cursor.visible = false
 
+func _activar_mode_plantar_tap():
+	mode_plantar = true
+	cursor.visible = true
+	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	EventBus.activar_mode_plantar()
+	print("Mode plantació activat (tap) amb: ", noms_cultius[index_cultiu_seleccionat] if noms_cultius.size() > index_cultiu_seleccionat else "?")
 
+func _obrir_roda():
+	roda_oberta = true
+	var opcions = []
+	for i in range(cultius_disponibles.size()):
+		opcions.append({"textura": textures_cultius[i], "nom": noms_cultius[i]})  # necessitaràs un array de textures/icones
+	roda_seleccio.obrir(opcions, index_cultiu_seleccionat)
+
+func _tancar_roda():
+	roda_oberta = false
+	roda_seleccio.tancar()
+
+func _confirmar_seleccio_roda():
+	index_cultiu_seleccionat = roda_seleccio.obtenir_seleccio()
+	mode_plantar = true
+	cursor.visible = true
+	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	EventBus.activar_mode_plantar()
+	print("Mode plantació activat (roda) amb: ", noms_cultius[index_cultiu_seleccionat])
+	
 func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
 	# Calcula el rectangle entre la posició inicial i l'actual
 	var min_x = mini(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
@@ -273,8 +322,9 @@ func plantar_zona_seleccionada():
 	
 	# Desactiva el mode si no queden llavors
 	if Inventari.tenir("llavor_raim") <= 0:
-		mode_plantacio = false
+		mode_plantar = false
 		cursor.visible = false
+		EventBus.desactivar_mode_plantar()
 
 
 func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: Vector3i, item_name: String):
@@ -295,7 +345,7 @@ func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: 
 	if _has_property(cultiu, "es_torre"):
 		cultiu.es_torre = true
 	llançar_particules(particules_plantar, posicio_cultiu)
-	Inventari.items["llavor_raim"] -= 1
+	Inventari.treure("llavor_raim")
 	
 	print("Cultiu plantat a: ", posicio_cultiu)
 	

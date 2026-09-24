@@ -1,7 +1,7 @@
 @tool
 extends EditorScript
 
-const PLAYER_PATH := "res://sprites/player"
+const PLAYER_PATH := "res://Sprites/player"
 const LLINDAR_BLANC := 0.85
 
 const COLORS := {

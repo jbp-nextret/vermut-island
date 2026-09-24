@@ -5,4 +5,4 @@
 
 [node name="barra_corner" unique_id=1807125879 instance=ExtResource("1_sposv")]
 script = ExtResource("2_dgf3c")
-model_path = "res://Models/barra_corner.glb"
+tipus = 1

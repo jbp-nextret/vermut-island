@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://ctejgorirlgtp"]
 
 [ext_resource type="Script" uid="uid://dhnvh5yv3jq78" path="res://Scripts/bola_foc.gd" id="1_n0au7"]
-[ext_resource type="Texture2D" uid="uid://cq7gjvtt842uo" path="res://sprites/Misc/fire_particles.PNG" id="2_unjdq"]
-[ext_resource type="Texture2D" uid="uid://b05bdre44rflr" path="res://sprites/Misc/particle_3.PNG" id="3_sh2tw"]
+[ext_resource type="Texture2D" uid="uid://cq7gjvtt842uo" path="res://Sprites/Misc/fire_particles.PNG" id="2_unjdq"]
+[ext_resource type="Texture2D" uid="uid://b05bdre44rflr" path="res://Sprites/Misc/particle_3.PNG" id="3_sh2tw"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_unjdq"]
 

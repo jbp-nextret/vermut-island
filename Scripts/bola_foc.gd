@@ -5,8 +5,8 @@ extends Area3D
 @onready var particules: GPUParticles3D = $GPUParticles3D
 var direccio: Vector3 = Vector3.ZERO
 var temps_viu: float = 0.0
-const TEXTURA_TRAIL := preload("res://sprites/Misc/particle_3.PNG")
-const TEXTURA_EXPLOSIO := preload("res://sprites/Misc/particle_0.PNG")
+const TEXTURA_TRAIL := preload("res://Sprites/Misc/particle_3.PNG")
+const TEXTURA_EXPLOSIO := preload("res://Sprites/Misc/particle_0.PNG")
 
 func _ready():
 	body_entered.connect(_on_body_entered)

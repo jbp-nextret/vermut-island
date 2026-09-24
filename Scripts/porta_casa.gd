@@ -12,26 +12,23 @@ func _ready():
 	body_exited.connect(_on_body_exited)
 
 func _on_body_entered(body):
-	if body.name == "Personatge":
+	if body.is_in_group("player"):
 		jugador_dins = true
-		print("Entrant a ", nom_casa)
-		if Input.is_action_just_pressed("accio_secundaria"):
-			entrar_casa()
 
 func _on_body_exited(body):
-	if body.name == "Personatge":
+	if body.is_in_group("player"):
 		jugador_dins = false
 
-func _process(delta):
+func _process(_delta):
 	if jugador_dins and Input.is_action_just_pressed("accio_secundaria"):
 		entrar_casa()
 
 func entrar_casa():
 	if not escena_interior:
-		print("Falta assignar escena_interior!")
+		push_error("Falta assignar escena_interior a " + nom_casa)
 		return
-	
+
 	print("Entrant a ", nom_casa)
 	GestorPartida.guardar_mundo()
 	EventBus.request_player_spawn(sortida_world)
-	get_tree().change_scene_to_file("res://Scenes/CasaInterior.tscn")
+	get_tree().change_scene_to_packed(escena_interior)

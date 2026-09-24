@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AcabatInterior" format=3]
+
+[ext_resource type="Script" path="res://Scripts/casa/acabat_interior.gd" id="1_acabat"]
+
+[resource]
+script = ExtResource("1_acabat")
+id = "paret_blanc"
+nom = "Blanc trencat"
+superficie = 1
+color = Color(0.9, 0.85, 0.8, 1)
+preu = 0
+punts_decoracio = 0
