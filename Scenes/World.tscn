@@ -153,9 +153,6 @@ render_target_update_mode = 4
 [node name="World" type="Node3D" parent="SubViewport" unique_id=59139261]
 script = ExtResource("1_45d1s")
 cultiu_escena = ExtResource("6_q2d71")
-cultius_disponibles = Array[PackedScene]([ExtResource("6_q2d71")])
-noms_cultius = Array[String](["Projectile Plant"])
-textures_cultius = Array[Texture2D]([ExtResource("3_r0dna")])
 
 [node name="Personatge" parent="SubViewport/World" unique_id=1584712923 instance=ExtResource("3_waglr")]
 bola_foc_scene = ExtResource("4_mvfa8")
@@ -291,8 +288,6 @@ script = ExtResource("14_8l3nt")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.246, 5.963, 0)
 script = ExtResource("16_waglr")
 escena_enemic = ExtResource("16_rwt1y")
-max_enemics = 10
-temps_spawn = 1.0
 
 [node name="Water" type="MeshInstance3D" parent="SubViewport/World" unique_id=656118576]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.586518, 1.5097125, 3.9963725)

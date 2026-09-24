@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Cultiu.tscn" id="1_base"]
+
+[node name="CarbassaEsquer" instance=ExtResource("1_base")]
+nom_cultiu = "Carbassa esquer"
+descripcio = "Molt resistent. Els enemics propers hi van abans que a cap altre cultiu."
+tint = Color(1, 0.6, 0.25, 1)
+tipus_cultiu = 5
+radi_influencia = 6.0
+vida_maxima = 45

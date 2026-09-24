@@ -15,9 +15,10 @@ var posicio_drag_actual = Vector3.ZERO
 var zone_seleccionada = []  # Llista de posicions a plantar
 # Variables roda plantació
 @export var llindar_hold: float = 0.25
-@export var cultius_disponibles: Array[PackedScene] = []  # assigna a l'Inspector: normal, defensa, vinyedo, flor...
-@export var noms_cultius: Array[String] = []  # noms per mostrar/debug, mateix ordre
-@export var textures_cultius: Array[Texture2D] = []
+# Els cultius de la roda surten de CatalegCultius (nom, icona i color de cada escena)
+var cultius_disponibles: Array = []
+var opcions_cultius: Array = []
+var indicador_rang: MeshInstance3D
 @onready var roda_seleccio = $RodaSeleccio  # afegeix la instància de RodaSeleccio.tscn com a fill de World
 
 var temps_prement_plantar: float = 0.0
@@ -31,6 +32,12 @@ func _ready():
 	var hud_diners := HudDiners.new()
 	hud_diners.marge_superior = 70   # a sota del rellotge
 	add_child(hud_diners)
+	add_child(HudOnades.new())
+
+	cultius_disponibles = CatalegCultius.TOTS
+	opcions_cultius = CatalegCultius.opcions_roda()
+	cultiu_escena = cultius_disponibles[0]
+	_crear_indicador_rang()
 	
 	if EventBus.has_signal("player_spawn_requested"):
 		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
@@ -240,15 +247,12 @@ func _activar_mode_plantar_tap():
 	mode_plantar = true
 	cursor.visible = true
 	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	_actualitzar_indicador_rang()
 	EventBus.activar_mode_plantar()
-	print("Mode plantació activat (tap) amb: ", noms_cultius[index_cultiu_seleccionat] if noms_cultius.size() > index_cultiu_seleccionat else "?")
 
 func _obrir_roda():
 	roda_oberta = true
-	var opcions = []
-	for i in range(cultius_disponibles.size()):
-		opcions.append({"textura": textures_cultius[i], "nom": noms_cultius[i]})  # necessitaràs un array de textures/icones
-	roda_seleccio.obrir(opcions, index_cultiu_seleccionat)
+	roda_seleccio.obrir(opcions_cultius, index_cultiu_seleccionat)
 
 func _tancar_roda():
 	roda_oberta = false
@@ -259,8 +263,8 @@ func _confirmar_seleccio_roda():
 	mode_plantar = true
 	cursor.visible = true
 	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
+	_actualitzar_indicador_rang()
 	EventBus.activar_mode_plantar()
-	print("Mode plantació activat (roda) amb: ", noms_cultius[index_cultiu_seleccionat])
 	
 func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
 	# Calcula el rectangle entre la posició inicial i l'actual
@@ -342,8 +346,6 @@ func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: 
 	cultiu.add_to_group("cultius")
 	add_child(cultiu)
 	cultiu.global_position = posicio_cultiu
-	if _has_property(cultiu, "es_torre"):
-		cultiu.es_torre = true
 	llançar_particules(particules_plantar, posicio_cultiu)
 	Inventari.treure("llavor_raim")
 	
@@ -370,6 +372,7 @@ func guardar_mundo():
 	# Guarda tots els cultius
 	for cultiu in get_tree().get_nodes_in_group("cultius"):
 		cultius_data.append({
+			"escena": cultiu.scene_file_path,
 			"posicio": {"x": cultiu.global_position.x, "y": cultiu.global_position.y, "z": cultiu.global_position.z},
 			"estat": cultiu.estat_actual,
 			"dies_passats": cultiu.dies_passats,
@@ -425,7 +428,11 @@ func carregar_mundo():
 	# Carrega cultius
 	var cultius_data = mundo_data.get("cultius", [])
 	for data in cultius_data:
-		var cultiu = cultiu_escena.instantiate()
+		var escena: PackedScene = cultius_disponibles[0]
+		var ruta = data.get("escena", "")
+		if ruta is String and not ruta.is_empty() and ResourceLoader.exists(ruta):
+			escena = load(ruta)
+		var cultiu = escena.instantiate()
 		add_child(cultiu)
 		
 		var posicio = Vector3(data.get("posicio")["x"], data.get("posicio")["y"], data.get("posicio")["z"])
@@ -433,13 +440,39 @@ func carregar_mundo():
 		var estat_guardat = data.get("estat", 0)
 		cultiu.estat_actual = int(clamp(estat_guardat, 0, cultiu.Estat.MADUR))
 		cultiu.dies_passats = data.get("dies_passats", 0)
-		if _has_property(cultiu, "es_torre"):
-			cultiu.es_torre = data.get("es_torre", true)
 		if _has_property(cultiu, "vida_actual"):
 			cultiu.vida_actual = data.get("vida_actual", cultiu.vida_maxima)
 		
-		print("Carregant cultiu: posicio=", posicio, " estat=", cultiu.estat_actual, " dies=", cultiu.dies_passats, " textures=", cultiu.textures.size())
 		
 		cultiu.actualitzar_sprite()
 	
 	print("Cultius carregats!")
+
+# ─────────────── Abast del cultiu seleccionat (sota el cursor de plantar)
+
+func _crear_indicador_rang():
+	indicador_rang = MeshInstance3D.new()
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	indicador_rang.material_override = mat
+	indicador_rang.position.y = 0.03
+	cursor.add_child(indicador_rang)
+	_actualitzar_indicador_rang()
+
+func _actualitzar_indicador_rang():
+	if indicador_rang == null:
+		return
+	var opcio: Dictionary = opcions_cultius[index_cultiu_seleccionat]
+	var radi: float = opcio.radi
+	indicador_rang.visible = radi > 0.0
+	if radi <= 0.0:
+		return
+	var disc := CylinderMesh.new()
+	disc.top_radius = radi
+	disc.bottom_radius = radi
+	disc.height = 0.02
+	indicador_rang.mesh = disc
+	var color: Color = opcio.color
+	indicador_rang.material_override.albedo_color = Color(color.r, color.g, color.b, 0.18)

@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Cultiu.tscn" id="1_base"]
+
+[node name="Calendula" instance=ExtResource("1_base")]
+nom_cultiu = "Calèndula"
+descripcio = "Les torres del voltant fan un 30 % més de dany i els cultius reben un 30 % menys."
+tint = Color(1, 0.85, 0.3, 1)
+tipus_cultiu = 4
+radi_influencia = 2.5
+modificador_dany = 0.3
+proteccio = 0.3
+vida_maxima = 6

@@ -21,6 +21,9 @@ size = Vector3(1, 0.5048828, 1)
 
 [node name="Cultiu" type="Node3D" unique_id=804750959 groups=["cultius"]]
 script = ExtResource("1_fgd7j")
+nom_cultiu = "Planta llançadora"
+descripcio = "Torre a distància: dispara llavors als enemics. Només defensa quan és gran."
+tipus_cultiu = 1
 dies_per_fase = 1
 textures = Array[Texture2D]([ExtResource("2_bb2lw"), ExtResource("3_sntq1"), ExtResource("4_eew2j")])
 llavor_drop_escena = ExtResource("5_sntq1")

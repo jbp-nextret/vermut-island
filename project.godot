@@ -25,6 +25,7 @@ SalutJugador="*uid://cq38u4e6yef4u"
 GestorPartida="*uid://cowacjofewlfj"
 Customization="*uid://kth6iuxy11jy"
 GameState="*res://autoloads/game_state.gd"
+GestorOnades="*res://autoloads/gestor_onades.gd"
 
 [display]
 

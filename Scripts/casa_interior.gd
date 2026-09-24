@@ -378,6 +378,8 @@ func _on_boto_vermuteria():
 	if not gestor_servei.obert and _seients_utilitzables() == 0:
 		_mostrar_avis("Necessites almenys una cadira amb una barra al costat")
 		return
+	if not gestor_servei.obert and Barrica.vermuts_disponibles() == 0:
+		_mostrar_avis("No tens raïm: no podràs servir vermut. Cull-ne a l'hort!")
 	gestor_servei.alternar()
 
 func _seients_utilitzables() -> int:
