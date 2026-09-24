@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://lbc55ohb55da" path="res://Scripts/poring.gd" id="1_2gd0a"]
 [ext_resource type="Texture2D" uid="uid://cbx3ls1yqw2gt" path="res://Sprites/poring/poring_idle.png" id="2_2gd0a"]
-[ext_resource type="Texture2D" uid="uid://cbdlfu2jnhddg" path="res://sprites/poring/poring_eating.png" id="2_th7t3"]
+[ext_resource type="Texture2D" uid="uid://cbdlfu2jnhddg" path="res://Sprites/poring/poring_eating.png" id="2_th7t3"]
 [ext_resource type="Texture2D" uid="uid://pnx5ayj5enr6" path="res://Sprites/drinks/vermut/vermut_icon.tres" id="3_t0rjg"]
-[ext_resource type="Texture2D" uid="uid://c7xcj3jatyvmu" path="res://sprites/poring/poring_walk.png" id="4_bqaw2"]
+[ext_resource type="Texture2D" uid="uid://c7xcj3jatyvmu" path="res://Sprites/poring/poring_walk.png" id="4_bqaw2"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_oswqv"]
 atlas = ExtResource("2_th7t3")

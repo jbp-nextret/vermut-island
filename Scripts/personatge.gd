@@ -234,7 +234,7 @@ func iniciar_atac(dany: int, tipus: String):
 		
 func _test_cercle():
 	var cercle := Sprite3D.new()
-	cercle.texture = preload("res://sprites/Misc/magic-3.png")
+	cercle.texture = preload("res://Sprites/Misc/magic-3.png")
 	cercle.pixel_size = 0.04
 	#cercle.billboard = SpriteBase3D.BILLBOARD_DISABLED
 	cercle.rotation_degrees.x = -90
@@ -303,7 +303,7 @@ func disparar_bola_foc():
 
 func _crear_cercle_alquimia():
 	var cercle := Sprite3D.new()
-	cercle.texture = preload("res://sprites/Misc/magic-3.png")
+	cercle.texture = preload("res://Sprites/Misc/magic-3.png")
 	cercle.pixel_size = 0.04
 	cercle.scale = Vector3.ONE * 0.3
 	cercle.modulate = cercle_colors[0]
