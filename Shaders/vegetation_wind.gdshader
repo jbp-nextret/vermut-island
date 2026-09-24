@@ -43,4 +43,6 @@ void fragment()
 
 	ALBEDO = tex.rgb;
 	ALPHA = tex.a;
+	// Retallat: s'escriu a la profunditat i l'aigua ja no la tapa
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
 }

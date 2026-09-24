@@ -21,6 +21,7 @@ enum Tipus { SEIENT, BARRA, DECORACIO, BARRICA, OBJECTE_PARET }
 @export var escala_model: float = 1
 
 func _ready():
+	MaterialsRetallats.aplicar(self)
 	if model_path.is_empty():
 		return
 	var model = load(model_path)

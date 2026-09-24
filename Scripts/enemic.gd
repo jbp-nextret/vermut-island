@@ -41,7 +41,8 @@ func _ready():
 	escala_original = scale
 
 	material_original = StandardMaterial3D.new()
-	material_original.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material_original.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	material_original.alpha_scissor_threshold = 0.5
 	material_original.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	material_original.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material_original.cull_mode = BaseMaterial3D.CULL_DISABLED

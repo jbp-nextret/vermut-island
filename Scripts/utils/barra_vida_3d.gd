@@ -35,7 +35,8 @@ func _crear_sprite(textura: Texture2D, color: Color, prioritat: int) -> Sprite3D
 	s.modulate = color
 	s.pixel_size = 0.02
 	s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	s.no_depth_test = true
+	# Amb prova de profunditat: si el terreny tapa el cultiu, també tapa la barra.
+	# El fons i la part plena són al mateix pla: les ordena render_priority.
 	s.render_priority = prioritat
 	s.shaded = false
 	add_child(s)

@@ -43,10 +43,14 @@ enum TipusCultiu {
 
 @export_group("")
 @export var vida_maxima: int = 10
+## Quina part de la vida es recupera cada segon, un cop fa estona que no rep cops.
+## De dia, el triple de ràpid.
+@export var regeneracio := 0.05
 ## Es manté només per compatibilitat amb les partides desades: el comportament el decideix el tipus.
 @export var es_torre: bool = true
 
 const COLOR_RANG_TORRE := Color(0.9, 0.9, 0.3, 0.12)
+const ESPERA_REGENERACIO := 4.0   # segons sense rebre dany abans de començar a curar-se
 
 var estat_actual = Estat.LLAVOR
 var dies_passats = 0
@@ -57,6 +61,8 @@ var vida_actual: int = 0
 var defensa_dany: int = 0
 var modificador_total_actual: float = 0.0
 var temps_ortiga := 0.0
+var temps_des_del_dany := 99.0
+var vida_acumulada := 0.0
 
 @onready var sprite = $Sprite
 @onready var area = $Area3D
@@ -150,7 +156,8 @@ func actualitzar_sprite():
 	var material = sprite.get_surface_override_material(0)
 	if material == null:
 		material = StandardMaterial3D.new()
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		material.alpha_scissor_threshold = 0.5
 		material.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -187,6 +194,8 @@ func _actualitzar_tint_influencia():
 func _process(delta):
 	if recollit:
 		return
+
+	_regenerar(delta)
 
 	if es_defensa():
 		temps_darrera_recalculacio += delta
@@ -282,12 +291,28 @@ func prendre_dany(quantitat: int):
 	var dany := maxi(1, int(ceil(quantitat * (1.0 - millor_proteccio))))
 
 	vida_actual -= dany
+	temps_des_del_dany = 0.0
+	vida_acumulada = 0.0
 	barra_vida.mostrar(vida_actual, vida_maxima)
 	var t := create_tween()
 	t.tween_property(sprite, "scale", Vector3(0.85, 1.15, 1.0), 0.05)
 	t.tween_property(sprite, "scale", Vector3.ONE, 0.1)
 	if vida_actual <= 0:
 		_morir()
+
+func _regenerar(delta: float) -> void:
+	if vida_actual >= vida_maxima or vida_actual <= 0:
+		return
+	temps_des_del_dany += delta
+	if temps_des_del_dany < ESPERA_REGENERACIO:
+		return
+	var ritme := regeneracio * vida_maxima * (1.0 if GestorTemps.es_nit() else 3.0)
+	vida_acumulada += ritme * delta
+	if vida_acumulada >= 1.0:
+		var punts := int(vida_acumulada)
+		vida_acumulada -= punts
+		vida_actual = mini(vida_maxima, vida_actual + punts)
+		barra_vida.mostrar(vida_actual, vida_maxima)   # quan torna a estar plena, s'amaga
 
 func _morir():
 	GestorOnades.cultiu_perdut()

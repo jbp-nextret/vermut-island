@@ -1553,49 +1553,61 @@ boots = NodePath("Skeleton/boots")
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, 0.79688644, 0)
 
 [node name="hair" type="AnimatedSprite3D" parent="Skeleton" unique_id=1154857753]
+render_priority = 3
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_a8kkx")
 animation = &"attack_down"
 
 [node name="skin" type="AnimatedSprite3D" parent="Skeleton" unique_id=689975587]
+render_priority = 0
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_ckqal")
 animation = &"attack_down"
 
 [node name="eyes" type="AnimatedSprite3D" parent="Skeleton" unique_id=1242674480]
+render_priority = 1
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_k2cc3")
 animation = &"attack_down"
 
 [node name="tshirt" type="AnimatedSprite3D" parent="Skeleton" unique_id=1250305580]
+render_priority = 2
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_pspb0")
 animation = &"attack_down"
 
 [node name="jeans" type="AnimatedSprite3D" parent="Skeleton" unique_id=923329292]
+render_priority = 1
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_4lvpi")
 animation = &"attack_down"
 
 [node name="boots" type="AnimatedSprite3D" parent="Skeleton" unique_id=157504736]
+render_priority = 2
 pixel_size = 0.05
 billboard = 2
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_vyjnp")
 animation = &"attack_down"
