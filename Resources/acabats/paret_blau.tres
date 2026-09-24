@@ -9,3 +9,4 @@ nom = "Blau cel"
 superficie = 1
 color = Color(0.62, 0.78, 0.9, 1)
 preu = 25
+punts_decoracio = 2

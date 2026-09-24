@@ -9,3 +9,4 @@ nom = "Fusta fosca"
 superficie = 0
 color = Color(0.42, 0.28, 0.18, 1)
 preu = 40
+punts_decoracio = 3

@@ -13,7 +13,7 @@ const ESCALA_PARET_BAIXADA := 0.08  # paret "abaixada" quan tapa la càmera (com
 
 # Mobles
 @export var mobles_disponibles: Array[PackedScene]
-@export var noms_mobles: Array[String] = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola", "Barrica"]
+@export var noms_mobles: Array[String] = ["Barra Normal", "Barra Mig", "Barra Lateral", "Cadira", "Rosa", "Cactus", "Amapola", "Barrica", "Finestra", "Prestatge"]
 @export var grid_size: float = 1.0
 
 var mode_construccio := false
@@ -65,6 +65,15 @@ var parets_actual := CatalegAcabats.PARET_PER_DEFECTE
 var acabats_comprats: Array = []
 var acabat_provant: AcabatInterior = null   # el que s'està provant, encara sense comprar
 var acabats_llista: Array = []              # els acabats que mostra ara la llista
+
+# Objectes de paret: a quina paret (índex a `parets`) i cel·la apunta la preview
+var paret_preview := -1
+var cella_preview := 0
+
+# Decoració
+var punts_decoracio := 0
+var label_decoracio: Label
+var punts_per_escena := {}   # memòria cau dels punts de cada escena de moble
 var pestanyes: TabBar
 var boto_comprar: Button
 var material_terra := StandardMaterial3D.new()
@@ -180,12 +189,11 @@ func crear_interior():
 	# Quatre parets tancades: ja no es pot caure de l'habitació.
 	# La que queda entre la càmera i la sala s'abaixa sola (_actualitzar_parets).
 	var ample := MIDA_SALA + GRUIX_PARET
-	var fons := crear_paret("Paret Fons", Vector3(0, 0, -m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, -1))
+	crear_paret("Paret Fons", Vector3(0, 0, -m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, -1))
 	crear_paret("Paret Davant", Vector3(0, 0, m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, 1))
 	crear_paret("Paret Esquerra", Vector3(-m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(-1, 0, 0))
 	var dreta := crear_paret("Paret Dreta", Vector3(m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(1, 0, 0))
 
-	crear_finestra(fons, Vector3(0, 1.3, 0), Vector3(2, 1.0, GRUIX_PARET + 0.04))
 	crear_porta_visual(dreta, Vector3(0, 0.95, 2), Vector3(GRUIX_PARET + 0.04, 1.9, 1))
 
 ## Retorna el node visual de la paret (per penjar-hi porta o finestra)
@@ -218,20 +226,6 @@ func crear_paret(nom: String, posicio: Vector3, mida: Vector3, normal: Vector3) 
 	parets.append({"cos": paret_static, "visual": visual, "normal": normal})
 	return visual
 
-func crear_finestra(paret: Node3D, posicio: Vector3, mida: Vector3):
-	var finestra = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = mida
-	finestra.mesh = box
-	finestra.position = posicio
-	finestra.name = "Finestra"
-	paret.add_child(finestra)
-
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(0.5, 0.7, 1.0, 0.8)
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	finestra.material_override = material
-
 func crear_porta_visual(paret: Node3D, posicio: Vector3, mida: Vector3):
 	var porta = MeshInstance3D.new()
 	var box = BoxMesh.new()
@@ -253,10 +247,20 @@ func _actualitzar_parets(delta: float):
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
-	for paret in parets:
-		var tapa: bool = (camera.global_position - paret.cos.global_position).dot(paret.normal) > 0.0
+	for i in parets.size():
+		var paret: Dictionary = parets[i]
+		var tapa := _paret_tapa(i, camera)
 		var objectiu := ESCALA_PARET_BAIXADA if tapa else 1.0
 		paret.visual.scale.y = move_toward(paret.visual.scale.y, objectiu, delta * 4.0)
+	# Els objectes d'una paret abaixada s'amaguen (la llum de les finestres continua)
+	for objecte in get_tree().get_nodes_in_group("objectes_paret"):
+		var amagat := _paret_tapa(objecte.get_meta("paret", -1), camera)
+		_per_cada_malla(objecte, func(m: GeometryInstance3D): m.visible = not amagat)
+
+func _paret_tapa(index: int, camera: Camera3D) -> bool:
+	if index < 0 or index >= parets.size():
+		return false
+	return (camera.global_position - parets[index].cos.global_position).dot(parets[index].normal) > 0.0
 
 func _rids_parets() -> Array[RID]:
 	var rids: Array[RID] = []
@@ -286,6 +290,16 @@ func _crear_hud():
 	boto_vermuteria = _crear_boto("Obrir vermuteria")
 	boto_vermuteria.pressed.connect(_on_boto_vermuteria)
 	caixa.add_child(boto_vermuteria)
+
+	# Decoració, a sota dels botons
+	label_decoracio = _crear_label(Color(0.85, 0.75, 1.0), 18)
+	label_decoracio.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	capa.add_child(label_decoracio)
+	label_decoracio.anchor_left = 1.0
+	label_decoracio.anchor_right = 1.0
+	label_decoracio.offset_left = -500
+	label_decoracio.offset_right = -12
+	label_decoracio.offset_top = 62
 
 	# Ajuda de controls, a baix
 	label_ajuda = _crear_label(Color.WHITE, 18)
@@ -355,6 +369,8 @@ func _actualitzar_hud():
 		label_ajuda.text = "Tria un acabat per provar com queda   ·   Roda: zoom   ·   Botó central: girar càmera   ·   Esc: desfer / sortir"
 	elif mode_eliminacio:
 		label_ajuda.text = "Clic esquerre: esborrar   ·   Clic dret / Esc: tornar a col·locar"
+	elif moble_preview and _es_de_paret(moble_preview):
+		label_ajuda.text = "Apunta a una paret   ·   Clic esquerre: penjar (mantén per pintar)   ·   Clic dret: esborrar   ·   Esc: sortir"
 	else:
 		label_ajuda.text = "Clic esquerre: col·locar (mantén per pintar)   ·   Q/E: girar   ·   Clic dret: esborrar   ·   Roda: zoom   ·   Botó central: girar càmera   ·   Esc: sortir"
 
@@ -379,6 +395,7 @@ func _actualitzar_taules():
 		seients[i].taula_assignada = barres[assignacio[i]] if assignacio[i] != -1 else null
 	for seient in seients:
 		seient.mostrar_avis(mode_construccio and not seient.es_utilitzable())
+	_actualitzar_decoracio()
 
 func _mateixa_cella(a: Vector3, b: Vector3) -> bool:
 	return round(a.x / grid_size) == round(b.x / grid_size) and round(a.z / grid_size) == round(b.z / grid_size)
@@ -394,6 +411,7 @@ func _on_servei_tancat():
 	_actualitzar_hud()
 	# Fos a negre curt: "Ha caigut la nit" i tornem a la casa
 	var resum := "%d clients servits   ·   +%d 🪙" % [gestor_servei.clients_servits, gestor_servei.guanys]
+	resum += "\nDecoració: %s" % Decoracio.nivell(punts_decoracio).nom
 	if gestor_servei.clients_enfadats > 0:
 		resum += "\n%d clients han marxat enfadats" % gestor_servei.clients_enfadats
 	label_transicio.text = "Fi del servei\n\n%s\n\nHa caigut la nit..." % resum
@@ -580,14 +598,21 @@ func _omplir_llista():
 	item_list.clear()
 	acabats_llista.clear()
 	if pestanya == Pestanya.MOBLES:
-		for nom in noms_mobles:
-			item_list.add_item(nom)
+		for i in noms_mobles.size():
+			var text: String = noms_mobles[i]
+			if i < mobles_disponibles.size():
+				var punts := _punts_escena(mobles_disponibles[i])
+				if punts > 0:
+					text += "   ✨%d" % punts
+			item_list.add_item(text)
 		return
 
 	var superficie := AcabatInterior.Superficie.PARET if pestanya == Pestanya.PARETS else AcabatInterior.Superficie.TERRA
 	var actual := parets_actual if superficie == AcabatInterior.Superficie.PARET else terra_actual
 	for acabat in CatalegAcabats.de_superficie(superficie):
 		var text: String = acabat.nom
+		if acabat.punts_decoracio > 0:
+			text += "   ✨%d" % acabat.punts_decoracio
 		if acabat.id == actual:
 			text += "   ✓"
 		elif not _es_meu(acabat):
@@ -614,6 +639,7 @@ func _provar_acabat(acabat: AcabatInterior):
 		_fixar_acabat(acabat)
 		return
 	acabat_provant = acabat
+	_actualitzar_decoracio()
 	boto_comprar.visible = true
 	if Inventari.diners >= acabat.preu:
 		boto_comprar.text = "Comprar per %d 🪙" % acabat.preu
@@ -639,6 +665,7 @@ func _fixar_acabat(acabat: AcabatInterior):
 	acabat_provant = null
 	boto_comprar.visible = false
 	_omplir_llista()
+	_actualitzar_decoracio()
 
 ## Desfà la prova d'un acabat no comprat i torna a posar els que tens
 func _restaurar_acabats():
@@ -646,6 +673,8 @@ func _restaurar_acabats():
 	if boto_comprar:
 		boto_comprar.visible = false
 	_aplicar_acabats_actuals()
+	if label_decoracio:
+		_actualitzar_decoracio()
 
 func _aplicar_acabats_actuals():
 	CatalegAcabats.per_id(terra_actual).aplicar(material_terra)
@@ -693,6 +722,9 @@ func _cancelar_preview():
 	item_list.deselect_all()
 
 func actualitzar_preview(delta: float):
+	if _es_de_paret(moble_preview):
+		_actualitzar_preview_paret(delta)
+		return
 	posicio_preview = obtenir_posicio_grid()
 	if posicio_preview == null:
 		moble_preview.visible = false
@@ -721,6 +753,8 @@ func _pintar_preview():
 	_per_cada_malla(moble_preview, func(m: GeometryInstance3D): m.material_overlay = material)
 
 func _estat_col_locacio(pos: Vector3) -> EstatPreview:
+	if _es_de_paret(moble_preview):
+		return EstatPreview.OK if _motiu_bloqueig_paret(paret_preview, cella_preview).is_empty() else EstatPreview.BLOQUEJAT
 	if not _motiu_bloqueig(pos).is_empty():
 		return EstatPreview.BLOQUEJAT
 	if not _avis_col_locacio(pos).is_empty():
@@ -796,6 +830,10 @@ func col_locar_moble(des_de_clic: bool):
 	var pos: Vector3 = posicio_preview
 	ultima_posicio_pintada = pos
 
+	if _es_de_paret(moble_preview):
+		_penjar_objecte(des_de_clic)
+		return
+
 	var motiu := _motiu_bloqueig(pos)
 	if not motiu.is_empty():
 		if des_de_clic:   # pintant no molestem amb avisos a cada cel·la
@@ -849,10 +887,14 @@ func _grup_principal(tipus: MobleBarra.Tipus) -> String:
 			return "decoracio"
 		MobleBarra.Tipus.BARRICA:
 			return "barriques"
+		MobleBarra.Tipus.OBJECTE_PARET:
+			return "objectes_paret"
 	return "mobles_reposats"
 
 func _afegir_grups(moble: Node, tipus: MobleBarra.Tipus):
-	if tipus == MobleBarra.Tipus.DECORACIO:
+	if tipus == MobleBarra.Tipus.OBJECTE_PARET:
+		moble.add_to_group("objectes_paret")
+	elif tipus == MobleBarra.Tipus.DECORACIO:
 		moble.add_to_group("decoracio")
 	else:
 		moble.add_to_group("mobles_base")
@@ -864,6 +906,160 @@ func _treure_moble(moble: Node3D):
 		if not str(grup).begins_with("_"):
 			moble.remove_from_group(grup)
 	moble.queue_free()
+
+# ─────────────────────────────────────────────── Objectes de paret
+
+func _es_de_paret(moble: Node) -> bool:
+	return _tipus(moble) == MobleBarra.Tipus.OBJECTE_PARET
+
+func _actualitzar_preview_paret(delta: float):
+	var ratoli := get_viewport().get_mouse_position()
+	var camera := get_viewport().get_camera_3d()
+	var origen := camera.project_ray_origin(ratoli)
+	var query := PhysicsRayQueryParameters3D.create(origen, origen + camera.project_ray_normal(ratoli) * 100.0)
+	# Les parets abaixades no compten: el raig les travessa fins a les de darrere
+	var excloure: Array[RID] = []
+	for i in parets.size():
+		if _paret_tapa(i, camera):
+			excloure.append(parets[i].cos.get_rid())
+	query.exclude = excloure
+	var resultat := get_world_3d().direct_space_state.intersect_ray(query)
+
+	paret_preview = -1
+	if not resultat.is_empty():
+		for i in parets.size():
+			if parets[i].cos == resultat.collider:
+				paret_preview = i
+	if paret_preview == -1:
+		moble_preview.visible = false
+		posicio_preview = null
+		return
+
+	var normal: Vector3 = parets[paret_preview].normal
+	var al_llarg: float = resultat.position.x if absf(normal.z) > 0.5 else resultat.position.z
+	cella_preview = clampi(roundi(al_llarg / grid_size), -LIMIT_SALA, LIMIT_SALA)
+
+	var objectiu := _posicio_a_paret(paret_preview, cella_preview, moble_preview.alcada_paret)
+	var apareix := not moble_preview.visible
+	moble_preview.visible = true
+	moble_preview.rotation = Vector3(0, _rotacio_paret(paret_preview), 0)
+	moble_preview.global_position = objectiu if apareix else moble_preview.global_position.lerp(objectiu, minf(1.0, delta * 25.0))
+	# Una "posició" per paret+cel·la, perquè el pintat detecti quan canvies de lloc
+	posicio_preview = objectiu
+
+	var estat := _estat_col_locacio(objectiu)
+	if estat != estat_preview:
+		estat_preview = estat
+		_pintar_preview()
+
+## Punt de la cara interior de la paret, a la cel·la i alçada donades
+func _posicio_a_paret(index: int, cella: int, alcada: float) -> Vector3:
+	var normal: Vector3 = parets[index].normal
+	var cara := MIDA_SALA / 2.0 - GRUIX_PARET / 2.0
+	if absf(normal.z) > 0.5:
+		return Vector3(cella * grid_size, alcada, normal.z * cara)
+	return Vector3(normal.x * cara, alcada, cella * grid_size)
+
+## Rotació perquè el davant de l'objecte (+Z) miri cap a dins de la sala
+func _rotacio_paret(index: int) -> float:
+	var cap_dins: Vector3 = -parets[index].normal
+	return atan2(cap_dins.x, cap_dins.z)
+
+func _situar_a_paret(objecte: Node3D, index: int, cella: int):
+	objecte.set_meta("paret", index)
+	objecte.set_meta("cella", cella)
+	objecte.global_position = _posicio_a_paret(index, cella, objecte.alcada_paret)
+	objecte.rotation = Vector3(0, _rotacio_paret(index), 0)
+
+func _objecte_a_paret(index: int, cella: int) -> Node3D:
+	for objecte in _vius("objectes_paret"):
+		if objecte.get_meta("paret", -1) == index and objecte.get_meta("cella", 999) == cella:
+			return objecte
+	return null
+
+func _motiu_bloqueig_paret(index: int, cella: int) -> String:
+	if index < 0:
+		return "Apunta a una paret"
+	# La porta de sortida (i dels clients) és a la paret dreta
+	var porta := _posicio_a_paret(index, cella, 0.0)
+	if Vector2(porta.x, porta.z).distance_to(Vector2(porta_clients.global_position.x, porta_clients.global_position.z)) < 1.0:
+		return "Aquí hi ha la porta"
+	return ""
+
+func _penjar_objecte(des_de_clic: bool):
+	var motiu := _motiu_bloqueig_paret(paret_preview, cella_preview)
+	if not motiu.is_empty():
+		if des_de_clic:
+			_mostrar_avis(motiu)
+		return
+
+	var escena := mobles_disponibles[index_preview]
+	var vell := _objecte_a_paret(paret_preview, cella_preview)
+	if vell:
+		if vell.scene_file_path == escena.resource_path:
+			return   # ja hi és
+		_treure_moble(vell)
+
+	var objecte: Node3D = escena.instantiate()
+	_afegir_grups(objecte, MobleBarra.Tipus.OBJECTE_PARET)
+	add_child(objecte)
+	_situar_a_paret(objecte, paret_preview, cella_preview)
+	objecte.scale = Vector3.ONE * 0.8
+	objecte.create_tween().tween_property(objecte, "scale", Vector3.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	call_deferred("_actualitzar_taules")
+
+func _index_paret(nom: String) -> int:
+	for i in parets.size():
+		if parets[i].cos.name == nom:
+			return i
+	return -1
+
+# ─────────────────────────────────────────────── Decoració
+
+func _actualitzar_decoracio():
+	punts_decoracio = _calcular_punts()
+	var nivell := Decoracio.nivell(punts_decoracio)
+	gestor_servei.multiplicador_propina = nivell.propina
+
+	var text := "✨ Decoració: %d · %s (propina ×%s)" % [punts_decoracio, nivell.nom, str(nivell.propina)]
+	var seguent := Decoracio.seguent_nivell(punts_decoracio)
+	if not seguent.is_empty():
+		var falten: int = seguent.min - punts_decoracio
+		text += "\n%d %s més per a %s" % [falten, "punt" if falten == 1 else "punts", seguent.nom]
+	label_decoracio.text = text
+
+func _calcular_punts() -> int:
+	var total := 0.0
+	var copies := {}
+	for grup in ["mobles_base", "decoracio", "objectes_paret"]:
+		for moble in _vius(grup):
+			if not moble is MobleBarra or moble.punts_decoracio <= 0:
+				continue
+			var n: int = copies.get(moble.scene_file_path, 0)
+			total += moble.punts_decoracio * pow(Decoracio.REPETICIO, n)
+			copies[moble.scene_file_path] = n + 1
+
+	# Acabats: el que s'està provant compta, perquè vegis què guanyaries
+	var terra := CatalegAcabats.per_id(terra_actual)
+	var paret := CatalegAcabats.per_id(parets_actual)
+	if acabat_provant:
+		if acabat_provant.superficie == AcabatInterior.Superficie.TERRA:
+			terra = acabat_provant
+		else:
+			paret = acabat_provant
+	total += terra.punts_decoracio + paret.punts_decoracio
+	return roundi(total)
+
+func _punts_escena(escena: PackedScene) -> int:
+	if punts_per_escena.has(escena.resource_path):
+		return punts_per_escena[escena.resource_path]
+	var punts := 0
+	var estat := escena.get_state()
+	for i in estat.get_node_property_count(0):
+		if estat.get_node_property_name(0, i) == &"punts_decoracio":
+			punts = estat.get_node_property_value(0, i)
+	punts_per_escena[escena.resource_path] = punts
+	return punts
 
 # ─────────────────────────────────────────────── Esborrar
 
@@ -904,7 +1100,7 @@ func actualitzar_hover_eliminacio():
 func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 	var node := collider
 	while node and node != self:
-		if node.is_in_group("mobles_base") or node.is_in_group("decoracio"):
+		if node.is_in_group("mobles_base") or node.is_in_group("decoracio") or node.is_in_group("objectes_paret"):
 			return node
 		node = node.get_parent()
 	return null
@@ -942,6 +1138,13 @@ func _desactivar_colisions(node: Node):
 
 func guardar_decoracio():
 	var mobles_data = []
+	for objecte in _vius("objectes_paret"):
+		mobles_data.append({
+			"index": obtenir_index_moble(objecte),
+			"scene_path": objecte.scene_file_path,
+			"paret": str(parets[objecte.get_meta("paret")].cos.name),
+			"cella": objecte.get_meta("cella"),
+		})
 	var mobles = get_tree().get_nodes_in_group("mobles_base") + get_tree().get_nodes_in_group("decoracio")
 	for moble in mobles:
 		if moble == moble_preview or moble.is_queued_for_deletion():
@@ -996,6 +1199,14 @@ func carregar_decoracio():
 		var moble: Node3D = escena.instantiate()
 		_afegir_grups(moble, _tipus(moble))
 		add_child(moble)
+
+		if data.has("paret"):
+			var index_paret := _index_paret(str(data.get("paret")))
+			if index_paret == -1:
+				moble.queue_free()
+				continue
+			_situar_a_paret(moble, index_paret, int(data.get("cella", 0)))
+			continue
 
 		var p = data.get("posicio")
 		var r = data.get("rotacio")

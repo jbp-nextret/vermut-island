@@ -9,3 +9,4 @@ nom = "Blanc trencat"
 superficie = 1
 color = Color(0.9, 0.85, 0.8, 1)
 preu = 0
+punts_decoracio = 0

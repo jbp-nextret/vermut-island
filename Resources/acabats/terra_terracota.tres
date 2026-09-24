@@ -9,3 +9,4 @@ nom = "Terracota"
 superficie = 0
 color = Color(0.72, 0.38, 0.25, 1)
 preu = 50
+punts_decoracio = 3

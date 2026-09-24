@@ -24,6 +24,9 @@ var clients_servits := 0
 var clients_enfadats := 0
 var guanys := 0
 
+## El posa CasaInterior segons el nivell de decoració
+var multiplicador_propina := 1.0
+
 func alternar() -> void:
 	if obert:
 		tancar()
@@ -78,6 +81,7 @@ func _fer_entrar_client() -> void:
 	var p: Poring = PORING.instantiate()
 	get_parent().add_child(p)
 	p.global_position = porta.global_position
+	p.multiplicador_propina = multiplicador_propina
 	p.setup(lliures.pick_random(), porta.global_position)
 	p.order_placed.connect(func(po, producte): comanda_feta.emit(po, producte))
 	p.ha_pagat.connect(_on_client_ha_pagat)

@@ -9,3 +9,4 @@ nom = "Rosa pàl·lid"
 superficie = 1
 color = Color(0.93, 0.75, 0.75, 1)
 preu = 30
+punts_decoracio = 2

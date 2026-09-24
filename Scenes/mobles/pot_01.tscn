@@ -6,3 +6,4 @@
 [node name="pot-01" unique_id=593877215 groups=["decoracio"] instance=ExtResource("1_akedp")]
 script = ExtResource("2_a0jw0")
 tipus = 2
+punts_decoracio = 2

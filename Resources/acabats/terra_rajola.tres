@@ -9,3 +9,4 @@ nom = "Rajola beix"
 superficie = 0
 color = Color(0.8, 0.7, 0.6, 1)
 preu = 0
+punts_decoracio = 0

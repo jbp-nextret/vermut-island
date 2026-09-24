@@ -31,6 +31,7 @@ var floor_y: float
 var order := ""
 var wait_time := 0.0
 var propina := 0
+var multiplicador_propina := 1.0   # segons la decoració de la vermuteria
 var posicio_bombolla: Vector3
 
 func _ready() -> void:
@@ -142,7 +143,9 @@ func serve(drink: Drink) -> bool:
 	if state != State.WAITING_ORDER or drink.product != order:
 		return false
 	# Com més ràpid el serveixes, més propina
-	propina = int(round(propina_maxima * (1.0 - clampf(wait_time / patience, 0.0, 1.0))))
+	# i com més bonica és la vermuteria, més (o menys) propina
+	var rapidesa := 1.0 - clampf(wait_time / patience, 0.0, 1.0)
+	propina = int(round(propina_maxima * rapidesa * multiplicador_propina))
 	drink.start_drinking(eat_time)
 	_change_state(State.EATING)
 	return true

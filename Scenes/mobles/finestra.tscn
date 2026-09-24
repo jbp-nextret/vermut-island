@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/moble_barra.gd" id="1_moble"]
+[ext_resource type="Script" path="res://Scripts/casa/llum_finestra.gd" id="2_llum"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_marc"]
+albedo_color = Color(0.36, 0.22, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_vidre"]
+transparency = 1
+albedo_color = Color(0.7, 0.85, 1, 0.55)
+emission_enabled = true
+emission = Color(0.75, 0.9, 1, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_travesser"]
+material = SubResource("Mat_marc")
+size = Vector3(1, 0.08, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_muntant"]
+material = SubResource("Mat_marc")
+size = Vector3(0.08, 1, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_creu_v"]
+material = SubResource("Mat_marc")
+size = Vector3(0.04, 0.9, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_creu_h"]
+material = SubResource("Mat_marc")
+size = Vector3(0.88, 0.04, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_vidre"]
+material = SubResource("Mat_vidre")
+size = Vector3(0.88, 0.88, 0.02)
+
+[sub_resource type="BoxShape3D" id="Shape_finestra"]
+size = Vector3(1, 1, 0.1)
+
+[node name="Finestra" type="Node3D"]
+script = ExtResource("1_moble")
+tipus = 4
+punts_decoracio = 3
+alcada_paret = 1.25
+
+[node name="Dalt" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0.05)
+mesh = SubResource("Mesh_travesser")
+
+[node name="Baix" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.46, 0.05)
+mesh = SubResource("Mesh_travesser")
+
+[node name="Esquerra" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 0, 0.05)
+mesh = SubResource("Mesh_muntant")
+
+[node name="Dreta" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 0, 0.05)
+mesh = SubResource("Mesh_muntant")
+
+[node name="CreuV" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+mesh = SubResource("Mesh_creu_v")
+
+[node name="CreuH" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+mesh = SubResource("Mesh_creu_h")
+
+[node name="Vidre" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.03)
+mesh = SubResource("Mesh_vidre")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
+shape = SubResource("Shape_finestra")
+
+[node name="LlumSol" type="SpotLight3D" parent="." node_paths=PackedStringArray("vidre")]
+transform = Transform3D(-1, 0, 0, 0, 0.766044, 0.642788, 0, 0.642788, -0.766044, 0, 0.3, 0.2)
+light_color = Color(1, 0.93, 0.8, 1)
+light_energy = 2.5
+spot_range = 6.0
+spot_angle = 45.0
+script = ExtResource("2_llum")
+vidre = NodePath("../Vidre")

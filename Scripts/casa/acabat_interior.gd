@@ -13,6 +13,8 @@ enum Superficie { TERRA, PARET }
 ## amb una sola textura de maó tens maons de tots els colors.
 @export var textura: Texture2D
 @export var preu := 0
+## Quant suma a la decoració de la vermuteria
+@export var punts_decoracio := 0
 
 func es_gratuit() -> bool:
 	return preu <= 0
