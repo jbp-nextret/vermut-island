@@ -9,10 +9,10 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_P:
-			print("P premuda")
+		if event.keycode == KEY_F1:   # F1: fer entrar un poring (prova)
+			print("F1 premuda")
 			spawn_poring()
-		elif event.keycode == KEY_S:
+		elif event.keycode == KEY_F2:   # F2: servir tothom (prova)
 			serve_all()
 
 func spawn_poring() -> void:

@@ -6,7 +6,7 @@
 
 [node name="Seat" unique_id=1569698955 instance=ExtResource("1_pnsdj")]
 script = ExtResource("2_lpd76")
-model_path = "res://Models/Seat.glb"
+tipus = 0
 
 [node name="Marker3D" type="Marker3D" parent="." index="0" unique_id=1890110901]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.090789795, 0)

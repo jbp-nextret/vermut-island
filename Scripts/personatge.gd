@@ -55,6 +55,7 @@ var temps_darrera_magia: float = 0.0
 @export var cercle_durada_visible: float = 1.5
 
 func _ready():
+	add_to_group("player")
 	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
 	anim_player.animation_finished.connect(_on_animation_finished)
@@ -80,7 +81,7 @@ func _physics_process(delta):
 			dash_actiu = false
 		return
 	# Salt
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
+	if is_on_floor() and Input.is_action_just_pressed("jump") and GameState.pot_moure():
 		velocity.y = JUMP_FORCE
 	# Direcció segons les tecles
 	var input_dir = Vector2.ZERO
@@ -92,6 +93,9 @@ func _physics_process(delta):
 		input_dir.y += 1
 	if Input.is_action_pressed("move_up"):
 		input_dir.y -= 1
+	# Construint (o en altres modes que ho bloquegin) el personatge no es mou
+	if not GameState.pot_moure():
+		input_dir = Vector2.ZERO
 	var direction = Vector3(input_dir.x, 0, input_dir.y)
 	if direction.length() > 0:
 		direction = direction.normalized()
@@ -195,6 +199,10 @@ func camera_shake(intensitat: float = 0.15):
 	shake_intensitat = intensitat
 			
 func _unhandled_input(event):
+	# Dins de casa, construint o servint no es pot atacar
+	# (i així la Q/E no treuen l'espasa ni llancen boles de foc)
+	if not GameState.pot_atacar():
+		return
 	if event.is_action_pressed("mode_combat"):
 		if not te_espasa:
 			return

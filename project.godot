@@ -24,6 +24,7 @@ EventBus="*uid://curq8pb0lhx7u"
 SalutJugador="*uid://cq38u4e6yef4u"
 GestorPartida="*uid://cowacjofewlfj"
 Customization="*uid://kth6iuxy11jy"
+GameState="*res://autoloads/game_state.gd"
 
 [display]
 
@@ -117,6 +118,7 @@ atac_magia={
 
 [layer_names]
 
+3d_physics/layer_2="terra"
 3d_physics/layer_5="hurtbox_jugador"
 3d_physics/layer_6="hurtbox_enemics"
 

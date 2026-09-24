@@ -28,6 +28,9 @@ var floor_y: float
 var order := ""
 var wait_time := 0.0
 
+func _ready() -> void:
+	add_to_group("porings")
+
 func setup(target_seat: Seat, exit_position: Vector3) -> void:
 	seat = target_seat
 	seat.occupant = self
@@ -87,13 +90,18 @@ func _change_state(new_state: State) -> void:
 		State.EATING:
 			order_bubble.hide()
 			sprite.play("eating")
-			await get_tree().create_timer(eat_time).timeout
-			_change_state(State.LEAVING)
+			# Un tween lligat al poring: si el poring desapareix, el tween també
+			create_tween().tween_callback(_acabar_de_beure).set_delay(eat_time)
 		State.LEAVING:
 			order_bubble.hide()
-			seat.occupant = null
+			if is_instance_valid(seat):
+				seat.occupant = null
 			global_position.y = floor_y   # baixa de la cadira
 			sprite.play("walking")
+
+func _acabar_de_beure() -> void:
+	if state == State.EATING:   # potser ja marxava (cadira eliminada...)
+		_change_state(State.LEAVING)
 
 func serve(drink: Drink) -> bool:
 	if state != State.WAITING_ORDER or drink.product != order:
@@ -101,3 +109,8 @@ func serve(drink: Drink) -> bool:
 	drink.start_drinking(eat_time)
 	_change_state(State.EATING)
 	return true
+
+# El bar tanca: qui encara no s'ha begut res se'n va; qui beu, acaba primer.
+func marxar() -> void:
+	if state == State.WALKING_TO_SEAT or state == State.WAITING_ORDER:
+		_change_state(State.LEAVING)

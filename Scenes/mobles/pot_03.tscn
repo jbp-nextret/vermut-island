@@ -5,4 +5,4 @@
 
 [node name="pot-03" unique_id=413043786 groups=["decoracio"] instance=ExtResource("1_gpfth")]
 script = ExtResource("2_ba736")
-model_path = "res://Models/pot-03.glb"
+tipus = 2

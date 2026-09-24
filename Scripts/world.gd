@@ -112,11 +112,11 @@ func aplicar_spawn_player(posicio: Vector3):
 		print("No s'ha trobat el Personatge o no està preparat")
 
 func _input(event):
-	if Input.is_action_just_pressed("plantar"):
+	if event.is_action_pressed("plantar"):
 		mantenint_plantar = true
 		temps_prement_plantar = 0.0
 
-	if Input.is_action_just_released("plantar"):
+	if event.is_action_released("plantar"):
 		mantenint_plantar = false
 		if roda_oberta:
 			_confirmar_seleccio_roda()
@@ -125,7 +125,7 @@ func _input(event):
 			_activar_mode_plantar_tap()
 	
 	# Cancel·la el mode plantació amb Escape
-	if Input.is_action_just_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		mode_plantar = false
 		cursor.visible = false
 		arrastrant = false
@@ -133,7 +133,7 @@ func _input(event):
 		EventBus.desactivar_mode_plantar()
 		print("Mode plantació cancel·lat")
 	
-	if mode_plantar and Input.is_action_just_pressed("accio_secundaria"):
+	if mode_plantar and event.is_action_pressed("accio_secundaria"):
 		if arrastrant:
 			arrastrant = false
 			plantar_zona_seleccionada()
@@ -141,13 +141,13 @@ func _input(event):
 			print("Plantació confirmada")
 			GestorPartida.guardar_mundo()
 	
-	if mode_plantar and Input.is_action_just_pressed("accio_primaria"):
+	if mode_plantar and event.is_action_pressed("accio_primaria"):
 		arrastrant = true
 		posicio_drag_inici = cursor.global_position
 		zone_seleccionada.clear()
 		print("Drag iniciat")
 	
-	if mode_plantar and Input.is_action_just_released("accio_primaria"):
+	if mode_plantar and event.is_action_released("accio_primaria"):
 		if arrastrant:
 			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
 
