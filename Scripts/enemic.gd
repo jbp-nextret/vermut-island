@@ -20,6 +20,7 @@ var velocitat_moviment = Vector3.ZERO
 var gravity = 20.0
 var escala_original = Vector3.ONE
 var material_original: StandardMaterial3D = null
+var material_dany: StandardMaterial3D = null
 var temps_feedback: float = 0.0
 var jugador: Node3D = null
 var barra_vida: BarraVida3D
@@ -28,11 +29,19 @@ var barra_vida: BarraVida3D
 var factor_velocitat := 1.0
 var alentit_fins := 0.0
 
+# Cops rebuts: empenta i una aturada curta
+var empenta := Vector3.ZERO
+var atordit_fins := 0.0
+
 # Alba: fuig i desapareix
 var fugint := false
 var direccio_fuga := Vector3.ZERO
 
 @onready var sprite = $Sprite
+
+# Recursos de les partícules de mort, compartits per tots els enemics
+static var _particules_mat: ParticleProcessMaterial
+static var _particules_quad: QuadMesh
 
 func _ready():
 	vida_actual = vida_maxima
@@ -69,6 +78,16 @@ func _physics_process(delta):
 
 	var ara := Time.get_ticks_msec() / 1000.0
 	var multiplicador := factor_velocitat if ara < alentit_fins else 1.0
+
+	# Empenta del cop (es va apagant) i atordiment: mentre dura, no ataca
+	empenta = empenta.move_toward(Vector3.ZERO, 25.0 * delta)
+	if ara < atordit_fins:
+		if es_volador:
+			global_position += empenta * delta
+		else:
+			velocity = Vector3(empenta.x, velocitat_moviment.y - gravity * delta, empenta.z)
+			move_and_slide()
+		return
 
 	temps_darrer_atac += delta
 	objectiu = obtenir_objectiu()
@@ -142,18 +161,25 @@ func alentir(factor: float, segons: float) -> void:
 	factor_velocitat = factor
 	alentit_fins = Time.get_ticks_msec() / 1000.0 + segons
 
-func prendre_dany(quantitat: int):
+func prendre_dany(quantitat: int, origen: Vector3 = Vector3.INF):
 	if fugint or vida_actual <= 0:
 		return
 	vida_actual -= quantitat
+	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.8, str(quantitat), Color(1, 0.95, 0.6) if quantitat >= 30 else Color.WHITE)
+	if origen.is_finite():
+		var lluny := global_position - origen
+		lluny.y = 0
+		empenta = lluny.normalized() * (7.0 if quantitat >= 30 else 4.5)
+		atordit_fins = Time.get_ticks_msec() / 1000.0 + 0.2
 	barra_vida.mostrar(vida_actual, vida_maxima)
 	mostrar_feedback_dany()
 	if vida_actual <= 0:
 		morir()
 
 func mostrar_feedback_dany():
-	var material_dany = material_original.duplicate()
-	material_dany.albedo_color = Color.RED
+	if material_dany == null:
+		material_dany = material_original.duplicate()
+		material_dany.albedo_color = Color(1, 0.3, 0.3)
 	sprite.set_surface_override_material(0, material_dany)
 	scale = escala_original * 1.2
 	temps_feedback = 0.2
@@ -178,7 +204,7 @@ func fugir() -> void:
 	direccio_fuga = (lluny.normalized() if lluny.length() > 0.1 else Vector3.FORWARD) + Vector3.UP * 0.5
 	barra_vida.visible = false
 	var t := create_tween()
-	t.tween_property(self, "scale", Vector3.ZERO, 1.5)
+	t.tween_property(self, "scale", Vector3.ONE * 0.01, 1.5)   # 0 exacte no li agrada al motor de física
 	t.tween_callback(queue_free)
 
 func mostrar_particules_mort():
@@ -186,27 +212,27 @@ func mostrar_particules_mort():
 	get_parent().add_child(particules)
 	particules.global_position = global_position
 
-	var process_mat = ParticleProcessMaterial.new()
-	process_mat.direction = Vector3(0, 1, 0)
-	process_mat.spread = 180.0
-	process_mat.initial_velocity_min = 2.0
-	process_mat.initial_velocity_max = 5.0
-	process_mat.gravity = Vector3(0, -9.8, 0)
-	process_mat.scale_min = 0.1
-	process_mat.scale_max = 0.3
-	process_mat.color = Color(1.0, 1.0, 0.059, 0.902)
-	particules.process_material = process_mat
-
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.30, 0.30)
-	var textura_mat := StandardMaterial3D.new()
-	textura_mat.albedo_texture = preload("res://Sprites/Misc/particle_2.PNG")
-	textura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	textura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	textura_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	textura_mat.vertex_color_use_as_albedo = true
-	quad.material = textura_mat
-	particules.draw_pass_1 = quad
+	if _particules_mat == null:
+		_particules_mat = ParticleProcessMaterial.new()
+		_particules_mat.direction = Vector3(0, 1, 0)
+		_particules_mat.spread = 180.0
+		_particules_mat.initial_velocity_min = 2.0
+		_particules_mat.initial_velocity_max = 5.0
+		_particules_mat.gravity = Vector3(0, -9.8, 0)
+		_particules_mat.scale_min = 0.1
+		_particules_mat.scale_max = 0.3
+		_particules_mat.color = Color(1.0, 1.0, 0.059, 0.902)
+		_particules_quad = QuadMesh.new()
+		_particules_quad.size = Vector2(0.30, 0.30)
+		var textura_mat := StandardMaterial3D.new()
+		textura_mat.albedo_texture = preload("res://Sprites/Misc/particle_2.PNG")
+		textura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		textura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		textura_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		textura_mat.vertex_color_use_as_albedo = true
+		_particules_quad.material = textura_mat
+	particules.process_material = _particules_mat
+	particules.draw_pass_1 = _particules_quad
 
 	particules.one_shot = true
 	particules.explosiveness = 0.9

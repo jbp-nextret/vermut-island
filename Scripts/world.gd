@@ -18,7 +18,7 @@ var zone_seleccionada = []  # Llista de posicions a plantar
 # Els cultius de la roda surten de CatalegCultius (nom, icona i color de cada escena)
 var cultius_disponibles: Array = []
 var opcions_cultius: Array = []
-var indicador_rang: MeshInstance3D
+var indicador_rang: AnellAbast
 @onready var roda_seleccio = $RodaSeleccio  # afegeix la instància de RodaSeleccio.tscn com a fill de World
 
 var temps_prement_plantar: float = 0.0
@@ -33,6 +33,9 @@ func _ready():
 	hud_diners.marge_superior = 70   # a sota del rellotge
 	add_child(hud_diners)
 	add_child(HudOnades.new())
+	var hud_combat := HudCombat.new()
+	hud_combat.jugador = $Personatge
+	add_child(hud_combat)
 
 	cultius_disponibles = CatalegCultius.TOTS
 	opcions_cultius = CatalegCultius.opcions_roda()
@@ -166,6 +169,7 @@ func _physics_process(delta: float) -> void:
 	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
 
 func _process(delta):
+	_actualitzar_anells()
 	if mantenint_plantar and not roda_oberta:
 		temps_prement_plantar += delta
 		if temps_prement_plantar >= llindar_hold:
@@ -451,28 +455,34 @@ func carregar_mundo():
 # ─────────────── Abast del cultiu seleccionat (sota el cursor de plantar)
 
 func _crear_indicador_rang():
-	indicador_rang = MeshInstance3D.new()
-	var mat := StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	indicador_rang.material_override = mat
-	indicador_rang.position.y = 0.03
-	cursor.add_child(indicador_rang)
+	# El cursor és un quad girat 90° per quedar pla: si l'anell en fos fill, en
+	# sortiria vertical. Per això és independent i el situem cada frame.
+	indicador_rang = AnellAbast.new()
+	indicador_rang.top_level = true
+	indicador_rang.visible = false
+	add_child(indicador_rang)
 	_actualitzar_indicador_rang()
 
 func _actualitzar_indicador_rang():
 	if indicador_rang == null:
 		return
 	var opcio: Dictionary = opcions_cultius[index_cultiu_seleccionat]
-	var radi: float = opcio.radi
-	indicador_rang.visible = radi > 0.0
-	if radi <= 0.0:
-		return
-	var disc := CylinderMesh.new()
-	disc.top_radius = radi
-	disc.bottom_radius = radi
-	disc.height = 0.02
-	indicador_rang.mesh = disc
-	var color: Color = opcio.color
-	indicador_rang.material_override.albedo_color = Color(color.r, color.g, color.b, 0.18)
+	indicador_rang.set_meta("radi", opcio.radi)
+	if opcio.radi > 0.0:
+		indicador_rang.configurar(opcio.radi, opcio.color)
+
+## En mode plantar: l'anell del cultiu triat segueix el cursor, i dels plantats
+## només es veuen els que cobreixen el punt on plantaràs (abans es veien tots)
+func _actualitzar_anells():
+	var actiu: bool = mode_plantar and cursor.visible
+	indicador_rang.visible = actiu and indicador_rang.get_meta("radi", 0.0) > 0.0
+	if actiu:
+		indicador_rang.global_position = cursor.global_position + Vector3.UP * 0.03
+	for cultiu in get_tree().get_nodes_in_group("cultius"):
+		if not cultiu.has_method("mostrar_radi"):
+			continue
+		var cobreix := false
+		if actiu:
+			var d := Vector2(cultiu.global_position.x - cursor.global_position.x, cultiu.global_position.z - cursor.global_position.z).length()
+			cobreix = d <= cultiu.radi_efecte()
+		cultiu.mostrar_radi(cobreix)

@@ -9,9 +9,11 @@ signal onada_acabada(resum: Dictionary)
 
 const DIES := ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"]
 
+# Rutes i no preload: l'script dels enemics fa servir GestorOnades, i carregar-los
+# mentre aquest autoload s'inicialitza crearia una dependència circular
 const ENEMICS := {
-	"ratpenat_petit": preload("res://Scenes/Enemic.tscn"),
-	"ratpenat": preload("res://Scenes/EnemicVolador.tscn"),
+	"ratpenat_petit": "res://Scenes/Enemic.tscn",
+	"ratpenat": "res://Scenes/EnemicVolador.tscn",
 }
 
 ## Composició de la primera setmana, de dilluns (0) a divendres (4)
@@ -125,7 +127,7 @@ func _spawnejar(delta: float) -> void:
 		return
 	temps_seguent = interval
 	var tipus: String = pendents.pop_back()
-	var enemic: Node = spawner.spawnejar(ENEMICS[tipus], multiplicador_vida)
+	var enemic: Node = spawner.spawnejar(load(ENEMICS[tipus]), multiplicador_vida)
 	enemic.set_meta("tipus_onada", tipus)
 	vius.append(tipus)
 

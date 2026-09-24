@@ -49,7 +49,7 @@ enum TipusCultiu {
 ## Es manté només per compatibilitat amb les partides desades: el comportament el decideix el tipus.
 @export var es_torre: bool = true
 
-const COLOR_RANG_TORRE := Color(0.9, 0.9, 0.3, 0.12)
+const COLOR_RANG_TORRE := Color(1.0, 0.85, 0.3)
 const ESPERA_REGENERACIO := 4.0   # segons sense rebre dany abans de començar a curar-se
 
 var estat_actual = Estat.LLAVOR
@@ -68,7 +68,7 @@ var vida_acumulada := 0.0
 @onready var area = $Area3D
 @onready var icona = $IconaRecollir
 
-var indicador_radi: MeshInstance3D = null
+var indicador_radi: Node3D = null
 var barra_vida: BarraVida3D
 
 func _ready():
@@ -87,8 +87,8 @@ func _ready():
 	actualitzar_sprite()
 
 	if radi_efecte() > 0.0 and mostrar_radi_influencia:
-		_crear_indicador_radi()
-		indicador_radi.visible = EventBus.mode_plantar_actiu
+		indicador_radi = AnellAbast.crear(self, radi_efecte(), COLOR_RANG_TORRE if es_defensa() else tint)
+		indicador_radi.visible = false
 		EventBus.mode_plantar_canviat.connect(_on_mode_plantar_canviat)
 
 # ─────────────── Tipus
@@ -117,26 +117,13 @@ func atraccio() -> float:
 # ─────────────── Aspecte
 
 func _on_mode_plantar_canviat(actiu: bool):
+	if indicador_radi and not actiu:
+		indicador_radi.visible = false
+
+## El món el crida en mode plantar: només es mostren les àrees que cobreixen el cursor
+func mostrar_radi(mostrar: bool) -> void:
 	if indicador_radi:
-		indicador_radi.visible = actiu
-
-func _crear_indicador_radi():
-	indicador_radi = MeshInstance3D.new()
-	var disc := CylinderMesh.new()
-	disc.top_radius = radi_efecte()
-	disc.bottom_radius = radi_efecte()
-	disc.height = 0.02
-	indicador_radi.mesh = disc
-
-	var mat := StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.albedo_color = COLOR_RANG_TORRE if es_defensa() else Color(tint.r, tint.g, tint.b, 0.15)
-	indicador_radi.material_override = mat
-
-	add_child(indicador_radi)
-	indicador_radi.position = Vector3(0, 0.02, 0)
+		indicador_radi.visible = mostrar
 
 func passar_dia():
 	if recollit or estat_actual == Estat.MADUR:

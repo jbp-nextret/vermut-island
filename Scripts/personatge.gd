@@ -54,6 +54,17 @@ var temps_darrera_magia: float = 0.0
 @export var cercle_colors: Array[Color] = [Color(1.0, 0.5, 0.1), Color(1.0, 0.8, 0.2), Color(0.9, 0.2, 0.8)]
 @export var cercle_durada_visible: float = 1.5
 
+signal magia_no_disponible
+
+# Combos i cua d'atacs
+const DANY_ATAC := {"tall": 20, "estocada": 45}
+const FINESTRA_COMBO := 0.45     # segons per encadenar el cop següent
+var combo := 0
+var temps_des_del_cop := 99.0
+var atac_en_cua := ""
+var temps_cua := 0.0
+var vida_anterior := 0
+
 func _ready():
 	add_to_group("player")
 	# Interaccions (barrica, clients...) i objecte a la mà
@@ -62,10 +73,16 @@ func _ready():
 	add_child(interaccio)
 	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
-	anim_player.animation_finished.connect(_on_animation_finished)
+	pivot_espasa.cop_encertat.connect(_on_cop_encertat)
+	vida_anterior = SalutJugador.vida_actual
+	SalutJugador.vida_canviat.connect(_on_vida_canviat)
 	call_deferred("_reset_interpolacio")
 	
 func _physics_process(delta):
+	temps_darrera_magia += delta
+	temps_des_del_cop += delta
+	if temps_cua > 0.0:
+		temps_cua -= delta
 	# Gravetat
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -117,8 +134,6 @@ func _physics_process(delta):
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
 		get_tree().reload_current_scene()
-	# Cooldown màgic
-	temps_darrera_magia += delta
 	
 func _process(delta):
 	for sprite in sprites:
@@ -212,24 +227,38 @@ func _unhandled_input(event):
 			return
 		toggle_mode_combat()
 	
-	if estat == Estat.COMBAT and not atacant:
+	if estat == Estat.COMBAT:
 		if event.is_action_pressed("accio_primaria"):
-			iniciar_atac(20, "tall")
+			_demanar_atac("tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			iniciar_atac(50, "estocada")
+			_demanar_atac("estocada")
 	# Atac màgic
 	if event.is_action_pressed("atac_magia"):  # crea aquesta input action
 		disparar_bola_foc()
 
-func iniciar_atac(dany: int, tipus: String):
+## Si ja està atacant, el guarda per quan acabi (així els combos no es perden)
+func _demanar_atac(tipus: String):
+	if atacant:
+		# Es guarda fins que acabi el cop actual (i una mica més)
+		atac_en_cua = tipus
+		temps_cua = 1.0
+	else:
+		iniciar_atac(tipus)
+
+func iniciar_atac(tipus: String):
 	atacant = true
 	pivot_espasa.visible = true
-	pivot_espasa.dany_actual = dany
-	camera_shake(0.1)
 
-	var nom_animacio = "sword_attack_" + tipus + "_" + ultima_direccio
+	# Combo de talls: 1r, 2n (en sentit contrari) i 3r (més fort)
+	combo = combo + 1 if temps_des_del_cop < FINESTRA_COMBO and combo < 3 else 1
+	var dany: int = DANY_ATAC[tipus]
+	if tipus == "tall" and combo == 3:
+		dany = int(dany * 1.6)
+
 	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
-	anim_player.play(nom_animacio)
+	var animacio := anim_player.get_animation("sword_attack_" + tipus + "_" + ultima_direccio)
+	var durada: float = pivot_espasa.atacar(tipus, animacio, dany, combo == 2)
+	create_tween().tween_callback(_on_atac_acabat).set_delay(durada)
 
 	if tipus == "estocada":
 		dash_actiu = true
@@ -247,10 +276,41 @@ func _test_cercle():
 	cercle.rotation_degrees.x = -90
 	print("Cercle creat a: ", cercle.global_position, " textura: ", cercle.texture)
 	
-func _on_animation_finished(anim_name):
-	if anim_name.begins_with("sword_attack_"):
-		atacant = false
-		pivot_espasa.visible = false
+func _on_atac_acabat():
+	atacant = false
+	temps_des_del_cop = 0.0
+	pivot_espasa.visible = estat == Estat.COMBAT
+	if not atac_en_cua.is_empty() and temps_cua > 0.0:
+		var seguent := atac_en_cua
+		atac_en_cua = ""
+		iniciar_atac(seguent)
+	atac_en_cua = ""
+
+## Cop encertat: sacseig i una aturada molt curta (hitstop) perquè es noti l'impacte
+func _on_cop_encertat(_enemic: Node3D, dany: int):
+	camera_shake(0.08 if dany < 30 else 0.16)
+	_hitstop(0.045 if dany < 30 else 0.08)
+
+func _hitstop(durada: float):
+	Engine.time_scale = 0.05
+	# El temporitzador ignora el time_scale, si no duraria 20 vegades més
+	get_tree().create_timer(durada, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
+
+## Quan el jugador rep mal: parpelleig vermell i sacseig
+func _on_vida_canviat(actual, _maxima):
+	if actual < vida_anterior:
+		camera_shake(0.2)
+		for sprite in sprites:
+			if sprite:
+				sprite.modulate = Color(1, 0.35, 0.35)
+		var t := create_tween()
+		for sprite in sprites:
+			if sprite:
+				t.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.3)
+	vida_anterior = actual
+
+func progres_magia() -> float:
+	return clampf(temps_darrera_magia / cooldown_magia, 0.0, 1.0)
 
 func toggle_mode_combat():
 	if estat == Estat.NORMAL:
@@ -294,6 +354,7 @@ func _crear_trail():
 
 func disparar_bola_foc():
 	if temps_darrera_magia < cooldown_magia:
+		magia_no_disponible.emit()
 		return
 	temps_darrera_magia = 0.0
 
