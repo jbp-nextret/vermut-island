@@ -71,7 +71,8 @@ func _fer_entrar_client() -> void:
 	if porta == null:
 		push_warning("GestorServei: falta assignar la porta")
 		return
-	var lliures := get_tree().get_nodes_in_group("seats").filter(func(s): return s.is_free())
+	# Només seients lliures i amb taula al costat (sense taula no es pot servir)
+	var lliures := get_tree().get_nodes_in_group("seats").filter(func(s): return s.is_free() and s.es_utilitzable())
 	if lliures.is_empty():
 		return
 	var p: Poring = PORING.instantiate()

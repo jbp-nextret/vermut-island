@@ -172,7 +172,8 @@ func punt_interaccio() -> Vector3:
 func pot_interactuar(jugador: InteraccioJugador) -> bool:
 	return state == State.WAITING_ORDER \
 		and jugador.objecte_portat is Drink \
-		and jugador.objecte_portat.product == order
+		and jugador.objecte_portat.product == order \
+		and is_instance_valid(seat) and seat.es_utilitzable()   # sense taula no es pot servir
 
 func text_interaccio(_jugador: InteraccioJugador) -> String:
 	return "Servir " + order
@@ -183,18 +184,9 @@ func interactuar(jugador: InteraccioJugador) -> void:
 	got.global_position = _posicio_a_taula()
 	serve(got)
 
-## On deixar el got: a sobre de la barra més propera, a la vora que toca al poring.
-## Si no hi ha cap barra a prop, al costat del poring.
+## On deixar el got: a sobre de la taula del seient, a la vora que toca al poring.
 func _posicio_a_taula() -> Vector3:
-	var barra: Node3D = null
-	var millor_distancia := 1.4
-	for b in get_tree().get_nodes_in_group("barres"):
-		var d := Vector2(b.global_position.x - global_position.x, b.global_position.z - global_position.z).length()
-		if d < millor_distancia:
-			barra = b
-			millor_distancia = d
-	if barra == null:
-		return global_position + Vector3(0.4, 0, 0)
+	var barra := seat.taula()
 
 	var caixa := _aabb_global(barra)
 	var marge := 0.15

@@ -14,7 +14,8 @@ var mode_construccio := false
 var mode_eliminacio := false
 var moble_preview: Node3D = null
 var posicio_preview: Variant = null   # Vector3 o null si el ratolí no apunta a terra
-var preview_valida := false
+enum EstatPreview { OK, AVIS, BLOQUEJAT }
+var estat_preview := EstatPreview.OK
 var moble_hovered: Node3D = null
 var punts_grid: Array[Node3D] = []
 var index_preview := -1
@@ -51,6 +52,7 @@ var gestor_servei: GestorServei
 var material_hover := StandardMaterial3D.new()
 var material_preview_ok := StandardMaterial3D.new()
 var material_preview_ko := StandardMaterial3D.new()
+var material_preview_avis := StandardMaterial3D.new()
 var material_grid := StandardMaterial3D.new()
 
 # ─────────────────────────────────────────────── Cicle de vida
@@ -81,11 +83,12 @@ func _configurar_materials():
 	material_hover.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material_hover.albedo_color = Color(1, 0, 0, 0.8)
 
-	for m in [material_preview_ok, material_preview_ko, material_grid]:
+	for m in [material_preview_ok, material_preview_ko, material_preview_avis, material_grid]:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material_preview_ok.albedo_color = Color(0.35, 1.0, 0.45, 0.35)
 	material_preview_ko.albedo_color = Color(1.0, 0.25, 0.25, 0.45)
+	material_preview_avis.albedo_color = Color(1.0, 0.8, 0.2, 0.4)
 	material_grid.albedo_color = Color(1, 1, 1, 0.35)
 
 func _configurar_llista_mobles():
@@ -210,7 +213,7 @@ func _crear_hud():
 	caixa.add_child(boto_construir)
 
 	boto_vermuteria = _crear_boto("Obrir vermuteria")
-	boto_vermuteria.pressed.connect(func(): gestor_servei.alternar())
+	boto_vermuteria.pressed.connect(_on_boto_vermuteria)
 	caixa.add_child(boto_vermuteria)
 
 	# Ajuda de controls, a baix
@@ -281,6 +284,20 @@ func _actualitzar_hud():
 		label_ajuda.text = "Clic esquerre: esborrar   ·   Clic dret / Esc: tornar a col·locar"
 	else:
 		label_ajuda.text = "Clic esquerre: col·locar (mantén per pintar)   ·   Q/E: girar   ·   Clic dret: esborrar   ·   Roda: zoom   ·   Botó central: girar càmera   ·   Esc: sortir"
+
+func _on_boto_vermuteria():
+	if not gestor_servei.obert and _seients_utilitzables() == 0:
+		_mostrar_avis("Necessites almenys una cadira amb una barra al costat")
+		return
+	gestor_servei.alternar()
+
+func _seients_utilitzables() -> int:
+	return get_tree().get_nodes_in_group("seats").filter(func(s): return s.es_utilitzable()).size()
+
+## En mode construcció, marca els seients que no tenen taula
+func _actualitzar_avisos_seients():
+	for seient in get_tree().get_nodes_in_group("seats"):
+		seient.mostrar_avis(mode_construccio and not seient.es_utilitzable())
 
 func _on_temps_servei(segons: float):
 	var s := int(ceil(segons))
@@ -390,6 +407,7 @@ func entrar_mode_construccio():
 
 	if index_preview >= 0:
 		_crear_preview()
+	_actualitzar_avisos_seients()
 	_actualitzar_hud()
 
 func sortir_mode_construccio():
@@ -408,6 +426,7 @@ func sortir_mode_construccio():
 
 	GameState.mode = GameState.Mode.EXPLORAR
 	guardar_decoracio()
+	_actualitzar_avisos_seients()
 	_actualitzar_hud()
 
 func actualitzar_posicio_camera():
@@ -471,8 +490,8 @@ func _crear_preview():
 	_desactivar_colisions(moble_preview)
 	_per_cada_malla(moble_preview, func(m: GeometryInstance3D): m.transparency = ALFA_PREVIEW)
 	moble_preview.visible = false
-	preview_valida = false
-	_pintar_preview(true)
+	estat_preview = EstatPreview.OK
+	_pintar_preview()
 
 func _eliminar_preview():
 	if moble_preview:
@@ -500,14 +519,39 @@ func actualitzar_preview(delta: float):
 		moble_preview.global_position = moble_preview.global_position.lerp(posicio_preview, minf(1.0, delta * 25.0))
 	moble_preview.rotation.y = lerp_angle(moble_preview.rotation.y, deg_to_rad(rotacio_preview), minf(1.0, delta * 20.0))
 
-	var valida := _motiu_bloqueig(posicio_preview).is_empty()
-	if valida != preview_valida:
-		preview_valida = valida
-		_pintar_preview(valida)
+	var estat := _estat_col_locacio(posicio_preview)
+	if estat != estat_preview:
+		estat_preview = estat
+		_pintar_preview()
 
-func _pintar_preview(valida: bool):
-	var material := material_preview_ok if valida else material_preview_ko
+func _pintar_preview():
+	var material: StandardMaterial3D
+	match estat_preview:
+		EstatPreview.OK: material = material_preview_ok
+		EstatPreview.AVIS: material = material_preview_avis
+		_: material = material_preview_ko
 	_per_cada_malla(moble_preview, func(m: GeometryInstance3D): m.material_overlay = material)
+
+func _estat_col_locacio(pos: Vector3) -> EstatPreview:
+	if not _motiu_bloqueig(pos).is_empty():
+		return EstatPreview.BLOQUEJAT
+	if not _avis_col_locacio(pos).is_empty():
+		return EstatPreview.AVIS
+	return EstatPreview.OK
+
+## Es pot col·locar, però potser no és bona idea (groc)
+func _avis_col_locacio(pos: Vector3) -> String:
+	if _tipus(moble_preview) == MobleBarra.Tipus.SEIENT and not _hi_ha_barra_al_costat(pos):
+		return "Cadira sense taula: cap client s'hi asseurà"
+	return ""
+
+func _hi_ha_barra_al_costat(pos: Vector3) -> bool:
+	for barra in get_tree().get_nodes_in_group("barres"):
+		if barra.is_queued_for_deletion():
+			continue
+		if Vector2(barra.global_position.x - pos.x, barra.global_position.z - pos.z).length() <= Seat.DISTANCIA_TAULA:
+			return true
+	return false
 
 func obtenir_posicio_grid() -> Variant:
 	var ratoli := get_viewport().get_mouse_position()
@@ -577,11 +621,16 @@ func col_locar_moble(des_de_clic: bool):
 			return   # ja hi és exactament igual, no cal fer res
 		_treure_moble(vell)
 
+	var avis := _avis_col_locacio(pos)
+	if des_de_clic and not avis.is_empty():
+		_mostrar_avis(avis)
+
 	var moble: Node3D = escena.instantiate()
 	_afegir_grups(moble, tipus)
 	add_child(moble)
 	moble.global_position = pos
 	moble.rotation_degrees.y = rotacio_preview
+	call_deferred("_actualitzar_avisos_seients")
 
 	# Petit "pop" en aparèixer
 	moble.scale = Vector3.ONE * 0.8
@@ -674,6 +723,7 @@ func eliminar_moble(moble: Node3D):
 	if moble == moble_hovered:
 		moble_hovered = null
 	_treure_moble(moble)
+	call_deferred("_actualitzar_avisos_seients")
 
 func canviar_color_moble(moble: Node3D):
 	_per_cada_malla(moble, func(m: GeometryInstance3D): m.material_override = material_hover)

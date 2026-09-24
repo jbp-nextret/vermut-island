@@ -18,7 +18,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func spawn_poring() -> void:
 	var seats := get_tree().get_nodes_in_group("seats")
 	print("Seients al grup: ", seats.size())
-	var free_seats := seats.filter(func(s): return s.is_free())
+	var free_seats := seats.filter(func(s): return s.is_free() and s.es_utilitzable())
 	if free_seats.is_empty():
 		print("No hi ha seients lliures")
 		return
