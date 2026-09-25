@@ -1,13 +1,16 @@
 extends CanvasLayer
 class_name HudCombat
-## Icones de combat a baix a l'esquerra:
-##  - espasa: il·luminada quan el mode combat està actiu
-##  - màgia: un anell que s'omple mentre es recarrega i "batega" quan està a punt
+## Icones de combat a baix a l'esquerra, cadascuna amb la seva tecla:
+##  - tall arcà (clic esquerre): il·luminada quan el mode combat està actiu
+##  - ona (clic dret) i bola de foc (E): un anell que s'omple mentre es recarreguen
+##    i "bateguen" quan tornen a estar a punt
 
 var jugador: Node
 var icona_espasa: IconaCombat
+var icona_ona: IconaCombat
 var icona_magia: IconaCombat
 var estava_a_punt := true
+var ona_a_punt := true
 
 func _ready():
 	var caixa := HBoxContainer.new()
@@ -20,9 +23,11 @@ func _ready():
 	caixa.offset_bottom = -12
 	caixa.grow_vertical = Control.GROW_DIRECTION_BEGIN
 
-	icona_espasa = IconaCombat.new("🗡", _tecla("mode_combat"), Color(0.8, 0.9, 1.0))
+	icona_espasa = IconaCombat.new("✨", _tecla("mode_combat"), Color(0.55, 0.85, 1.0))
+	icona_ona = IconaCombat.new("💫", "Dret", Color(0.8, 0.5, 1.0))
 	icona_magia = IconaCombat.new("🔥", _tecla("atac_magia"), Color(1.0, 0.55, 0.15))
 	caixa.add_child(icona_espasa)
+	caixa.add_child(icona_ona)
 	caixa.add_child(icona_magia)
 
 	if jugador and jugador.has_signal("magia_no_disponible"):
@@ -32,8 +37,16 @@ func _process(_delta):
 	if not is_instance_valid(jugador):
 		return
 	visible = GameState.pot_atacar()
-	icona_espasa.activa = jugador.estat == 1   # Estat.COMBAT
-	icona_espasa.progres = 1.0
+	var en_combat: bool = jugador.estat == 1   # Estat.COMBAT
+	icona_espasa.activa = en_combat
+	icona_espasa.progres = jugador.combat.progres_tall() if jugador.combat else 1.0
+	var progres_ona: float = jugador.combat.progres_ona() if jugador.combat else 1.0
+	icona_ona.progres = progres_ona
+	icona_ona.activa = en_combat and progres_ona >= 1.0
+	if progres_ona >= 1.0 and not ona_a_punt:
+		icona_ona.bategar()
+	ona_a_punt = progres_ona >= 1.0
+	icona_ona.queue_redraw()
 	var progres: float = jugador.progres_magia()
 	icona_magia.progres = progres
 	icona_magia.activa = progres >= 1.0

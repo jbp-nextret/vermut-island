@@ -56,13 +56,11 @@ var temps_darrera_magia: float = 0.0
 
 signal magia_no_disponible
 
-# Combos i cua d'atacs
-const DANY_ATAC := {"tall": 20, "estocada": 45}
-const FINESTRA_COMBO := 0.45     # segons per encadenar el cop següent
-var combo := 0
-var temps_des_del_cop := 99.0
-var atac_en_cua := ""
+# Atacs màgics a curta distància (substitueixen l'espasa)
+var combat: CombatMagic
+var atac_en_cua := ""        # si prems mentre es recarrega, surt quan pugui
 var temps_cua := 0.0
+const MEMORIA_ATAC := 0.45   # una mica més que la recàrrega del tall
 var vida_anterior := 0
 
 func _ready():
@@ -73,16 +71,25 @@ func _ready():
 	add_child(interaccio)
 	pivot_espasa.visible = false
 	Customization.aplicar_aparenca(_sprites())
-	pivot_espasa.cop_encertat.connect(_on_cop_encertat)
+	# L'espasa ja no es fa servir: els atacs són màgics
+	pivot_espasa.visible = false
+	pivot_espasa.process_mode = Node.PROCESS_MODE_DISABLED
+	combat = CombatMagic.new()
+	combat.name = "CombatMagic"
+	add_child(combat)
+	combat.cop_encertat.connect(_on_cop_encertat)
 	vida_anterior = SalutJugador.vida_actual
 	SalutJugador.vida_canviat.connect(_on_vida_canviat)
 	call_deferred("_reset_interpolacio")
 	
 func _physics_process(delta):
 	temps_darrera_magia += delta
-	temps_des_del_cop += delta
 	if temps_cua > 0.0:
 		temps_cua -= delta
+		if temps_cua <= 0.0:
+			atac_en_cua = ""
+		elif not atac_en_cua.is_empty():
+			_atac_magic(atac_en_cua)
 	# Gravetat
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -198,7 +205,7 @@ func actualitza_animacio(input_dir: Vector2):
 	_actualitzar_orientacio_espasa()
 
 func _actualitzar_orientacio_espasa():
-	pivot_espasa.scale.x = -1 if mirall_horitzontal else 1
+	pass   # l'espasa ja no es fa servir
 
 func _sprites() -> Dictionary:
 	return {
@@ -229,42 +236,42 @@ func _unhandled_input(event):
 	
 	if estat == Estat.COMBAT:
 		if event.is_action_pressed("accio_primaria"):
-			_demanar_atac("tall")
+			_atac_magic("tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			_demanar_atac("estocada")
+			_atac_magic("ona")
 	# Atac màgic
 	if event.is_action_pressed("atac_magia"):  # crea aquesta input action
 		disparar_bola_foc()
 
-## Si ja està atacant, el guarda per quan acabi (així els combos no es perden)
-func _demanar_atac(tipus: String):
-	if atacant:
-		# Es guarda fins que acabi el cop actual (i una mica més)
-		atac_en_cua = tipus
-		temps_cua = 1.0
-	else:
-		iniciar_atac(tipus)
-
-func iniciar_atac(tipus: String):
+## Llança un atac màgic cap al ratolí. Si encara es recarrega, el guarda uns instants.
+func _atac_magic(tipus: String):
+	var direccio := _direccio_cap_al_cursor()
+	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.ona()
+	if not fet:
+		if atac_en_cua != tipus:
+			atac_en_cua = tipus
+			temps_cua = MEMORIA_ATAC
+		return
+	atac_en_cua = ""
+	temps_cua = 0.0
+	# El cos es gira cap on ataca i fa l'animació d'atac
+	_mirar_cap_a(direccio)
 	atacant = true
-	pivot_espasa.visible = true
-
-	# Combo de talls: 1r, 2n (en sentit contrari) i 3r (més fort)
-	combo = combo + 1 if temps_des_del_cop < FINESTRA_COMBO and combo < 3 else 1
-	var dany: int = DANY_ATAC[tipus]
-	if tipus == "tall" and combo == 3:
-		dany = int(dany * 1.6)
-
 	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
-	var animacio := anim_player.get_animation("sword_attack_" + tipus + "_" + ultima_direccio)
-	var durada: float = pivot_espasa.atacar(tipus, animacio, dany, combo == 2)
-	create_tween().tween_callback(_on_atac_acabat).set_delay(durada)
+	create_tween().tween_callback(func(): atacant = false).set_delay(0.25)
 
-	if tipus == "estocada":
-		dash_actiu = true
-		dash_direccio = _direccio_mirada()
-		dash_temps_restant = dash_estocada_durada
-		
+## Converteix una direcció del món en "up/down/right" (+ mirall) relatiu a la càmera
+func _mirar_cap_a(direccio: Vector3):
+	var camera = get_viewport().get_camera_3d()
+	var cam_angle = atan2(camera.global_position.x - global_position.x, camera.global_position.z - global_position.z)
+	var local := direccio.rotated(Vector3.UP, -cam_angle)
+	if absf(local.x) > absf(local.z):
+		ultima_direccio = "right"
+		mirall_horitzontal = local.x < 0
+	else:
+		ultima_direccio = "down" if local.z > 0 else "up"
+		mirall_horitzontal = false
+
 func _test_cercle():
 	var cercle := Sprite3D.new()
 	cercle.texture = preload("res://Sprites/Misc/magic-3.png")
@@ -276,16 +283,6 @@ func _test_cercle():
 	cercle.rotation_degrees.x = -90
 	print("Cercle creat a: ", cercle.global_position, " textura: ", cercle.texture)
 	
-func _on_atac_acabat():
-	atacant = false
-	temps_des_del_cop = 0.0
-	pivot_espasa.visible = estat == Estat.COMBAT
-	if not atac_en_cua.is_empty() and temps_cua > 0.0:
-		var seguent := atac_en_cua
-		atac_en_cua = ""
-		iniciar_atac(seguent)
-	atac_en_cua = ""
-
 ## Cop encertat: sacseig i una aturada molt curta (hitstop) perquè es noti l'impacte
 func _on_cop_encertat(_enemic: Node3D, dany: int):
 	camera_shake(0.08 if dany < 30 else 0.16)
@@ -313,12 +310,7 @@ func progres_magia() -> float:
 	return clampf(temps_darrera_magia / cooldown_magia, 0.0, 1.0)
 
 func toggle_mode_combat():
-	if estat == Estat.NORMAL:
-		estat = Estat.COMBAT
-		pivot_espasa.visible = true
-	else:
-		estat = Estat.NORMAL
-		pivot_espasa.visible = false
+	estat = Estat.COMBAT if estat == Estat.NORMAL else Estat.NORMAL
 
 func _on_atac_finalitzat():
 	atacant = false
