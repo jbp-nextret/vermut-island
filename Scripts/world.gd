@@ -11,6 +11,7 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 @onready var roda_seleccio = $RodaSeleccio
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
+var regador: Regador
 
 func _ready():
 	cursor.visible = false
@@ -27,6 +28,13 @@ func _ready():
 	plantador.name = "Plantador"
 	plantador.configurar(self, $GridMap, roda_seleccio, cursor, blocs_plantables)
 	add_child(plantador)
+	regador = Regador.new()
+	regador.name = "Regador"
+	regador.configurar(self, plantador, $Personatge)
+	add_child(regador)
+	var hud_rec := HudRec.new()
+	hud_rec.regador = regador
+	add_child(hud_rec)
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
 	add_child(hud_plantar)
@@ -154,7 +162,8 @@ func guardar_mundo():
 			"estat": cultiu.estat_actual,
 			"dies_passats": cultiu.dies_passats,
 			"es_torre": cultiu.es_torre if _has_property(cultiu, "es_torre") else false,
-			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0
+			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0,
+			"regat": cultiu.regat
 		})
 	
 	# Guarda totes les plantes (si n'hi ha al mundo)
@@ -222,6 +231,8 @@ func carregar_mundo():
 		
 		
 		cultiu.actualitzar_sprite()
+		if data.get("regat", false):
+			cultiu.regar()
 	
 	print("Cultius carregats!")
 

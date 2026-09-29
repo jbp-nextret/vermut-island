@@ -69,6 +69,12 @@ var vida_acumulada := 0.0
 @onready var icona = $IconaRecollir
 
 var indicador_radi: Node3D = null
+
+# Rec: un cultiu només creix si el dia anterior l'han regat (i en passar el dia s'asseca)
+var regat := false
+var taca_humitat: MeshInstance3D
+var icona_set: Label3D
+static var _material_humitat: StandardMaterial3D
 var ressaltat := false
 var barra_vida: BarraVida3D
 
@@ -137,8 +143,73 @@ func ressaltar(actiu: bool) -> void:
 const NOMS_ESTAT := ["Llavor", "Creixent", "Mitjana", "Gran", "Madura"]
 
 ## Text curt per a l'etiqueta que surt en passar-hi el ratolí
+## Té set si encara ha de créixer i avui no l'han regat
+func necessita_aigua() -> bool:
+	return not recollit and not es_madur() and not regat
+
+func regar() -> void:
+	if recollit or regat:
+		return
+	regat = true
+	_actualitzar_humitat()
+
+## Taca fosca a terra quan està regat (no cal cap sprite nou de terra mullada)
+func _actualitzar_humitat() -> void:
+	if taca_humitat == null:
+		if not regat:
+			return
+		taca_humitat = MeshInstance3D.new()
+		var pla := PlaneMesh.new()
+		pla.size = Vector2(0.95, 0.95)
+		taca_humitat.mesh = pla
+		taca_humitat.material_override = _material_taca()
+		taca_humitat.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		taca_humitat.position = Vector3(0, -0.47, 0)   # just a sobre del terra
+		taca_humitat.rotation.y = randf() * TAU            # que no totes les taques siguin iguals
+		add_child(taca_humitat)
+		taca_humitat.transparency = 1.0
+	var t := create_tween()
+	t.tween_property(taca_humitat, "transparency", 0.0 if regat else 1.0, 0.5 if regat else 1.5)
+
+static func _material_taca() -> StandardMaterial3D:
+	if _material_humitat:
+		return _material_humitat
+	# Taca de 16x16 en pixel art: fosca al centre i vores irregulars
+	var imatge := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var soroll := FastNoiseLite.new()
+	soroll.seed = 7
+	soroll.frequency = 0.25
+	for y in 16:
+		for x in 16:
+			var d := Vector2(x - 7.5, y - 7.5).length() / 8.0
+			var valor := 1.0 - d + soroll.get_noise_2d(x, y) * 0.35
+			if valor > 0.15:
+				imatge.set_pixel(x, y, Color(0.12, 0.07, 0.04, 0.55 if valor > 0.4 else 0.35))
+	_material_humitat = StandardMaterial3D.new()
+	_material_humitat.albedo_texture = ImageTexture.create_from_image(imatge)
+	_material_humitat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	_material_humitat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_material_humitat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _material_humitat
+
+## En mode regar: una gota sobre els cultius que tenen set
+func mostrar_set(mostrar: bool) -> void:
+	if mostrar and icona_set == null:
+		icona_set = Label3D.new()
+		icona_set.text = "💧"
+		icona_set.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		icona_set.no_depth_test = true
+		icona_set.font_size = 48
+		icona_set.pixel_size = 0.006
+		icona_set.position = Vector3.UP * 0.75
+		add_child(icona_set)
+	if icona_set:
+		icona_set.visible = mostrar
+
 func text_info() -> String:
 	var text := "%s\n%s · ❤ %d/%d" % [nom_cultiu, NOMS_ESTAT[estat_actual], vida_actual, vida_maxima]
+	if not es_madur():
+		text += "\n💧 Regat" if regat else "\n💧 Té set: sense aigua no creix"
 	if es_defensa() and not es_madur():
 		text += "\n(defensarà quan sigui madura)"
 	elif es_collita() and es_madur():
@@ -146,8 +217,14 @@ func text_info() -> String:
 	return text
 
 func passar_dia():
+	var estava_regat := regat
+	# Cada dia el terra s'asseca
+	regat = false
+	_actualitzar_humitat()
 	if recollit or estat_actual == Estat.MADUR:
 		return
+	if not estava_regat:
+		return   # sense aigua no creix
 	dies_passats += 1
 	if dies_passats >= dies_per_fase:
 		dies_passats = 0

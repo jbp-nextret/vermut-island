@@ -52,3 +52,8 @@ static func _material(color: Color) -> StandardMaterial3D:
 		mat.albedo_color = color
 		_materials[clau] = mat
 	return _materials[clau]
+
+## Canvia el color de la vora (per exemple, vermell si és fora d'abast)
+func modulate_color(color: Color) -> void:
+	if get_child_count() > 0 and get_child(0) is MeshInstance3D:
+		get_child(0).material_override = _material(Color(color.r, color.g, color.b, 0.55))
