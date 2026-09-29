@@ -8,15 +8,21 @@ class_name Plantador
 ##      · torres a distància: cercle d'abast
 ##      · la resta: s'acoloreixen les cel·les de l'àrea i els cultius afectats
 ##  - Clic: planta. Arrossegant: planta a cada cel·la per on passes. Clic dret / Esc: surt.
+##  - Rodeta del ratolí: canvia de cultiu (amb un avís a la pantalla i sobre el cursor).
 
 signal seleccio_canviada(index: int)
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
+signal canviat_amb_rodeta(index: int, direccio: int)
 
 const LLAVOR := "llavor_raim"
 const LLINDAR_RODA := 0.25
 const COLOR_VALID := Color(0.3, 1.0, 0.4)
 const COLOR_INVALID := Color(1.0, 0.3, 0.3)
+## Alçada de cada línia de text a la pantalla (en píxels del joc), sigui quin sigui el zoom
+const LINIA_INFO_PX := 13.0
+const LINIA_CANVI_PX := 16.0
+const SEPARACIO_PX := 8.0   # distància entre el cultiu i la seva etiqueta
 
 var mon: Node3D
 var gridmap: GridMap
@@ -41,6 +47,9 @@ var anell: AnellAbast
 var cel_les_area: Array[MeshInstance3D] = []
 var ressaltats: Array = []
 var etiqueta_info: Label3D
+var etiqueta_canvi: Label3D
+var tween_canvi: Tween
+var unitats_per_pixel := 0.02
 var material_cella := StandardMaterial3D.new()
 
 func configurar(p_mon: Node3D, p_gridmap: GridMap, p_roda, p_cursor: MeshInstance3D, p_blocs: Array) -> void:
@@ -69,12 +78,25 @@ func _ready():
 	etiqueta_info = Label3D.new()
 	etiqueta_info.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	etiqueta_info.no_depth_test = true
-	etiqueta_info.font_size = 36
-	etiqueta_info.outline_size = 10
-	etiqueta_info.pixel_size = 0.004
+	etiqueta_info.font_size = 64
+	etiqueta_info.outline_size = 16
+	etiqueta_info.pixel_size = 0.0065
+	etiqueta_info.line_spacing = -4.0
+	etiqueta_info.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	etiqueta_info.top_level = true
 	etiqueta_info.visible = false
 	add_child(etiqueta_info)
+
+	etiqueta_canvi = Label3D.new()
+	etiqueta_canvi.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	etiqueta_canvi.no_depth_test = true
+	etiqueta_canvi.font_size = 72
+	etiqueta_canvi.outline_size = 18
+	etiqueta_canvi.pixel_size = 0.0065
+	etiqueta_canvi.top_level = true
+	etiqueta_canvi.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	etiqueta_canvi.modulate.a = 0.0
+	add_child(etiqueta_canvi)
 
 	material_cella.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material_cella.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -117,6 +139,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("accio_secundaria"):
 		sortir()
 		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed and \
+			(event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+		canviar_amb_rodeta(-1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("accio_primaria"):
 		pintant = true
 		ultima_cella_pintada = null
@@ -144,6 +170,7 @@ func sortir():
 	fantasma.visible = false
 	anell.visible = false
 	etiqueta_info.visible = false
+	etiqueta_canvi.modulate.a = 0.0
 	_amagar_area()
 	_treure_ressaltats()
 	for c in get_tree().get_nodes_in_group("cultius"):
@@ -155,6 +182,21 @@ func sortir():
 func seleccionar(nou_index: int):
 	index = clampi(nou_index, 0, opcions.size() - 1)
 	seleccio_canviada.emit(index)
+
+## Passa al cultiu anterior (-1) o següent (+1), fent la volta
+func canviar_amb_rodeta(direccio: int):
+	seleccionar(posmod(index + direccio, opcions.size()))
+	canviat_amb_rodeta.emit(index, direccio)
+	# La vista prèvia fa un bot i el nom apareix un moment sobre el cursor
+	var o := opcio()
+	fantasma.scale = Vector3.ONE * 1.35
+	etiqueta_canvi.text = "%s %s" % [o.insignia, o.nom]
+	etiqueta_canvi.modulate = Color(Color(o.color).lerp(Color.WHITE, 0.4), 1.0)
+	if tween_canvi:
+		tween_canvi.kill()
+	tween_canvi = create_tween().set_parallel(true)
+	tween_canvi.tween_property(fantasma, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween_canvi.tween_property(etiqueta_canvi, "modulate:a", 0.0, 0.35).set_delay(0.7)
 
 func _obrir_roda():
 	roda_oberta = true
@@ -182,11 +224,22 @@ func _process(delta):
 		return
 
 	cella = _cella_sota_ratoli()
+	_escalar_etiquetes()
 	_actualitzar_visuals()
 	if pintant and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		pintant = false
 	if pintant and not cella.is_empty() and cella.cella != ultima_cella_pintada:
 		_intentar_plantar(false)
+
+## Les etiquetes 3D es veurien més grans o més petites segons el zoom de la càmera:
+## les ajustem perquè a la pantalla facin sempre la mateixa mida
+func _escalar_etiquetes():
+	var camera := get_viewport().get_camera_3d()
+	if camera == null or camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+		return
+	unitats_per_pixel = camera.size / get_viewport().get_visible_rect().size.y
+	etiqueta_info.pixel_size = LINIA_INFO_PX * unitats_per_pixel / etiqueta_info.font_size
+	etiqueta_canvi.pixel_size = LINIA_CANVI_PX * unitats_per_pixel / etiqueta_canvi.font_size
 
 ## Quina cel·la de l'hort hi ha sota el ratolí (o {} si cap)
 func _cella_sota_ratoli() -> Dictionary:
@@ -327,11 +380,13 @@ func _actualitzar_visuals():
 				_ressaltar(c)
 	_mostrar_anells_plantats(cella.posicio)
 
+	etiqueta_canvi.global_position = cella.posicio + Vector3.UP * (0.35 + SEPARACIO_PX * unitats_per_pixel)
+
 	# Informació del cultiu que hi ha sota el ratolí
 	etiqueta_info.visible = cultiu_sota_ratoli != null
 	if etiqueta_info.visible:
 		etiqueta_info.text = cultiu_sota_ratoli.text_info()
-		etiqueta_info.global_position = cultiu_sota_ratoli.global_position + Vector3.UP * 1.0
+		etiqueta_info.global_position = cultiu_sota_ratoli.global_position + Vector3.UP * (0.35 + SEPARACIO_PX * unitats_per_pixel)
 
 ## Només els cercles de les torres a distància que ja cobreixen aquest punt
 func _mostrar_anells_plantats(punt):

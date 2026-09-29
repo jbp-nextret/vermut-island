@@ -12,6 +12,11 @@ var label_llavors: Label
 var label_ajuda: Label
 var label_avis: Label
 var tween_avis: Tween
+var tira: HBoxContainer
+var tira_icones: Array[TextureRect] = []
+var tira_nom: Label
+var caixa_tira: VBoxContainer
+var tween_tira: Tween
 
 func _ready():
 	panell = PanelContainer.new()
@@ -46,7 +51,7 @@ func _ready():
 	textos.add_child(label_llavors)
 
 	label_ajuda = _label(9, Color(0.9, 0.9, 0.9))
-	label_ajuda.text = "Clic: plantar · Arrossega: en fila · Mantén P: triar · Clic dret: sortir"
+	label_ajuda.text = "Clic: plantar · Arrossega: en fila · Rodeta: canviar · Clic dret: sortir"
 	label_ajuda.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(label_ajuda)
 	label_ajuda.anchor_left = 0.0
@@ -68,6 +73,8 @@ func _ready():
 	label_avis.offset_bottom = -64
 	label_avis.modulate.a = 0.0
 
+	_crear_tira()
+	plantador.canviat_amb_rodeta.connect(_mostrar_tira)
 	plantador.seleccio_canviada.connect(func(_i): _actualitzar())
 	plantador.mode_canviat.connect(func(_a): _actualitzar())
 	plantador.avis.connect(_mostrar_avis)
@@ -75,7 +82,8 @@ func _ready():
 
 func _process(_delta):
 	visible = GameState.pot_atacar()   # només a fora (no dins de casa ni construint)
-	label_ajuda.visible = plantador.actiu and not plantador.roda_oberta
+	# L'ajuda s'amaga mentre es veu la tira de la rodeta
+	label_ajuda.visible = plantador.actiu and not plantador.roda_oberta and caixa_tira.modulate.a < 0.05
 
 func _actualitzar():
 	var o: Dictionary = plantador.opcio()
@@ -88,6 +96,69 @@ func _actualitzar():
 	var actiu := plantador.actiu
 	panell.add_theme_stylebox_override("panel", _estil(actiu, o.color))
 	label_ajuda.visible = actiu
+
+## Tira a baix al centre: [anterior] [ACTUAL] [següent] i el nom
+func _crear_tira():
+	caixa_tira = VBoxContainer.new()
+	caixa_tira.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caixa_tira.alignment = BoxContainer.ALIGNMENT_END
+	add_child(caixa_tira)
+	caixa_tira.anchor_left = 0.5
+	caixa_tira.anchor_right = 0.5
+	caixa_tira.anchor_top = 1.0
+	caixa_tira.anchor_bottom = 1.0
+	caixa_tira.offset_left = -120
+	caixa_tira.offset_right = 120
+	caixa_tira.offset_top = -124
+	caixa_tira.offset_bottom = -70
+	caixa_tira.modulate.a = 0.0
+
+	tira = HBoxContainer.new()
+	tira.alignment = BoxContainer.ALIGNMENT_CENTER
+	tira.add_theme_constant_override("separation", 6)
+	caixa_tira.add_child(tira)
+	for i in 3:
+		var fons := PanelContainer.new()
+		fons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tira.add_child(fons)
+		var t := TextureRect.new()
+		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		t.custom_minimum_size = Vector2(34, 34) if i == 1 else Vector2(22, 22)
+		fons.add_child(t)
+		tira_icones.append(t)
+
+	tira_nom = _label(13, Color.WHITE)
+	tira_nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caixa_tira.add_child(tira_nom)
+
+func _mostrar_tira(index: int, direccio: int):
+	var n := plantador.opcions.size()
+	for i in 3:
+		var o: Dictionary = plantador.opcions[posmod(index + i - 1, n)]
+		tira_icones[i].texture = o.textura
+		tira_icones[i].modulate = o.color if i == 1 else Color(o.color, 0.55)
+		tira_icones[i].get_parent().add_theme_stylebox_override("panel", _estil(i == 1, o.color))
+	var actual: Dictionary = plantador.opcions[index]
+	tira_nom.text = "%s %s" % [actual.insignia, actual.nom]
+	tira_nom.add_theme_color_override("font_color", Color(actual.color).lerp(Color.WHITE, 0.5))
+
+	# Entra lliscant des del costat del gir i s'esvaeix al cap d'una estona
+	if tween_tira:
+		tween_tira.kill()
+	caixa_tira.modulate.a = 1.0
+	tira.position.x = 14.0 * direccio
+	tween_tira = create_tween()
+	tween_tira.tween_property(tira, "position:x", 0.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween_tira.tween_interval(0.9)
+	tween_tira.tween_property(caixa_tira, "modulate:a", 0.0, 0.35)
+
+	# I el panell de baix a la dreta fa un bot
+	panell.pivot_offset = panell.size / 2.0
+	var bot := create_tween()
+	bot.tween_property(panell, "scale", Vector2.ONE * 1.12, 0.06)
+	bot.tween_property(panell, "scale", Vector2.ONE, 0.12)
 
 func _mostrar_avis(text: String):
 	label_avis.text = text
