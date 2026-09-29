@@ -17,9 +17,18 @@ var llaurador: Llaurador
 # Terra llaurada pel jugador (fora de la ZonaHort també s'hi pot plantar)
 var llaurades := {}   # Vector3i -> true
 const NOMS_HERBA := ["cube-top", "cube_half-top"]
-## Peça de terra segons quins veïns són herba (W=oest, E=est, N=nord, S=sud)
-const VARIANTS_TERRA := {"": "005", "W": "002", "E": "008", "N": "006", "S": "004",
-	"WS": "001", "WN": "003", "ES": "007", "EN": "009"}
+## Peça de terra i gir (graus) segons quins veïns són herba (W=oest, E=est, N=nord, S=sud).
+## Les tires i els extrems que no tenen peça pròpia fan servir la _019 i la _020 girades.
+const VARIANTS_TERRA := {
+	"": ["005", 0],
+	"W": ["002", 0], "E": ["008", 0], "N": ["006", 0], "S": ["004", 0],
+	"WS": ["001", 0], "WN": ["003", 0], "ES": ["007", 0], "EN": ["009", 0],
+	"NS": ["020", 0], "WE": ["020", 90],                     # tires
+	"WNS": ["019", 0], "ENS": ["021", 0],                    # extrems oberts a l'est / a l'oest
+	"WES": ["019", 90], "WEN": ["019", -90],                 # extrems oberts al nord / al sud
+	"WENS": ["023", 0],                                      # cel·la aïllada
+}
+const PECES_AUTOTILE := ["001", "002", "003", "004", "005", "006", "007", "008", "009", "019", "020", "021", "023"]
 
 func _ready():
 	cursor.visible = false
@@ -203,17 +212,18 @@ func _autotile(cella: Vector3i) -> void:
 		return
 	var nom := gridmap.mesh_library.get_item_name(item)
 	var prefix := _prefix_terra(nom)
-	# Només les 9 peces de terra "normals" (les especials de l'hort no es toquen)
-	if not nom.begins_with(prefix) or not nom.trim_prefix(prefix) in VARIANTS_TERRA.values():
+	# Només les peces de terra d'autotiling (la resta d'especials de l'hort no es toquen)
+	if not nom.begins_with(prefix) or not nom.trim_prefix(prefix) in PECES_AUTOTILE:
 		return
 	var clau := ""
 	for costat in [["W", Vector3i(-1, 0, 0)], ["E", Vector3i(1, 0, 0)], ["N", Vector3i(0, 0, -1)], ["S", Vector3i(0, 0, 1)]]:
 		if not _es_terra(cella + costat[1]):
 			clau += costat[0]
-	var variant: String = VARIANTS_TERRA.get(clau, "005")
-	var nou := gridmap.mesh_library.find_item_by_name(prefix + variant)
+	var variant: Array = VARIANTS_TERRA.get(clau, ["005", 0])
+	var nou := gridmap.mesh_library.find_item_by_name(prefix + variant[0])
 	if nou != GridMap.INVALID_CELL_ITEM:
-		gridmap.set_cell_item(cella, nou)
+		var gir := gridmap.get_orthogonal_index_from_basis(Basis(Vector3.UP, deg_to_rad(variant[1])))
+		gridmap.set_cell_item(cella, nou, gir)
 
 func _es_terra(cella: Vector3i) -> bool:
 	var gridmap: GridMap = $GridMap
