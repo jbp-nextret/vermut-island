@@ -104,7 +104,7 @@ func _ready():
 	etiqueta_canvi.pixel_size = 0.0065
 	etiqueta_canvi.top_level = true
 	etiqueta_canvi.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	etiqueta_canvi.modulate.a = 0.0
+	etiqueta_canvi.visible = false
 	add_child(etiqueta_canvi)
 
 	etiqueta_area = Label3D.new()
@@ -204,7 +204,10 @@ func sortir():
 	fantasma.visible = false
 	anell.visible = false
 	etiqueta_info.visible = false
-	etiqueta_canvi.modulate.a = 0.0
+	# (la vora del text té el seu propi color: si només s'esvaeix el modulate, queda en negre)
+	if tween_canvi:
+		tween_canvi.kill()
+	etiqueta_canvi.visible = false
 	_amagar_area()
 	_treure_ressaltats()
 	for c in get_tree().get_nodes_in_group("cultius"):
@@ -226,11 +229,15 @@ func canviar_amb_tecla(direccio: int):
 	fantasma.scale = Vector3.ONE * 1.35
 	etiqueta_canvi.text = "%s %s" % [o.insignia, o.nom]
 	etiqueta_canvi.modulate = Color(Color(o.color).lerp(Color.WHITE, 0.4), 1.0)
+	etiqueta_canvi.outline_modulate = Color(0, 0, 0, 1)
+	etiqueta_canvi.visible = true
 	if tween_canvi:
 		tween_canvi.kill()
 	tween_canvi = create_tween().set_parallel(true)
 	tween_canvi.tween_property(fantasma, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween_canvi.tween_property(etiqueta_canvi, "modulate:a", 0.0, 0.35).set_delay(0.7)
+	tween_canvi.tween_property(etiqueta_canvi, "outline_modulate:a", 0.0, 0.35).set_delay(0.7)
+	tween_canvi.chain().tween_callback(func(): etiqueta_canvi.visible = false)
 
 func _obrir_roda():
 	roda_oberta = true
