@@ -39,8 +39,6 @@ func _ready():
 	anell.visible = false
 	add_child(anell)
 	anell.configurar(RADI, COLOR_AIGUA)
-	# Si entres a plantar, surts de regar
-	plantador.mode_canviat.connect(func(a): if a and actiu: sortir())
 
 func progres() -> float:
 	return clampf(temps_des_del_rec / RECARREGA, 0.0, 1.0)
@@ -71,6 +69,10 @@ func entrar():
 		plantador.sortir()
 	actiu = true
 	mode_canviat.emit(true)
+
+func sortir_si_actiu():
+	if actiu:
+		sortir()
 
 func sortir():
 	actiu = false

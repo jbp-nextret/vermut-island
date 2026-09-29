@@ -12,6 +12,14 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
 var regador: Regador
+var llaurador: Llaurador
+
+# Terra llaurada pel jugador (fora de la ZonaHort també s'hi pot plantar)
+var llaurades := {}   # Vector3i -> true
+const NOMS_HERBA := ["cube-top", "cube_half-top"]
+## Peça de terra segons quins veïns són herba (W=oest, E=est, N=nord, S=sud)
+const VARIANTS_TERRA := {"": "005", "W": "002", "E": "008", "N": "006", "S": "004",
+	"WS": "001", "WN": "003", "ES": "007", "EN": "009"}
 
 func _ready():
 	cursor.visible = false
@@ -32,8 +40,19 @@ func _ready():
 	regador.name = "Regador"
 	regador.configurar(self, plantador, $Personatge)
 	add_child(regador)
-	var hud_rec := HudRec.new()
-	hud_rec.regador = regador
+	llaurador = Llaurador.new()
+	llaurador.name = "Llaurador"
+	llaurador.configurar(self, plantador, $Personatge)
+	add_child(llaurador)
+	# Només un mode d'eina alhora: plantar, regar o llaurar
+	for eina in [plantador, regador, llaurador]:
+		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
+
+	var hud_llaurar := HudEina.new()
+	hud_llaurar.configurar(llaurador, "llaurar", "⛏", Color(0.85, 0.65, 0.35), "Clic: llaurar · Arrossega: àrea · Clic dret: sortir", 1)
+	add_child(hud_llaurar)
+	var hud_rec := HudEina.new()
+	hud_rec.configurar(regador, "regar", "💧", Color(0.45, 0.75, 1.0), "Clic: regar · Clic dret: sortir", 0)
 	add_child(hud_rec)
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
@@ -147,6 +166,62 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
+## En entrar en un mode d'eina, surt dels altres
+func _nomes_una_eina(eina: Node) -> void:
+	for altra in [plantador, regador, llaurador]:
+		if altra != eina and altra.actiu:
+			altra.sortir()
+
+## Es pot plantar a la cel·la? A la ZonaHort (peces de terra) o on el jugador ha llaurat
+func es_plantable(cella: Vector3i, nom: String, posicio: Vector3) -> bool:
+	if llaurades.has(cella):
+		return true
+	return nom in blocs_plantables and dins_zona_hort(posicio)
+
+func es_herba(nom: String) -> bool:
+	return nom in NOMS_HERBA
+
+## Converteix l'herba de la cel·la en terra i arregla les vores de les veïnes
+func llaurar_cella(cella: Vector3i) -> void:
+	var gridmap: GridMap = $GridMap
+	var nom := gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella))
+	llaurades[cella] = true
+	if es_herba(nom):
+		gridmap.set_cell_item(cella, gridmap.mesh_library.find_item_by_name(_prefix_terra(nom) + "005"))
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			_autotile(cella + Vector3i(dx, 0, dz))
+
+func _prefix_terra(nom: String) -> String:
+	return "cube_half-top_" if nom.begins_with("cube_half") else "cube-top_"
+
+## Tria la peça de terra (centre, vora o cantonada) segons quins veïns són herba
+func _autotile(cella: Vector3i) -> void:
+	var gridmap: GridMap = $GridMap
+	var item := gridmap.get_cell_item(cella)
+	if item == GridMap.INVALID_CELL_ITEM:
+		return
+	var nom := gridmap.mesh_library.get_item_name(item)
+	var prefix := _prefix_terra(nom)
+	# Només les 9 peces de terra "normals" (les especials de l'hort no es toquen)
+	if not nom.begins_with(prefix) or not nom.trim_prefix(prefix) in VARIANTS_TERRA.values():
+		return
+	var clau := ""
+	for costat in [["W", Vector3i(-1, 0, 0)], ["E", Vector3i(1, 0, 0)], ["N", Vector3i(0, 0, -1)], ["S", Vector3i(0, 0, 1)]]:
+		if not _es_terra(cella + costat[1]):
+			clau += costat[0]
+	var variant: String = VARIANTS_TERRA.get(clau, "005")
+	var nou := gridmap.mesh_library.find_item_by_name(prefix + variant)
+	if nou != GridMap.INVALID_CELL_ITEM:
+		gridmap.set_cell_item(cella, nou)
+
+func _es_terra(cella: Vector3i) -> bool:
+	var gridmap: GridMap = $GridMap
+	var item := gridmap.get_cell_item(cella)
+	if item == GridMap.INVALID_CELL_ITEM:
+		return false
+	return llaurades.has(cella) or gridmap.mesh_library.get_item_name(item) in blocs_plantables
+
 func dins_zona_hort(posicio: Vector3) -> bool:
 	return zona_hort.conte_punt(posicio)
 	
@@ -175,6 +250,7 @@ func guardar_mundo():
 			})
 	
 	var mundo_data = {
+		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -212,6 +288,9 @@ func carregar_mundo():
 		return
 	
 	# Carrega cultius
+	# Terra que el jugador havia llaurat
+	for c in mundo_data.get("llaurades", []):
+		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])
 	for data in cultius_data:
 		var escena: PackedScene = CatalegCultius.TOTS[0]

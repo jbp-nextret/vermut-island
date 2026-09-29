@@ -342,7 +342,7 @@ func _info_cella(c: Vector3i) -> Dictionary:
 		"valida": true,
 		"motiu": "",
 	}
-	if not nom in blocs_plantables or not mon.dins_zona_hort(info.posicio):
+	if not mon.es_plantable(c, nom, info.posicio):
 		info.valida = false
 		info.motiu = "Aquí no s'hi pot plantar"
 	elif mon.cultiu_a_prop(info.posicio):
