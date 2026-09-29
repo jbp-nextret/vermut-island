@@ -51,7 +51,7 @@ func _ready():
 	textos.add_child(label_llavors)
 
 	label_ajuda = _label(9, Color(0.9, 0.9, 0.9))
-	label_ajuda.text = "Clic: plantar · Arrossega: en fila · Rodeta: canviar · Clic dret: sortir"
+	label_ajuda.text = "Clic: plantar · Arrossega: àrea · Q/E: canviar · Clic dret: sortir"
 	label_ajuda.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(label_ajuda)
 	label_ajuda.anchor_left = 0.0
@@ -74,7 +74,7 @@ func _ready():
 	label_avis.modulate.a = 0.0
 
 	_crear_tira()
-	plantador.canviat_amb_rodeta.connect(_mostrar_tira)
+	plantador.canviat_amb_tecla.connect(_mostrar_tira)
 	plantador.seleccio_canviada.connect(func(_i): _actualitzar())
 	plantador.mode_canviat.connect(func(_a): _actualitzar())
 	plantador.avis.connect(_mostrar_avis)
@@ -82,7 +82,7 @@ func _ready():
 
 func _process(_delta):
 	visible = GameState.pot_atacar()   # només a fora (no dins de casa ni construint)
-	# L'ajuda s'amaga mentre es veu la tira de la rodeta
+	# L'ajuda s'amaga mentre es veu la tira del canvi de cultiu
 	label_ajuda.visible = plantador.actiu and not plantador.roda_oberta and caixa_tira.modulate.a < 0.05
 
 func _actualitzar():
@@ -97,7 +97,7 @@ func _actualitzar():
 	panell.add_theme_stylebox_override("panel", _estil(actiu, o.color))
 	label_ajuda.visible = actiu
 
-## Tira a baix al centre: [anterior] [ACTUAL] [següent] i el nom
+## Tira a baix al centre en canviar amb Q/E: [anterior] [ACTUAL] [següent] i el nom
 func _crear_tira():
 	caixa_tira = VBoxContainer.new()
 	caixa_tira.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -144,7 +144,7 @@ func _mostrar_tira(index: int, direccio: int):
 	tira_nom.text = "%s %s" % [actual.insignia, actual.nom]
 	tira_nom.add_theme_color_override("font_color", Color(actual.color).lerp(Color.WHITE, 0.5))
 
-	# Entra lliscant des del costat del gir i s'esvaeix al cap d'una estona
+	# Entra lliscant des del costat cap on has canviat i s'esvaeix al cap d'una estona
 	if tween_tira:
 		tween_tira.kill()
 	caixa_tira.modulate.a = 1.0

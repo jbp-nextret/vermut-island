@@ -7,13 +7,14 @@ class_name Plantador
 ##  - Vista prèvia del cultiu (verda o vermella) i, segons el tipus:
 ##      · torres a distància: cercle d'abast
 ##      · la resta: s'acoloreixen les cel·les de l'àrea i els cultius afectats
-##  - Clic: planta. Arrossegant: planta a cada cel·la per on passes. Clic dret / Esc: surt.
-##  - Rodeta del ratolí: canvia de cultiu (amb un avís a la pantalla i sobre el cursor).
+##  - Clic: planta en aquesta cel·la. Arrossegant: selecciona una àrea i en deixar anar
+##    s'hi planta (clic dret o Esc durant l'arrossegament: cancel·la). Clic dret / Esc: surt.
+##  - Q / E: cultiu anterior / següent (amb un avís a la pantalla i sobre el cursor).
 
 signal seleccio_canviada(index: int)
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
-signal canviat_amb_rodeta(index: int, direccio: int)
+signal canviat_amb_tecla(index: int, direccio: int)
 
 const LLAVOR := "llavor_raim"
 const LLINDAR_RODA := 0.25
@@ -23,6 +24,7 @@ const COLOR_INVALID := Color(1.0, 0.3, 0.3)
 const LINIA_INFO_PX := 13.0
 const LINIA_CANVI_PX := 16.0
 const SEPARACIO_PX := 8.0   # distància entre el cultiu i la seva etiqueta
+const MIDA_MAXIMA_AREA := 12  # cel·les per costat
 
 var mon: Node3D
 var gridmap: GridMap
@@ -35,8 +37,15 @@ var index := 0
 var actiu := false
 var cella: Dictionary = {}          # {cella, posicio, superficie, valida, motiu}
 var cultiu_sota_ratoli: Node3D = null
-var pintant := false
-var ultima_cella_pintada = null
+# Selecció per àrea
+var arrossegant := false
+var inici_area: Dictionary = {}
+var seleccio_area: Array = []
+var quads_seleccio: Array[MeshInstance3D] = []
+var fantasmes_seleccio: Array[Sprite3D] = []
+var etiqueta_area: Label3D
+var material_seleccio_ok := StandardMaterial3D.new()
+var material_seleccio_ko := StandardMaterial3D.new()
 
 var prement_p := false
 var temps_p := 0.0
@@ -98,6 +107,23 @@ func _ready():
 	etiqueta_canvi.modulate.a = 0.0
 	add_child(etiqueta_canvi)
 
+	etiqueta_area = Label3D.new()
+	etiqueta_area.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	etiqueta_area.no_depth_test = true
+	etiqueta_area.font_size = 64
+	etiqueta_area.outline_size = 16
+	etiqueta_area.top_level = true
+	etiqueta_area.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	etiqueta_area.visible = false
+	add_child(etiqueta_area)
+
+	for m in [material_seleccio_ok, material_seleccio_ko]:
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material_seleccio_ok.albedo_color = Color(COLOR_VALID, 0.35)
+	material_seleccio_ko.albedo_color = Color(COLOR_INVALID, 0.35)
+
 	material_cella.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material_cella.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material_cella.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -137,19 +163,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("accio_secundaria"):
-		sortir()
+		if arrossegant:
+			_cancel_lar_area()   # només cancel·la la selecció
+		else:
+			sortir()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.pressed and \
-			(event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-		canviar_amb_rodeta(-1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
+	# Q / E (les mateixes accions que el combat, que en mode plantar no s'usen)
+	elif event.is_action_pressed("mode_combat"):
+		canviar_amb_tecla(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("atac_magia"):
+		canviar_amb_tecla(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("accio_primaria"):
-		pintant = true
-		ultima_cella_pintada = null
-		_intentar_plantar(true)
+		if not cella.is_empty():
+			arrossegant = true
+			inici_area = cella.duplicate()
+			seleccio_area = [cella]
 		get_viewport().set_input_as_handled()
 	elif event.is_action_released("accio_primaria"):
-		pintant = false
+		if arrossegant:
+			_plantar_area()
 		get_viewport().set_input_as_handled()
 
 func alternar():
@@ -165,7 +199,7 @@ func entrar():
 
 func sortir():
 	actiu = false
-	pintant = false
+	_cancel_lar_area()
 	cursor.visible = false
 	fantasma.visible = false
 	anell.visible = false
@@ -184,9 +218,9 @@ func seleccionar(nou_index: int):
 	seleccio_canviada.emit(index)
 
 ## Passa al cultiu anterior (-1) o següent (+1), fent la volta
-func canviar_amb_rodeta(direccio: int):
+func canviar_amb_tecla(direccio: int):
 	seleccionar(posmod(index + direccio, opcions.size()))
-	canviat_amb_rodeta.emit(index, direccio)
+	canviat_amb_tecla.emit(index, direccio)
 	# La vista prèvia fa un bot i el nom apareix un moment sobre el cursor
 	var o := opcio()
 	fantasma.scale = Vector3.ONE * 1.35
@@ -226,10 +260,10 @@ func _process(delta):
 	cella = _cella_sota_ratoli()
 	_escalar_etiquetes()
 	_actualitzar_visuals()
-	if pintant and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		pintant = false
-	if pintant and not cella.is_empty() and cella.cella != ultima_cella_pintada:
-		_intentar_plantar(false)
+	if arrossegant:
+		if not cella.is_empty():
+			seleccio_area = _cel_les_area(inici_area.cella, cella.cella)
+		_mostrar_seleccio()
 
 ## Les etiquetes 3D es veurien més grans o més petites segons el zoom de la càmera:
 ## les ajustem perquè a la pantalla facin sempre la mateixa mida
@@ -240,6 +274,7 @@ func _escalar_etiquetes():
 	unitats_per_pixel = camera.size / get_viewport().get_visible_rect().size.y
 	etiqueta_info.pixel_size = LINIA_INFO_PX * unitats_per_pixel / etiqueta_info.font_size
 	etiqueta_canvi.pixel_size = LINIA_CANVI_PX * unitats_per_pixel / etiqueta_canvi.font_size
+	etiqueta_area.pixel_size = LINIA_CANVI_PX * unitats_per_pixel / etiqueta_area.font_size
 
 ## Quina cel·la de l'hort hi ha sota el ratolí (o {} si cap)
 func _cella_sota_ratoli() -> Dictionary:
@@ -313,16 +348,114 @@ func _info_cella(c: Vector3i) -> Dictionary:
 
 # ─────────────── Plantar
 
-func _intentar_plantar(des_de_clic: bool):
+func _intentar_plantar(_des_de_clic: bool = true):
 	if cella.is_empty():
 		return
-	ultima_cella_pintada = cella.cella
 	if not cella.valida:
-		if des_de_clic:
-			avis.emit(cella.motiu)
+		avis.emit(cella.motiu)
 		return
 	if mon.plantar_cultiu(escena(), cella.posicio):
 		seleccio_canviada.emit(index)
+
+## Totes les cel·les del rectangle entre `a` i `b` (seguint l'alçada del terreny)
+func _cel_les_area(a: Vector3i, b: Vector3i) -> Array:
+	var x0 := mini(a.x, b.x)
+	var x1 := mini(maxi(a.x, b.x), x0 + MIDA_MAXIMA_AREA - 1)
+	var z0 := mini(a.z, b.z)
+	var z1 := mini(maxi(a.z, b.z), z0 + MIDA_MAXIMA_AREA - 1)
+	var resultat := []
+	var disponibles := llavors()
+	for x in range(x0, x1 + 1):
+		for z in range(z0, z1 + 1):
+			var info := _info_columna(x, z, a.y)
+			if info.is_empty():
+				continue
+			# Si no hi ha llavors per a totes, les últimes queden en vermell
+			if info.valida:
+				if disponibles > 0:
+					disponibles -= 1
+				else:
+					info.valida = false
+					info.motiu = "No tens prou llavors"
+			resultat.append(info)
+	return resultat
+
+## La cel·la de terra d'una columna, buscant a prop de l'alçada de referència
+func _info_columna(x: int, z: int, y_ref: int) -> Dictionary:
+	for y in range(y_ref + 2, y_ref - 4, -1):
+		if gridmap.get_cell_item(Vector3i(x, y, z)) != GridMap.INVALID_CELL_ITEM:
+			return _info_cella(Vector3i(x, y, z))
+	return {}
+
+func _plantar_area():
+	var plantats := 0
+	var motiu := ""
+	for info in seleccio_area:
+		if info.valida:
+			if mon.plantar_cultiu(escena(), info.posicio):
+				plantats += 1
+		elif motiu.is_empty():
+			motiu = info.motiu
+	if plantats == 0 and not motiu.is_empty():
+		avis.emit(motiu)
+	seleccio_canviada.emit(index)
+	_cancel_lar_area()
+
+func _cancel_lar_area():
+	arrossegant = false
+	inici_area = {}
+	seleccio_area.clear()
+	for q in quads_seleccio:
+		q.visible = false
+	for f in fantasmes_seleccio:
+		f.visible = false
+	if etiqueta_area:
+		etiqueta_area.visible = false
+
+## Quadres verds/vermells i vista prèvia a cada cel·la de l'àrea
+func _mostrar_seleccio():
+	var o := opcio()
+	var valides := 0
+	for i in seleccio_area.size():
+		var info: Dictionary = seleccio_area[i]
+		if i >= quads_seleccio.size():
+			var q := MeshInstance3D.new()
+			var pla := PlaneMesh.new()
+			pla.size = Vector2(0.92, 0.92)
+			q.mesh = pla
+			q.top_level = true
+			q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(q)
+			quads_seleccio.append(q)
+			var f := Sprite3D.new()
+			f.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+			f.shaded = false
+			f.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			f.top_level = true
+			add_child(f)
+			fantasmes_seleccio.append(f)
+		var q := quads_seleccio[i]
+		q.visible = true
+		q.material_override = material_seleccio_ok if info.valida else material_seleccio_ko
+		q.global_position = info.superficie + Vector3.UP * 0.03
+		var f := fantasmes_seleccio[i]
+		f.visible = info.valida
+		if info.valida:
+			valides += 1
+			f.texture = o.textura
+			f.pixel_size = 1.0 / float(o.textura.get_height()) if o.textura else 0.01
+			f.modulate = Color(o.color, 0.5)
+			f.global_position = info.posicio
+	for i in range(seleccio_area.size(), quads_seleccio.size()):
+		quads_seleccio[i].visible = false
+		fantasmes_seleccio[i].visible = false
+
+	# Quants se'n plantaran, sobre el cursor
+	etiqueta_area.visible = not cella.is_empty()
+	if etiqueta_area.visible:
+		etiqueta_area.text = "%s ×%d   🌱 %d" % [o.insignia, valides, llavors()]
+		etiqueta_area.modulate = Color(0.85, 1.0, 0.8) if valides > 0 else Color(1, 0.6, 0.55)
+		etiqueta_area.global_position = cella.posicio + Vector3.UP * (0.35 + SEPARACIO_PX * unitats_per_pixel)
 
 # ─────────────── Visuals
 
@@ -350,7 +483,7 @@ func _actualitzar_visuals():
 		mat.albedo_color = Color(color_estat, 0.35)
 
 	# Vista prèvia del cultiu (no si ja n'hi ha un, que es veu ell)
-	fantasma.visible = cultiu_sota_ratoli == null
+	fantasma.visible = cultiu_sota_ratoli == null and not arrossegant
 	if fantasma.visible:
 		fantasma.texture = o.textura
 		fantasma.pixel_size = 1.0 / float(o.textura.get_height()) if o.textura else 0.01

@@ -14,9 +14,6 @@ func _physics_process(delta: float) -> void:
 	size = lerp(size, target_size, delta * 8.0)
 
 func _input(event):
-	# En mode plantar, la rodeta canvia de cultiu (no fa zoom)
-	if EventBus.mode_plantar_actiu:
-		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			target_size = clamp(target_size - ZOOM_SPEED, MIN_ZOOM, MAX_ZOOM)
