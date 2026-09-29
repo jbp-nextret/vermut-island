@@ -7,5 +7,5 @@ nom_cultiu = "Carbassa esquer"
 descripcio = "Molt resistent. Els enemics propers hi van abans que a cap altre cultiu."
 tint = Color(1, 0.6, 0.25, 1)
 tipus_cultiu = 5
-radi_influencia = 6.0
+radi_influencia = 3.5
 vida_maxima = 45

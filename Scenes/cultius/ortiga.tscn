@@ -7,6 +7,6 @@ nom_cultiu = "Ortiga"
 descripcio = "Els enemics que passen a prop van a la meitat de velocitat."
 tint = Color(0.55, 0.95, 0.55, 1)
 tipus_cultiu = 6
-radi_influencia = 2.5
+radi_influencia = 1.5
 alentiment = 0.5
 vida_maxima = 10
