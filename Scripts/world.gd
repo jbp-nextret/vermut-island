@@ -7,24 +7,10 @@ extends Node3D
 @onready var particules_collir = $ParticulesCollir
 @onready var spawn_casa = $SpawnCasa
 
-var mode_plantar = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
-var arrastrant = false
-var posicio_drag_inici = Vector3.ZERO
-var posicio_drag_actual = Vector3.ZERO
-var zone_seleccionada = []  # Llista de posicions a plantar
-# Variables roda plantació
-@export var llindar_hold: float = 0.25
-# Els cultius de la roda surten de CatalegCultius (nom, icona i color de cada escena)
-var cultius_disponibles: Array = []
-var opcions_cultius: Array = []
-var indicador_rang: AnellAbast
-@onready var roda_seleccio = $RodaSeleccio  # afegeix la instància de RodaSeleccio.tscn com a fill de World
-
-var temps_prement_plantar: float = 0.0
-var mantenint_plantar: bool = false
-var roda_oberta: bool = false
-var index_cultiu_seleccionat: int = 0  # últim triat, per defecte el primer
+@onready var roda_seleccio = $RodaSeleccio
+# El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
+var plantador: Plantador
 
 func _ready():
 	cursor.visible = false
@@ -37,10 +23,13 @@ func _ready():
 	hud_combat.jugador = $Personatge
 	add_child(hud_combat)
 
-	cultius_disponibles = CatalegCultius.TOTS
-	opcions_cultius = CatalegCultius.opcions_roda()
-	cultiu_escena = cultius_disponibles[0]
-	_crear_indicador_rang()
+	plantador = Plantador.new()
+	plantador.name = "Plantador"
+	plantador.configurar(self, $GridMap, roda_seleccio, cursor, blocs_plantables)
+	add_child(plantador)
+	var hud_plantar := HudPlantar.new()
+	hud_plantar.plantador = plantador
+	add_child(hud_plantar)
 	
 	if EventBus.has_signal("player_spawn_requested"):
 		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
@@ -124,237 +113,21 @@ func aplicar_spawn_player(posicio: Vector3):
 	else:
 		print("No s'ha trobat el Personatge o no està preparat")
 
-func _input(event):
-	if event.is_action_pressed("plantar"):
-		mantenint_plantar = true
-		temps_prement_plantar = 0.0
-
-	if event.is_action_released("plantar"):
-		mantenint_plantar = false
-		if roda_oberta:
-			_confirmar_seleccio_roda()
-			_tancar_roda()
-		else:
-			_activar_mode_plantar_tap()
-	
-	# Cancel·la el mode plantació amb Escape
-	if event.is_action_pressed("ui_cancel"):
-		mode_plantar = false
-		cursor.visible = false
-		arrastrant = false
-		zone_seleccionada.clear()
-		EventBus.desactivar_mode_plantar()
-		print("Mode plantació cancel·lat")
-	
-	if mode_plantar and event.is_action_pressed("accio_secundaria"):
-		if arrastrant:
-			arrastrant = false
-			plantar_zona_seleccionada()
-			zone_seleccionada.clear()
-			print("Plantació confirmada")
-			GestorPartida.guardar_mundo()
-	
-	if mode_plantar and event.is_action_pressed("accio_primaria"):
-		arrastrant = true
-		posicio_drag_inici = cursor.global_position
-		zone_seleccionada.clear()
-		print("Drag iniciat")
-	
-	if mode_plantar and event.is_action_released("accio_primaria"):
-		if arrastrant:
-			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
-
-func _physics_process(delta: float) -> void:
-	var camera = get_viewport().get_camera_3d()
-	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
-
-func _process(delta):
-	_actualitzar_anells()
-	if mantenint_plantar and not roda_oberta:
-		temps_prement_plantar += delta
-		if temps_prement_plantar >= llindar_hold:
-			_obrir_roda()
-	if not mode_plantar: return
-	var espai = get_world_3d().direct_space_state
-	var camera = get_viewport().get_camera_3d()
-	var pos_ratolí = get_viewport().get_mouse_position()
-	var origen = camera.project_ray_origin(pos_ratolí)
-	var direccio = camera.project_ray_normal(pos_ratolí)
-	
-	var query = PhysicsRayQueryParameters3D.create(origen, origen + direccio * 100.0)
-	var resultat = espai.intersect_ray(query)
-	
-	if resultat:
-		var posicio = resultat.position
-		var gridmap = get_node("GridMap")
-		
-		# Busca el bloc directament a sota (mateixa X, Z)
-		var pos_x = int(round(posicio.x))
-		var pos_z = int(round(posicio.z))
-		
-		var bloc_trobat = false
-		var item_name_mes_propa = ""
-		var cell_coords_mes_propa = Vector3i.ZERO
-		
-		# Busca de dalt a baix a la columna X, Z
-		for y in range(int(posicio.y), int(posicio.y) - 5, -1):
-			var cell_coords = Vector3i(pos_x, y, pos_z)
-			var cell_item = gridmap.get_cell_item(cell_coords)
-			if cell_item >= 0:
-				var item_name = gridmap.mesh_library.get_item_name(cell_item)
-				if item_name in blocs_plantables:
-					bloc_trobat = true
-					item_name_mes_propa = item_name
-					cell_coords_mes_propa = cell_coords
-					break
-		
-		if bloc_trobat:
-			var posicio_cursor = gridmap.map_to_local(cell_coords_mes_propa)
-			
-			if item_name_mes_propa.contains("half"):
-				posicio_cursor.y = float(cell_coords_mes_propa.y) + 0.5
-			else:
-				posicio_cursor.y = float(cell_coords_mes_propa.y) + 1.0
-			
-			cursor.global_position = posicio_cursor
-			cursor.visible = true
-			posicio_drag_actual = posicio_cursor
-			
-			# Si està arrastrant, calcula la zona rectangular
-			if arrastrant:
-				actualitzar_zona_seleccionada(gridmap, cell_coords_mes_propa, item_name_mes_propa)
-		else:
-			cursor.visible = false
-		
-		var mat = cursor.get_surface_override_material(0)
-		if mat == null: return
-		
-		# Canvia color segons si la posició és vàlida
-		var posicio_valida = bloc_trobat and not cultiu_a_prop(cursor.global_position) and dins_zona_hort(cursor.global_position)
-		
-		if arrastrant:
-			# Mentre arrossega, mostra feedback
-			if posicio_valida:
-				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.7)
-			else:
-				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.7)
-		else:
-			# Quan no arrossega, mostra color normal
-			if posicio_valida:
-				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.5)
-			else:
-				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.5)
-	else:
-		cursor.visible = false
-
-func _activar_mode_plantar_tap():
-	mode_plantar = true
-	cursor.visible = true
-	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
-	_actualitzar_indicador_rang()
-	EventBus.activar_mode_plantar()
-
-func _obrir_roda():
-	roda_oberta = true
-	roda_seleccio.obrir(opcions_cultius, index_cultiu_seleccionat)
-
-func _tancar_roda():
-	roda_oberta = false
-	roda_seleccio.tancar()
-
-func _confirmar_seleccio_roda():
-	index_cultiu_seleccionat = roda_seleccio.obtenir_seleccio()
-	mode_plantar = true
-	cursor.visible = true
-	cultiu_escena = cultius_disponibles[index_cultiu_seleccionat]
-	_actualitzar_indicador_rang()
-	EventBus.activar_mode_plantar()
-	
-func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
-	# Calcula el rectangle entre la posició inicial i l'actual
-	var min_x = mini(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
-	var max_x = maxi(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
-	var min_z = mini(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
-	var max_z = maxi(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
-	var y = cell_coords.y
-	
-	zone_seleccionada.clear()
-	
-	# Omple el rectangle
-	for x in range(min_x, max_x + 1):
-		for z in range(min_z, max_z + 1):
-			var cell_coords_rect = Vector3i(x, y, z)
-			var cell_item = gridmap.get_cell_item(cell_coords_rect)
-			if cell_item >= 0:
-				var item = gridmap.mesh_library.get_item_name(cell_item)
-				if item in blocs_plantables:
-					var posicio_final = gridmap.map_to_local(cell_coords_rect)
-					if item.contains("half"):
-						posicio_final.y = float(cell_coords_rect.y) + 1
-					else:
-						posicio_final.y = float(cell_coords_rect.y) + 1.5
-					
-					# Mostra els punts de feedback visual
-					visualitzar_posicio_plantacio(posicio_final)
-					zone_seleccionada.append({"posicio": posicio_final, "cell_coords": cell_coords_rect, "item_name": item})
-
-
-func visualitzar_posicio_plantacio(posicio: Vector3):
-	# Crea visuals de feedback (petits cursors verds)
-	var debug_sphere = MeshInstance3D.new()
-	debug_sphere.mesh = SphereMesh.new()
-	debug_sphere.mesh.radius = 0.1
-	debug_sphere.mesh.height = 0.2
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.8)
-	debug_sphere.set_surface_override_material(0, mat)
-	add_child(debug_sphere)
-	debug_sphere.global_position = posicio
-	
-	# Elimina el sphere després d'un moment
-	await get_tree().create_timer(0.1).timeout
-	debug_sphere.queue_free()
-
-
-func plantar_zona_seleccionada():
-	if zone_seleccionada.is_empty():
-		print("Cap zona seleccionada")
-		return
-	
-	print("Plantant ", zone_seleccionada.size(), " cultius...")
-	
-	for data in zone_seleccionada:
-		plantar_en_posicio(data["posicio"], get_node("GridMap"), data["cell_coords"], data["item_name"])
-	
-	GestorPartida.guardar_mundo()
-	
-	# Desactiva el mode si no queden llavors
-	if Inventari.tenir("llavor_raim") <= 0:
-		mode_plantar = false
-		cursor.visible = false
-		EventBus.desactivar_mode_plantar()
-
-
-func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: Vector3i, item_name: String):
-	# Comprova si tens llavors
-	if Inventari.tenir("llavor_raim") <= 0:
-		return
-	
-	if not dins_zona_hort(posicio_cultiu):
-		return
-	
-	if cultiu_a_prop(posicio_cultiu):
-		return
-	
-	var cultiu = cultiu_escena.instantiate()
+## Planta un cultiu a `posicio` (ja validada pel Plantador). Gasta una llavor.
+func plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
+	if not Inventari.treure("llavor_raim"):
+		return false
+	var cultiu = escena.instantiate()
 	cultiu.add_to_group("cultius")
 	add_child(cultiu)
-	cultiu.global_position = posicio_cultiu
-	llançar_particules(particules_plantar, posicio_cultiu)
-	Inventari.treure("llavor_raim")
-	
-	print("Cultiu plantat a: ", posicio_cultiu)
-	
+	cultiu.global_position = posicio
+	# Petit bot en aparèixer
+	cultiu.scale = Vector3.ONE * 0.4
+	cultiu.create_tween().tween_property(cultiu, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	llançar_particules(particules_plantar, posicio)
+	GestorPartida.call_deferred("guardar_mundo")
+	return true
+
 func llançar_particules(particules: GPUParticles3D, posicio: Vector3):
 	particules.global_position = posicio
 	particules.restart()
@@ -432,7 +205,7 @@ func carregar_mundo():
 	# Carrega cultius
 	var cultius_data = mundo_data.get("cultius", [])
 	for data in cultius_data:
-		var escena: PackedScene = cultius_disponibles[0]
+		var escena: PackedScene = CatalegCultius.TOTS[0]
 		var ruta = data.get("escena", "")
 		if ruta is String and not ruta.is_empty() and ResourceLoader.exists(ruta):
 			escena = load(ruta)
@@ -454,35 +227,3 @@ func carregar_mundo():
 
 # ─────────────── Abast del cultiu seleccionat (sota el cursor de plantar)
 
-func _crear_indicador_rang():
-	# El cursor és un quad girat 90° per quedar pla: si l'anell en fos fill, en
-	# sortiria vertical. Per això és independent i el situem cada frame.
-	indicador_rang = AnellAbast.new()
-	indicador_rang.top_level = true
-	indicador_rang.visible = false
-	add_child(indicador_rang)
-	_actualitzar_indicador_rang()
-
-func _actualitzar_indicador_rang():
-	if indicador_rang == null:
-		return
-	var opcio: Dictionary = opcions_cultius[index_cultiu_seleccionat]
-	indicador_rang.set_meta("radi", opcio.radi)
-	if opcio.radi > 0.0:
-		indicador_rang.configurar(opcio.radi, opcio.color)
-
-## En mode plantar: l'anell del cultiu triat segueix el cursor, i dels plantats
-## només es veuen els que cobreixen el punt on plantaràs (abans es veien tots)
-func _actualitzar_anells():
-	var actiu: bool = mode_plantar and cursor.visible
-	indicador_rang.visible = actiu and indicador_rang.get_meta("radi", 0.0) > 0.0
-	if actiu:
-		indicador_rang.global_position = cursor.global_position + Vector3.UP * 0.03
-	for cultiu in get_tree().get_nodes_in_group("cultius"):
-		if not cultiu.has_method("mostrar_radi"):
-			continue
-		var cobreix := false
-		if actiu:
-			var d := Vector2(cultiu.global_position.x - cursor.global_position.x, cultiu.global_position.z - cursor.global_position.z).length()
-			cobreix = d <= cultiu.radi_efecte()
-		cultiu.mostrar_radi(cobreix)

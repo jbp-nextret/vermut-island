@@ -69,6 +69,7 @@ var vida_acumulada := 0.0
 @onready var icona = $IconaRecollir
 
 var indicador_radi: Node3D = null
+var ressaltat := false
 var barra_vida: BarraVida3D
 
 func _ready():
@@ -86,7 +87,7 @@ func _ready():
 
 	actualitzar_sprite()
 
-	if radi_efecte() > 0.0 and mostrar_radi_influencia:
+	if tipus_cultiu == TipusCultiu.DEFENSA_RANGED and mostrar_radi_influencia:
 		indicador_radi = AnellAbast.crear(self, radi_efecte(), COLOR_RANG_TORRE if es_defensa() else tint)
 		indicador_radi.visible = false
 		EventBus.mode_plantar_canviat.connect(_on_mode_plantar_canviat)
@@ -124,6 +125,25 @@ func _on_mode_plantar_canviat(actiu: bool):
 func mostrar_radi(mostrar: bool) -> void:
 	if indicador_radi:
 		indicador_radi.visible = mostrar
+
+## En mode plantar: aquest cultiu es veuria afectat (o afecta) el que plantaràs
+func ressaltar(actiu: bool) -> void:
+	if ressaltat == actiu:
+		return
+	ressaltat = actiu
+	_actualitzar_tint_influencia()
+	sprite.scale = Vector3.ONE * (1.12 if actiu else 1.0)
+
+const NOMS_ESTAT := ["Llavor", "Creixent", "Mitjana", "Gran", "Madura"]
+
+## Text curt per a l'etiqueta que surt en passar-hi el ratolí
+func text_info() -> String:
+	var text := "%s\n%s · ❤ %d/%d" % [nom_cultiu, NOMS_ESTAT[estat_actual], vida_actual, vida_maxima]
+	if es_defensa() and not es_madur():
+		text += "\n(defensarà quan sigui madura)"
+	elif es_collita() and es_madur():
+		text += "\n[F] Collir"
+	return text
 
 func passar_dia():
 	if recollit or estat_actual == Estat.MADUR:
@@ -169,7 +189,9 @@ func _actualitzar_tint_influencia():
 	if material == null:
 		return
 	var color := tint
-	if modificador_total_actual > 0.01:
+	if ressaltat:
+		color = color.lerp(Color(1.0, 0.95, 0.5), 0.55)   # daurat: afectat pel que plantaràs
+	elif modificador_total_actual > 0.01:
 		# Potenciada per una flor: una mica més verda
 		var intensitat = clamp(modificador_total_actual, 0.0, 1.0)
 		color = color * Color(1.0 - intensitat * 0.4, 1.0, 1.0 - intensitat * 0.4)

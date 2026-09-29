@@ -23,7 +23,7 @@ func configurar(radi: float, color: Color) -> void:
 	tor.rings = 64
 	tor.ring_segments = 4
 	vora.mesh = tor
-	vora.material_override = _material(Color(color.r, color.g, color.b, 0.75))
+	vora.material_override = _material(Color(color.r, color.g, color.b, 0.55))
 	vora.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	vora.scale.y = 0.3
 	add_child(vora)
@@ -37,7 +37,7 @@ func configurar(radi: float, color: Color) -> void:
 	disc.radial_segments = 48
 	disc.rings = 1
 	farcit.mesh = disc
-	farcit.material_override = _material(Color(color.r, color.g, color.b, 0.08))
+	farcit.material_override = _material(Color(color.r, color.g, color.b, 0.035))
 	farcit.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(farcit)
 
