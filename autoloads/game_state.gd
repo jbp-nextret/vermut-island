@@ -15,6 +15,11 @@ var mode: Mode = Mode.EXPLORAR:
 
 var dins_casa := false
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pantalla_completa"):
+		var finestra := get_window()
+		finestra.mode = Window.MODE_WINDOWED if finestra.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
+
 func pot_atacar() -> bool:
 	return mode == Mode.EXPLORAR and not dins_casa
 

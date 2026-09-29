@@ -34,6 +34,7 @@ var atacant: bool = false
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 var te_espasa: bool = true
 @onready var camera_pivot: Node3D = $CameraPivot
+@onready var camera: Camera3D = $CameraPivot/Camera3D
 var shake_intensitat: float = 0.0
 
 # Estocada (atac secundari)
@@ -62,6 +63,12 @@ var atac_en_cua := ""        # si prems mentre es recarrega, surt quan pugui
 var temps_cua := 0.0
 const MEMORIA_ATAC := 0.45   # una mica més que la recàrrega del tall
 var vida_anterior := 0
+
+# Les capes del personatge (pell, roba, cabell...) són retallades i escriuen profunditat
+# (així tenen vora i l'aigua no les tapa). Per no parpellejar al mateix pla, cada capa
+# s'avança una mica cap a la càmera segons el seu ordre.
+const SEPARACIO_CAPES := 0.004
+var posicions_capes := {}
 
 func _ready():
 	add_to_group("player")
@@ -143,6 +150,7 @@ func _physics_process(delta):
 		get_tree().reload_current_scene()
 	
 func _process(delta):
+	_separar_capes()
 	for sprite in sprites:
 		if sprite == skin:
 			continue
@@ -151,15 +159,13 @@ func _process(delta):
 		sprite.flip_h = skin.flip_h
 	# Camera shake
 	if shake_intensitat > 0:
-		camera_pivot.position = Vector3(
-			randf_range(-shake_intensitat, shake_intensitat),
-			randf_range(-shake_intensitat, shake_intensitat),
-			0
-		)
+		camera.h_offset = randf_range(-shake_intensitat, shake_intensitat)
+		camera.v_offset = randf_range(-shake_intensitat, shake_intensitat)
 		shake_intensitat = lerp(shake_intensitat, 0.0, delta * 10.0)
 		if shake_intensitat < 0.01:
 			shake_intensitat = 0.0
-			camera_pivot.position = Vector3.ZERO
+			camera.h_offset = 0.0
+			camera.v_offset = 0.0
 		
 func play_anim(anim: String, flip: bool = false):
 	for sprite in sprites:
@@ -220,6 +226,19 @@ func _sprites() -> Dictionary:
 func canviar_color(nom_part: String, nou_color: Color) -> void:
 	Customization.canviar_color(nom_part, nou_color, _sprites())
 	
+func _separar_capes():
+	var cap_camera: Vector3 = camera.global_position - global_position
+	cap_camera.y = 0.0
+	if cap_camera.length() < 0.01:
+		return
+	cap_camera = cap_camera.normalized()
+	for sprite in sprites:
+		if sprite == null:
+			continue
+		if not posicions_capes.has(sprite):
+			posicions_capes[sprite] = sprite.position
+		sprite.global_position = sprite.get_parent().to_global(posicions_capes[sprite]) + cap_camera * SEPARACIO_CAPES * (sprite.render_priority + 1)
+
 # Funcions combat
 func camera_shake(intensitat: float = 0.15):
 	shake_intensitat = intensitat
@@ -244,8 +263,10 @@ func _unhandled_input(event):
 		disparar_bola_foc()
 
 ## Llança un atac màgic cap al ratolí. Si encara es recarrega, el guarda uns instants.
-func _atac_magic(tipus: String):
-	var direccio := _direccio_cap_al_cursor()
+## `direccio` buida = cap al ratolí (des de la barra d'accions es passa la de la mirada)
+func _atac_magic(tipus: String, direccio := Vector3.ZERO):
+	if direccio == Vector3.ZERO:
+		direccio = _direccio_cap_al_cursor()
 	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.estocada(direccio)
 	if not fet:
 		if atac_en_cua != tipus:
@@ -350,7 +371,7 @@ func _crear_trail():
 	tween.tween_property(ghost, "modulate:a", 0.0, trail_durada)
 	tween.tween_callback(ghost.queue_free)
 
-func disparar_bola_foc():
+func disparar_bola_foc(direccio := Vector3.ZERO):
 	if temps_darrera_magia < cooldown_magia:
 		magia_no_disponible.emit()
 		return
@@ -361,7 +382,7 @@ func disparar_bola_foc():
 	var bola = bola_foc_scene.instantiate()
 	get_tree().current_scene.add_child(bola)
 	bola.global_position = global_position + Vector3(0, 1.0, 0)
-	bola.direccio = _direccio_cap_al_cursor()
+	bola.direccio = direccio if direccio != Vector3.ZERO else _direccio_cap_al_cursor()
 
 
 func _crear_cercle_alquimia():

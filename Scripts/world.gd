@@ -33,13 +33,13 @@ const PECES_AUTOTILE := ["001", "002", "003", "004", "005", "006", "007", "008",
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
+	# HUD: vida i rellotge a dalt, diners a sota dels cors, barra d'accions a baix al centre
+	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
+	add_child(HudJoc.new())
 	var hud_diners := HudDiners.new()
-	hud_diners.marge_superior = 70   # a sota del rellotge
+	hud_diners.marge_superior = 30
 	add_child(hud_diners)
 	add_child(HudOnades.new())
-	var hud_combat := HudCombat.new()
-	hud_combat.jugador = $Personatge
-	add_child(hud_combat)
 
 	plantador = Plantador.new()
 	plantador.name = "Plantador"
@@ -57,12 +57,12 @@ func _ready():
 	for eina in [plantador, regador, llaurador]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
-	var hud_llaurar := HudEina.new()
-	hud_llaurar.configurar(llaurador, "llaurar", "⛏", Color(0.85, 0.65, 0.35), "Clic: llaurar · Arrossega: àrea · Clic dret: sortir", 1)
-	add_child(hud_llaurar)
-	var hud_rec := HudEina.new()
-	hud_rec.configurar(regador, "regar", "💧", Color(0.45, 0.75, 1.0), "Clic: regar · Clic dret: sortir", 0)
-	add_child(hud_rec)
+	var barra := BarraAccions.new()
+	barra.jugador = $Personatge
+	barra.plantador = plantador
+	barra.regador = regador
+	barra.llaurador = llaurador
+	add_child(barra)
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
 	add_child(hud_plantar)
@@ -145,7 +145,9 @@ func aplicar_spawn_player(posicio: Vector3):
 		spawn_pos.y = max(posicio.y, 1.0)
 		player.global_position = spawn_pos
 		player.global_rotation = Vector3.ZERO
-		print("Personatge reposicionat a: ", spawn_pos)
+		var camera = player.get_node_or_null("CameraPivot/Camera3D")
+		if camera and camera.has_method("centrar_de_cop"):
+			camera.centrar_de_cop()
 	else:
 		print("No s'ha trobat el Personatge o no està preparat")
 

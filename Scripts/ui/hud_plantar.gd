@@ -29,7 +29,7 @@ func _ready():
 	panell.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	panell.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	panell.offset_right = -8
-	panell.offset_bottom = -8
+	panell.offset_bottom = -60   # per sobre de la barra d'accions
 
 	var fila := HBoxContainer.new()
 	fila.add_theme_constant_override("separation", 6)
@@ -69,8 +69,8 @@ func _ready():
 	label_avis.anchor_top = 1.0
 	label_avis.anchor_bottom = 1.0
 	label_avis.offset_right = -10
-	label_avis.offset_top = -80
-	label_avis.offset_bottom = -64
+	label_avis.offset_top = -132
+	label_avis.offset_bottom = -116
 	label_avis.modulate.a = 0.0
 
 	_crear_tira()
@@ -82,8 +82,8 @@ func _ready():
 
 func _process(_delta):
 	visible = GameState.pot_atacar()   # només a fora (no dins de casa ni construint)
-	# L'ajuda s'amaga mentre es veu la tira del canvi de cultiu
-	label_ajuda.visible = plantador.actiu and not plantador.roda_oberta and caixa_tira.modulate.a < 0.05
+	# L'ajuda del mode plantar ara la mostra la barra d'accions, a baix al centre
+	label_ajuda.visible = false
 
 func _actualitzar():
 	var o: Dictionary = plantador.opcio()
@@ -109,8 +109,8 @@ func _crear_tira():
 	caixa_tira.anchor_bottom = 1.0
 	caixa_tira.offset_left = -120
 	caixa_tira.offset_right = 120
-	caixa_tira.offset_top = -124
-	caixa_tira.offset_bottom = -70
+	caixa_tira.offset_top = -150
+	caixa_tira.offset_bottom = -98
 	caixa_tira.modulate.a = 0.0
 
 	tira = HBoxContainer.new()

@@ -98,7 +98,12 @@ func _ready():
 	_configurar_llista_mobles()
 	_crear_hud()
 	_crear_gestor_servei()
-	add_child(HudDiners.new())
+	var hud_joc := HudJoc.new()
+	hud_joc.mostrar_rellotge = false
+	add_child(hud_joc)
+	var hud_diners := HudDiners.new()
+	hud_diners.marge_superior = 30
+	add_child(hud_diners)
 
 	panel_ui.visible = false
 	item_list.visible = false
