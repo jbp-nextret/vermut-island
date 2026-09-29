@@ -38,14 +38,14 @@ var shake_intensitat: float = 0.0
 
 # Estocada (atac secundari)
 @export var dash_estocada_velocitat: float = 12.0
-@export var dash_estocada_durada: float = 0.15
+@export var dash_estocada_durada: float = 0.18
 var dash_actiu: bool = false
 var dash_direccio: Vector3 = Vector3.ZERO
 var dash_temps_restant: float = 0.0
 # Trail
 @export var trail_interval: float = 0.03
 @export var trail_durada: float = 0.25
-@export var trail_color: Color = Color(1, 1, 1, 0.4)
+@export var trail_color: Color = Color(0.6, 0.85, 1.0, 0.45)
 var trail_temps: float = 0.0
 # Combat màgic
 @export var bola_foc_scene: PackedScene
@@ -238,7 +238,7 @@ func _unhandled_input(event):
 		if event.is_action_pressed("accio_primaria"):
 			_atac_magic("tall")
 		elif event.is_action_pressed("accio_secundaria"):
-			_atac_magic("ona")
+			_atac_magic("estocada")
 	# Atac màgic
 	if event.is_action_pressed("atac_magia"):  # crea aquesta input action
 		disparar_bola_foc()
@@ -246,7 +246,7 @@ func _unhandled_input(event):
 ## Llança un atac màgic cap al ratolí. Si encara es recarrega, el guarda uns instants.
 func _atac_magic(tipus: String):
 	var direccio := _direccio_cap_al_cursor()
-	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.ona()
+	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.estocada(direccio)
 	if not fet:
 		if atac_en_cua != tipus:
 			atac_en_cua = tipus
@@ -256,6 +256,12 @@ func _atac_magic(tipus: String):
 	temps_cua = 0.0
 	# El cos es gira cap on ataca i fa l'animació d'atac
 	_mirar_cap_a(direccio)
+	if tipus == "estocada":
+		dash_actiu = true
+		dash_direccio = direccio
+		dash_temps_restant = dash_estocada_durada
+		# Invulnerable mentre dura el dash (per travessar enemics sense rebre)
+		SalutJugador.invulnerable_fins = maxf(SalutJugador.invulnerable_fins, Time.get_ticks_msec() / 1000.0 + dash_estocada_durada + 0.1)
 	atacant = true
 	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
 	create_tween().tween_callback(func(): atacant = false).set_delay(0.25)
