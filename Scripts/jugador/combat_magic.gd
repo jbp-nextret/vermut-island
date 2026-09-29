@@ -16,7 +16,7 @@ const ALCADA_MAXIMA := 2.4
 const ALCADA_EFECTE := 0.7
 
 const TEXTURA_ESPASA := preload("res://Sprites/sword.png")
-const TEXTURA_REMOLI := preload("res://Sprites/Misc/magic-3.png")
+const TEXTURA_REMOLI := preload("res://Sprites/Misc/magic-1.png")
 const PIXEL_ESPASA := 0.055
 const COLOR_ESPASA := Color(0.75, 0.92, 1.0)
 const COLORS_TALL := [Color(0.55, 0.85, 1.0), Color(0.75, 0.6, 1.0), Color(1.0, 0.85, 0.5)]
@@ -150,8 +150,8 @@ func _efecte_cercle(radi: float, color: Color):
 	var cercle := _sprite(TEXTURA_REMOLI, 0.01, Color(color, 0.9), 0)
 	jugador.get_parent().add_child(cercle)
 	cercle.global_position = jugador.global_position + Vector3.UP * 0.1
-	var mida_final: float = radi * 2.0 / (TEXTURA_REMOLI.get_width() * cercle.pixel_size)
-	cercle.scale = Vector3.ONE * mida_final * 0.2
+	var mida_final: float = radi * 1.0 / (TEXTURA_REMOLI.get_width() * cercle.pixel_size)
+	cercle.scale = Vector3.ONE * mida_final * 0.1
 	var t := cercle.create_tween().set_parallel(true)
 	t.tween_property(cercle, "scale", Vector3.ONE * mida_final, 0.25).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	t.tween_property(cercle, "rotation_degrees:y", 90.0, 0.45)
