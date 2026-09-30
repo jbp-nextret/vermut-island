@@ -27,6 +27,7 @@ Customization="*uid://kth6iuxy11jy"
 GameState="*res://autoloads/game_state.gd"
 GestorOnades="*res://autoloads/gestor_onades.gd"
 Meteorologia="*res://autoloads/meteorologia.gd"
+MenuPausa="*res://Scripts/ui/menu_pausa.gd"
 
 [display]
 

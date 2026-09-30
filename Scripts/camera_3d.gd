@@ -105,3 +105,15 @@ func _crear_postprocessat():
 	postprocessat.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	postprocessat.visible = GameState.postprocessat_actiu
 	add_child(postprocessat)
+	_aplicar_vores()
+	SettingsManager.opcio_canviada.connect(_on_opcio_canviada)
+
+func _on_opcio_canviada(clau: String, _valor):
+	if clau == "postprocessat":
+		postprocessat.visible = GameState.postprocessat_actiu
+	elif clau == "vores":
+		_aplicar_vores()
+
+func _aplicar_vores():
+	var material := postprocessat.material_override as ShaderMaterial
+	material.set_shader_parameter("intensitat_vora", 0.75 if SettingsManager.valor("vores") else 0.0)

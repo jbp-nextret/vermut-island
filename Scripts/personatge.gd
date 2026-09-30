@@ -240,7 +240,7 @@ func _separar_capes():
 # Funcions combat
 func camera_shake(intensitat: float = 0.15):
 	# Els valors d'abans (0,08-0,2) equivalen a un terç-mig de trauma
-	trauma = minf(1.0, trauma + intensitat * 2.5)
+	trauma = minf(1.0, trauma + intensitat * 2.5 * SettingsManager.valor("sacseig"))
 
 func _actualitzar_sacseig(delta: float):
 	if trauma <= 0.0:

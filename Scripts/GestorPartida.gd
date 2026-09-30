@@ -10,8 +10,17 @@ func registrar_mundo(mundo: Node) -> void:
 func desregistrar_mundo() -> void:
 	mundo_actual = null
 
+## Desa-ho tot: temps, inventari, món i (si hi ets) la decoració de la casa.
+## És el que fa el menú de pausa.
+func guardar_partida() -> void:
+	guardar_mundo()
+	var escena := get_tree().current_scene
+	if escena and escena.has_method("guardar_decoracio"):
+		escena.guardar_decoracio()
+
 func guardar_mundo() -> void:
 	Inventari.guardar()   # l'inventari i els diners es desen sempre, siguis on siguis
+	GestorTemps.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	

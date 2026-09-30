@@ -103,6 +103,7 @@ func _process(_delta):
 	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
 
 	# Nom del botó sota el ratolí, o què pots fer en el mode actiu
+	label_info.visible = SettingsManager.valor("ajudes") or not nom_sobre.is_empty()
 	if not nom_sobre.is_empty():
 		label_info.text = nom_sobre
 	elif plantador.actiu:

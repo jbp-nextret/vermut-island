@@ -121,7 +121,7 @@ func _crear_pluja():
 
 func _actualitzar_pluja(direccio: Vector2, forca: float):
 	var intensitat := Meteorologia.pluja
-	var plou := intensitat > 0.02
+	var plou: bool = intensitat > 0.02 and SettingsManager.valor("particules_meteo")
 	pluja.emitting = plou
 	esquitxos.emitting = plou and intensitat > 0.2
 	if not plou or not is_instance_valid(jugador):

@@ -15,36 +15,13 @@ var mode: Mode = Mode.EXPLORAR:
 
 var dins_casa := false
 
-# Preferències (es desen a user://configuracio.cfg)
-const FITXER_CONFIG := "user://configuracio.cfg"
-var postprocessat_actiu := true:
-	set(valor):
-		postprocessat_actiu = valor
-		_desar_config()
-var pantalla_completa := true:
-	set(valor):
-		pantalla_completa = valor
-		_aplicar_pantalla()
-		_desar_config()
-
-func _ready():
-	var config := ConfigFile.new()
-	if config.load(FITXER_CONFIG) == OK:
-		postprocessat_actiu = config.get_value("grafics", "postprocessat", true)
-		pantalla_completa = config.get_value("grafics", "pantalla_completa", true)
-	_aplicar_pantalla()
-
-func _aplicar_pantalla():
-	if not is_inside_tree():
-		return
-	var finestra := get_window()
-	finestra.mode = Window.MODE_FULLSCREEN if pantalla_completa else Window.MODE_WINDOWED
-
-func _desar_config():
-	var config := ConfigFile.new()
-	config.set_value("grafics", "postprocessat", postprocessat_actiu)
-	config.set_value("grafics", "pantalla_completa", pantalla_completa)
-	config.save(FITXER_CONFIG)
+# Preferències: ara les porta el SettingsManager (aquí queden com a dreceres)
+var postprocessat_actiu: bool:
+	get: return SettingsManager.valor("postprocessat")
+	set(valor): SettingsManager.canviar("postprocessat", valor)
+var pantalla_completa: bool:
+	get: return SettingsManager.valor("pantalla_completa")
+	set(valor): SettingsManager.canviar("pantalla_completa", valor)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pantalla_completa"):
