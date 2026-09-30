@@ -45,7 +45,7 @@ func _ready():
 	add_child(dia)
 	dia.anchor_left = 1.0
 	dia.anchor_right = 1.0
-	dia.offset_left = -160
+	dia.offset_left = -260
 	dia.offset_right = -10
 	dia.offset_top = 26
 	rellotge.visible = mostrar_rellotge
@@ -86,7 +86,7 @@ func _process(_delta):
 		var icona := "🌙" if h < 6.0 or h >= 20.0 else ("🌅" if h < 9.0 else ("☀" if h < 18.0 else "🌇"))
 		rellotge.text = "%s %02d:%02d" % [icona, int(h), int((h - int(h)) * 60)]
 		var d: int = GestorTemps.dia_actual
-		dia.text = "%s · Setmana %d" % [DIES[posmod(d - 1, 7)], (d - 1) / 7 + 1]
+		dia.text = "%s · Setmana %d · %s %s" % [DIES[posmod(d - 1, 7)], (d - 1) / 7 + 1, Meteorologia.icona(), Meteorologia.nom()]
 
 ## Cor de 9x8 en pixel art: "ple", "mig" o "buit"
 static func textura_cor(tipus: String) -> ImageTexture:

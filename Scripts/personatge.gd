@@ -35,7 +35,14 @@ var atacant: bool = false
 var te_espasa: bool = true
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/Camera3D
-var shake_intensitat: float = 0.0
+var shake_intensitat: float = 0.0   # (ja no es fa servir: ara és `trauma`)
+## Sacseig de càmera: cada cop suma "trauma" (0..1). El sacseig és trauma², i es mou
+## amb soroll suau (no salts aleatoris). Una mica de desplaçament i una mica de rotació.
+const SACSEIG_DESPLACAMENT := 0.35
+const SACSEIG_ROTACIO := 0.035
+const SACSEIG_RECUPERACIO := 1.6    # trauma que es perd per segon
+var trauma := 0.0
+var soroll_sacseig := FastNoiseLite.new()
 
 # Estocada (atac secundari)
 @export var dash_estocada_velocitat: float = 12.0
@@ -159,15 +166,8 @@ func _process(delta):
 		sprite.frame = skin.frame
 		sprite.frame_progress = skin.frame_progress
 		sprite.flip_h = skin.flip_h
-	# Camera shake
-	if shake_intensitat > 0:
-		camera.h_offset = randf_range(-shake_intensitat, shake_intensitat)
-		camera.v_offset = randf_range(-shake_intensitat, shake_intensitat)
-		shake_intensitat = lerp(shake_intensitat, 0.0, delta * 10.0)
-		if shake_intensitat < 0.01:
-			shake_intensitat = 0.0
-			camera.h_offset = 0.0
-			camera.v_offset = 0.0
+	# Sacseig de càmera
+	_actualitzar_sacseig(delta)
 		
 func play_anim(anim: String, flip: bool = false):
 	for sprite in sprites:
@@ -239,7 +239,22 @@ func _separar_capes():
 
 # Funcions combat
 func camera_shake(intensitat: float = 0.15):
-	shake_intensitat = intensitat
+	# Els valors d'abans (0,08-0,2) equivalen a un terç-mig de trauma
+	trauma = minf(1.0, trauma + intensitat * 2.5)
+
+func _actualitzar_sacseig(delta: float):
+	if trauma <= 0.0:
+		return
+	trauma = maxf(0.0, trauma - SACSEIG_RECUPERACIO * delta)
+	var forca := trauma * trauma
+	var t := Time.get_ticks_msec() * 0.06
+	camera.h_offset = SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(t, 0.0)
+	camera.v_offset = SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(0.0, t)
+	camera.rotation.z = SACSEIG_ROTACIO * forca * soroll_sacseig.get_noise_2d(t, 100.0)
+	if trauma <= 0.0:
+		camera.h_offset = 0.0
+		camera.v_offset = 0.0
+		camera.rotation.z = 0.0
 			
 func _unhandled_input(event):
 	# Dins de casa, construint o servint no es pot atacar

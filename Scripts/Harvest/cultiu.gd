@@ -49,6 +49,7 @@ enum TipusCultiu {
 ## Es manté només per compatibilitat amb les partides desades: el comportament el decideix el tipus.
 @export var es_torre: bool = true
 
+const SHADER_CULTIU := preload("res://Shaders/cultiu.gdshader")
 const COLOR_RANG_TORRE := Color(1.0, 0.85, 0.3)
 const ESPERA_REGENERACIO := 4.0   # segons sense rebre dany abans de començar a curar-se
 
@@ -237,17 +238,15 @@ func actualitzar_sprite():
 		push_warning("No hi ha textures assignades al cultiu " + nom_cultiu)
 		return
 	var index_visual = clampi(_index_visual_per_estat(estat_actual), 0, textures.size() - 1)
-	var material = sprite.get_surface_override_material(0)
+	# Material propi amb el shader que el fa gronxar amb el vent
+	var material := sprite.get_surface_override_material(0) as ShaderMaterial
 	if material == null:
-		material = StandardMaterial3D.new()
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		material.alpha_scissor_threshold = 0.5
-		material.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	material = material.duplicate()
-	material.albedo_texture = textures[index_visual]
-	sprite.set_surface_override_material(0, material)
+		material = ShaderMaterial.new()
+		material.shader = SHADER_CULTIU
+		sprite.set_surface_override_material(0, material)
+	material.set_shader_parameter("textura", textures[index_visual])
+	# Els cultius grans es gronxen més que les llavors
+	material.set_shader_parameter("gronxament", [0.2, 0.5, 0.8, 1.0, 1.0][estat_actual])
 	_actualitzar_tint_influencia()
 	if barra_vida:
 		barra_vida.mostrar(vida_actual, vida_maxima)
@@ -262,7 +261,7 @@ func _index_visual_per_estat(estat: int) -> int:
 		_: return clamp(estat, 0, textures.size() - 1)
 
 func _actualitzar_tint_influencia():
-	var material = sprite.get_surface_override_material(0)
+	var material := sprite.get_surface_override_material(0) as ShaderMaterial
 	if material == null:
 		return
 	var color := tint
@@ -272,8 +271,7 @@ func _actualitzar_tint_influencia():
 		# Potenciada per una flor: una mica més verda
 		var intensitat = clamp(modificador_total_actual, 0.0, 1.0)
 		color = color * Color(1.0 - intensitat * 0.4, 1.0, 1.0 - intensitat * 0.4)
-	if not material.albedo_color.is_equal_approx(color):
-		material.albedo_color = color
+	material.set_shader_parameter("tint", color)
 
 # ─────────────── Cada frame
 
