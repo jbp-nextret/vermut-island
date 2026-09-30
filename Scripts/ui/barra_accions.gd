@@ -42,6 +42,11 @@ func _ready():
 	_boto("plantar", "🌱", "plantar", Color(0.55, 0.95, 0.5), "Plantar (mantén P: triar cultiu)", func(): plantador.alternar())
 	_boto("regar", "💧", "regar", Color(0.45, 0.75, 1.0), "Regar", _alternar.bind(regador))
 	_boto("llaurar", "⛏", "llaurar", Color(0.85, 0.65, 0.35), "Llaurar", _alternar.bind(llaurador))
+	var separador2 := Control.new()
+	separador2.custom_minimum_size = Vector2(14, 0)
+	separador2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fila.add_child(separador2)
+	_boto("motxilla", "🎒", "inventari", Color(0.95, 0.8, 0.5), "Motxilla", func(): MenuInventari.obrir())
 
 	label_info = _label(11, Color(0.92, 0.95, 1.0))
 	add_child(label_info)
@@ -101,6 +106,7 @@ func _process(_delta):
 	_actualitzar("plantar", plantador.actiu, 1.0)
 	_actualitzar("regar", regador.actiu, regador.progres())
 	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
+	_actualitzar("motxilla", true, 1.0)
 
 	# Nom del botó sota el ratolí, o què pots fer en el mode actiu
 	label_info.visible = SettingsManager.valor("ajudes") or not nom_sobre.is_empty()

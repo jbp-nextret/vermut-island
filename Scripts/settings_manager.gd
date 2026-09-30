@@ -31,7 +31,7 @@ const ACCIONS_REMAPEJABLES := [
 	["mode_combat", "Mode combat"], ["atac_magia", "Bola de foc"],
 	["plantar", "Plantar"], ["regar", "Regar"], ["llaurar", "Llaurar"],
 	["girar_camera_esquerra", "Girar càmera ←"], ["girar_camera_dreta", "Girar càmera →"],
-	["decorar", "Construir (a casa)"],
+	["decorar", "Construir (a casa)"], ["inventari", "Motxilla"],
 ]
 
 const BUSOS := {"volum_general": "Master", "volum_musica": "Music", "volum_efectes": "SFX"}
