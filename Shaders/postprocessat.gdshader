@@ -1,6 +1,6 @@
 shader_type spatial;
 // Postprocessat de pantalla completa (va en un quad fill de la càmera):
-//  - vora blanca al voltant de les siluetes (objectes, personatges i desnivells del terreny)
+//  - vora fosca al voltant de les siluetes (objectes, personatges i desnivells del terreny)
 //  - gradació de color suau i una vinyeta als costats
 //  - posterització amb dithering ordenat, per donar-li un aire més de pixel art
 render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, fog_disabled;
@@ -8,8 +8,8 @@ render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, fog_
 uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
 uniform sampler2D DEPTH_TEXTURE : hint_depth_texture, filter_nearest;
 
-uniform vec4 color_vora : source_color = vec4(1.0, 1.0, 1.0, 1.0);
-uniform float intensitat_vora : hint_range(0.0, 1.0) = 0.8;
+uniform vec4 color_vora : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform float intensitat_vora : hint_range(0.0, 1.0) = 0.75;
 // Quanta diferència de profunditat (en unitats del món) fa falta perquè hi hagi vora
 uniform float llindar_profunditat = 0.1;
 uniform float saturacio : hint_range(0.0, 2.0) = 0.95;

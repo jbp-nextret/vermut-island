@@ -149,7 +149,7 @@ func _efecte_mitja_lluna(direccio: Vector3, abast: float, color: Color):
 func _efecte_cercle(radi: float, color: Color):
 	var cercle := _sprite(TEXTURA_REMOLI, 0.01, Color(color, 0.9), 0)
 	jugador.get_parent().add_child(cercle)
-	cercle.global_position = jugador.global_position + Vector3.UP * 0.1
+	cercle.global_position = terra_sota(jugador, jugador.global_position) + Vector3.UP * 0.02
 	var mida_final: float = radi * 1.0 / (TEXTURA_REMOLI.get_width() * cercle.pixel_size)
 	cercle.scale = Vector3.ONE * mida_final * 0.1
 	var t := cercle.create_tween().set_parallel(true)
@@ -222,6 +222,14 @@ func _enemics_propers(radi: float) -> Array:
 		if absf(cap.y) <= ALCADA_MAXIMA and _pla(cap).length() <= radi:
 			resultat.append(enemic)
 	return resultat
+
+## El punt de terra just a sota de `punt` (el mateix punt si no en troba)
+static func terra_sota(des_de: Node3D, punt: Vector3) -> Vector3:
+	var consulta := PhysicsRayQueryParameters3D.create(punt + Vector3.UP * 0.5, punt + Vector3.DOWN * 4.0)
+	if des_de is CollisionObject3D:
+		consulta.exclude = [des_de.get_rid()]
+	var resultat := des_de.get_world_3d().direct_space_state.intersect_ray(consulta)
+	return resultat.position if not resultat.is_empty() else punt
 
 static func _pla(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0, v.z)

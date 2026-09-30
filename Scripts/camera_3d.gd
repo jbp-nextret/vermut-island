@@ -3,6 +3,8 @@ extends Camera3D
 ##  - zoom amb la rodeta
 ##  - gir al voltant del jugador: Z / C a passos de 45°, o arrossegant amb el botó central
 ##    (en deixar-lo, s'ajusta al pas més proper). R torna a la vista inicial.
+##    El gir està limitat a GIR_MAXIM per banda: més enllà, els sprites de vegetació
+##    (que no giren amb la càmera) es veurien de costat o per darrere.
 ##  - segueix el jugador amb una mica de suavitat
 ##  - postprocessat (vores blanques i color): F10 l'activa o el desactiva
 
@@ -10,6 +12,7 @@ const ZOOM_SPEED = 0.5
 const MIN_ZOOM = 6.0
 const MAX_ZOOM = 11.0
 const PAS_GIR := 45.0
+const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial
 const SENSIBILITAT_GIR := 0.008
 const SUAVITAT_SEGUIMENT := 10.0
 const SUAVITAT_GIR := 12.0
@@ -65,19 +68,24 @@ func _input(event):
 			if not event.pressed:
 				gir_objectiu = _ajustar_al_pas(gir_objectiu)
 	elif event is InputEventMouseMotion and girant_amb_ratoli:
-		gir_objectiu -= event.relative.x * SENSIBILITAT_GIR
+		gir_objectiu = _limitar(gir_objectiu - event.relative.x * SENSIBILITAT_GIR)
 
 func _unhandled_input(event):
 	if not current:
 		return
 	if event.is_action_pressed("girar_camera_esquerra"):
-		gir_objectiu = _ajustar_al_pas(gir_objectiu) - deg_to_rad(PAS_GIR)
+		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) - deg_to_rad(PAS_GIR))
 	elif event.is_action_pressed("girar_camera_dreta"):
-		gir_objectiu = _ajustar_al_pas(gir_objectiu) + deg_to_rad(PAS_GIR)
+		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) + deg_to_rad(PAS_GIR))
 	elif event.is_action_pressed("reset_camera"):
 		gir_objectiu = gir_inicial
 	elif event.is_action_pressed("alternar_postprocessat") and postprocessat:
-		postprocessat.visible = not postprocessat.visible
+		# Es desa a GameState: en canviar d'escena (o de partida) es manté com el vas deixar
+		GameState.postprocessat_actiu = not GameState.postprocessat_actiu
+		postprocessat.visible = GameState.postprocessat_actiu
+
+func _limitar(angle: float) -> float:
+	return clampf(angle, gir_inicial - deg_to_rad(GIR_MAXIM), gir_inicial + deg_to_rad(GIR_MAXIM))
 
 func _ajustar_al_pas(angle: float) -> float:
 	var pas := deg_to_rad(PAS_GIR)
@@ -95,4 +103,5 @@ func _crear_postprocessat():
 	postprocessat.material_override = material
 	postprocessat.extra_cull_margin = 16384.0
 	postprocessat.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	postprocessat.visible = GameState.postprocessat_actiu
 	add_child(postprocessat)

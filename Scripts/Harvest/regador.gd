@@ -159,7 +159,7 @@ func _cercle_magic(centre: Vector3):
 	cercle.rotation_degrees.x = 90
 	cercle.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mon.add_child(cercle)
-	cercle.global_position = centre + Vector3.UP * 0.05
+	cercle.global_position = CombatMagic.terra_sota(jugador, centre) + Vector3.UP * 0.02
 	var mida_final: float = RADI * 2.0 / (TEXTURA_CERCLE.get_width() * cercle.pixel_size)
 	cercle.scale = Vector3.ONE * mida_final * 0.3
 	var t := cercle.create_tween().set_parallel(true)
