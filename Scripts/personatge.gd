@@ -65,9 +65,11 @@ const MEMORIA_ATAC := 0.45   # una mica més que la recàrrega del tall
 var vida_anterior := 0
 
 # Les capes del personatge (pell, roba, cabell...) són retallades i escriuen profunditat
-# (així tenen vora i l'aigua no les tapa). Per no parpellejar al mateix pla, cada capa
-# s'avança una mica cap a la càmera segons el seu ordre.
-const SEPARACIO_CAPES := 0.004
+# (així tenen vora i l'aigua no les tapa). Perquè no parpellegin al mateix pla, cada capa
+# s'avança una mica cap a la càmera segons el seu ordre, exactament en la direcció en què
+# mira la càmera: amb càmera ortogràfica això no les mou gens a la pantalla, i no queden
+# escletxes entre capes.
+const SEPARACIO_CAPES := 0.002
 var posicions_capes := {}
 
 func _ready():
@@ -227,11 +229,7 @@ func canviar_color(nom_part: String, nou_color: Color) -> void:
 	Customization.canviar_color(nom_part, nou_color, _sprites())
 	
 func _separar_capes():
-	var cap_camera: Vector3 = camera.global_position - global_position
-	cap_camera.y = 0.0
-	if cap_camera.length() < 0.01:
-		return
-	cap_camera = cap_camera.normalized()
+	var cap_camera: Vector3 = camera.global_basis.z   # l'eix de visió, cap a la càmera
 	for sprite in sprites:
 		if sprite == null:
 			continue
