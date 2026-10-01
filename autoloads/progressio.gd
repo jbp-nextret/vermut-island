@@ -55,18 +55,24 @@ func rang(id: String) -> int:
 
 func valor(id: String) -> float:
 	var h := ArbreHabilitats.habilitat(id)
-	return h.per_rang * rang(id) if not h.is_empty() else 0.0
+	return h.per_rang * rang(id) if h else 0.0
+
+## Si l'habilitat es pot fer servir (com a mínim un rang)
+func te(id: String) -> bool:
+	return rang(id) > 0
 
 ## Per què no es pot millorar ("" si sí que es pot)
 func motiu_bloqueig(id: String) -> String:
 	var h := ArbreHabilitats.habilitat(id)
-	if h.is_empty() or h.max <= 0:
+	if h == null or h.max <= 0:
 		return "Encara no està disponible"
 	if rang(id) >= h.max:
 		return "Ja està al màxim"
-	if h.has("requisit") and rang(h.requisit[0]) < h.requisit[1]:
-		var r := ArbreHabilitats.habilitat(h.requisit[0])
-		return "Cal %s al rang %d" % [r.nom, h.requisit[1]]
+	# Els requisits només compten per desbloquejar-la (el primer rang)
+	if rang(id) == 0:
+		for r in h.requisits:
+			if r and not r.complert():
+				return "Cal: " + r.text()
 	if punts <= 0:
 		return "No tens punts (en guanyes un per nivell)"
 	return ""
@@ -74,6 +80,11 @@ func motiu_bloqueig(id: String) -> String:
 func millorar(id: String) -> bool:
 	if not motiu_bloqueig(id).is_empty():
 		return false
+	# En desbloquejar-la, es gasten els objectes o diners que demana
+	if rang(id) == 0:
+		for r in ArbreHabilitats.habilitat(id).requisits:
+			if r:
+				r.pagar()
 	habilitats[id] = rang(id) + 1
 	punts -= 1
 	_aplicar_efectes()

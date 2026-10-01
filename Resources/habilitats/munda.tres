@@ -1,0 +1,134 @@
+[gd_resource type="Resource" script_class="ArbreDef" format=3]
+
+[ext_resource type="Script" path="res://Scripts/progressio/habilitat.gd" id="1_ia65m"]
+[ext_resource type="Script" path="res://Scripts/progressio/requisit.gd" id="2_mehbm"]
+[ext_resource type="Script" path="res://Scripts/progressio/arbre_def.gd" id="3_2ec75"]
+
+[sub_resource type="Resource" id="Resource_gpjra"]
+script = ExtResource("1_ia65m")
+id = "salut_max"
+nom = "Constitució"
+icona = "❤"
+text = "+%d de vida màxima"
+textos = PackedStringArray()
+max = 3
+per_rang = 20.0
+col = 1
+
+[sub_resource type="Resource" id="Resource_8gjb3"]
+script = ExtResource("2_mehbm")
+habilitat = "salut_max"
+
+[sub_resource type="Resource" id="Resource_l25j3"]
+script = ExtResource("1_ia65m")
+id = "velocitat"
+nom = "Cames lleugeres"
+icona = "👟"
+text = "+%d %% de velocitat de moviment"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.08
+percent = true
+fila = 1
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_8gjb3")])
+
+[sub_resource type="Resource" id="Resource_wqjxr"]
+script = ExtResource("2_mehbm")
+habilitat = "salut_max"
+
+[sub_resource type="Resource" id="Resource_0bu3a"]
+script = ExtResource("1_ia65m")
+id = "botanica"
+nom = "Botànica"
+icona = "🌼"
+text = "Desbloqueja cultius nous per plantar"
+textos = PackedStringArray("Pots plantar Calèndula", "Pots plantar Calèndula i Ortiga", "Pots plantar Calèndula, Ortiga i Carbassa esquer")
+max = 3
+col = 1
+fila = 1
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_wqjxr")])
+
+[sub_resource type="Resource" id="Resource_44bup"]
+script = ExtResource("2_mehbm")
+habilitat = "salut_max"
+
+[sub_resource type="Resource" id="Resource_3xage"]
+script = ExtResource("1_ia65m")
+id = "regeneracio"
+nom = "Recuperació"
+icona = "🩹"
+text = "Recupera %d de vida cada 3 s sense rebre mal"
+textos = PackedStringArray()
+max = 3
+col = 2
+fila = 1
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_44bup")])
+
+[sub_resource type="Resource" id="Resource_omd1a"]
+script = ExtResource("2_mehbm")
+habilitat = "velocitat"
+
+[sub_resource type="Resource" id="Resource_debbo"]
+script = ExtResource("2_mehbm")
+tipus = 3
+quantitat = 50
+
+[sub_resource type="Resource" id="Resource_2xo3b"]
+script = ExtResource("1_ia65m")
+id = "motxilla"
+nom = "Motxilla gran"
+icona = "🎒"
+text = "+%d espais a la motxilla"
+textos = PackedStringArray()
+max = 3
+per_rang = 4.0
+fila = 2
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_omd1a"), SubResource("Resource_debbo")])
+
+[sub_resource type="Resource" id="Resource_i8815"]
+script = ExtResource("2_mehbm")
+habilitat = "botanica"
+
+[sub_resource type="Resource" id="Resource_n5xcl"]
+script = ExtResource("1_ia65m")
+id = "ma_verda"
+nom = "Mà verda"
+icona = "🌱"
+text = "%d %% de probabilitat que un cultiu regat creixi el doble"
+textos = PackedStringArray()
+max = 2
+per_rang = 0.25
+percent = true
+col = 1
+fila = 2
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_i8815")])
+
+[sub_resource type="Resource" id="Resource_g2d8w"]
+script = ExtResource("2_mehbm")
+habilitat = "botanica"
+
+[sub_resource type="Resource" id="Resource_2syd1"]
+script = ExtResource("2_mehbm")
+tipus = 2
+objecte = "raim"
+quantitat = 10
+
+[sub_resource type="Resource" id="Resource_nlorh"]
+script = ExtResource("1_ia65m")
+id = "vermuter"
+nom = "Mestre vermuter"
+icona = "🍷"
+text = "+%d vermuts per cada raïm"
+textos = PackedStringArray()
+max = 2
+col = 2
+fila = 2
+requisits = Array[ExtResource("2_mehbm")]([SubResource("Resource_g2d8w"), SubResource("Resource_2syd1")])
+
+[resource]
+script = ExtResource("3_2ec75")
+id = "munda"
+nom = "Mundà"
+icona = "🌿"
+color = Color(0.6, 0.95, 0.5, 1)
+habilitats = Array[ExtResource("1_ia65m")]([SubResource("Resource_gpjra"), SubResource("Resource_l25j3"), SubResource("Resource_0bu3a"), SubResource("Resource_3xage"), SubResource("Resource_2xo3b"), SubResource("Resource_n5xcl"), SubResource("Resource_nlorh")])

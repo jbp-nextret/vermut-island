@@ -10,7 +10,9 @@ class_name Regador
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
 
-const RADI := 1.5             # rega la cel·la i les 8 del voltant (l'habilitat "Pluja ampla" l'amplia)
+## Radi base: només la cel·la on apuntes. Cada rang de "Pluja ampla" suma una cel·la
+## (rang 1: 3×3; rang 2: radi 2)
+const RADI := 0.5
 ## Càrregues d'aigua: cada encanteri en gasta una i es recuperen soles (o de cop si plou).
 ## L'habilitat "Núvol generós" en dona més.
 const CARREGUES_BASE := 4.0
@@ -30,7 +32,7 @@ var carregues := CARREGUES_BASE
 var radi_actual := RADI
 
 func radi() -> float:
-	return RADI * (1.0 + Progressio.valor("abast_regar"))
+	return RADI + Progressio.valor("abast_regar")
 
 func carregues_max() -> float:
 	return CARREGUES_BASE + Progressio.valor("aigua_regar")

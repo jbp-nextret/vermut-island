@@ -1,0 +1,111 @@
+[gd_resource type="Resource" script_class="ArbreDef" format=3]
+
+[ext_resource type="Script" path="res://Scripts/progressio/habilitat.gd" id="1_q1ldy"]
+[ext_resource type="Script" path="res://Scripts/progressio/requisit.gd" id="2_idghq"]
+[ext_resource type="Script" path="res://Scripts/progressio/arbre_def.gd" id="3_cgae2"]
+
+[sub_resource type="Resource" id="Resource_cb311"]
+script = ExtResource("1_q1ldy")
+id = "dany_espasa"
+nom = "Fil espectral"
+icona = "⚔"
+text = "+%d %% de mal amb l'espasa (tall, remolí i estocada)"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.15
+percent = true
+
+[sub_resource type="Resource" id="Resource_81m8e"]
+script = ExtResource("2_idghq")
+tipus = 1
+nivell = 2
+
+[sub_resource type="Resource" id="Resource_v70e6"]
+script = ExtResource("1_q1ldy")
+id = "bola_foc"
+nom = "Bola de foc"
+icona = "🔥"
+text = "Llança boles de foc amb E (gasten mana)"
+textos = PackedStringArray()
+col = 2
+requisits = Array[ExtResource("2_idghq")]([SubResource("Resource_81m8e")])
+
+[sub_resource type="Resource" id="Resource_crhbu"]
+script = ExtResource("2_idghq")
+habilitat = "dany_espasa"
+
+[sub_resource type="Resource" id="Resource_j0hxi"]
+script = ExtResource("1_q1ldy")
+id = "abast_dash"
+nom = "Estocada llarga"
+icona = "💨"
+text = "+%d %% de distància de l'estocada"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.2
+percent = true
+fila = 1
+requisits = Array[ExtResource("2_idghq")]([SubResource("Resource_crhbu")])
+
+[sub_resource type="Resource" id="Resource_fk7si"]
+script = ExtResource("2_idghq")
+habilitat = "bola_foc"
+
+[sub_resource type="Resource" id="Resource_2xynx"]
+script = ExtResource("1_q1ldy")
+id = "recarrega_foc"
+nom = "Foc ràpid"
+icona = "⚡"
+text = "−%d %% de recàrrega de la bola de foc"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.12
+percent = true
+col = 2
+fila = 1
+requisits = Array[ExtResource("2_idghq")]([SubResource("Resource_fk7si")])
+
+[sub_resource type="Resource" id="Resource_6v58n"]
+script = ExtResource("2_idghq")
+habilitat = "dany_espasa"
+rang = 3
+
+[sub_resource type="Resource" id="Resource_ewi7g"]
+script = ExtResource("1_q1ldy")
+id = "escut"
+nom = "Escut arcà"
+icona = "💠"
+text = "Pròximament: un escut que atura els cops"
+textos = PackedStringArray()
+max = 0
+per_rang = 0.0
+col = 1
+fila = 2
+requisits = Array[ExtResource("2_idghq")]([SubResource("Resource_6v58n")])
+
+[sub_resource type="Resource" id="Resource_brbm7"]
+script = ExtResource("2_idghq")
+habilitat = "recarrega_foc"
+rang = 2
+
+[sub_resource type="Resource" id="Resource_ptgvs"]
+script = ExtResource("1_q1ldy")
+id = "dany_foc"
+nom = "Flama intensa"
+icona = "☄"
+text = "+%d %% de mal de la bola de foc"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.25
+percent = true
+col = 2
+fila = 2
+requisits = Array[ExtResource("2_idghq")]([SubResource("Resource_brbm7")])
+
+[resource]
+script = ExtResource("3_cgae2")
+id = "atac"
+nom = "Màgia d'atac"
+icona = "⚔"
+color = Color(1, 0.55, 0.45, 1)
+habilitats = Array[ExtResource("1_q1ldy")]([SubResource("Resource_cb311"), SubResource("Resource_v70e6"), SubResource("Resource_j0hxi"), SubResource("Resource_2xynx"), SubResource("Resource_ewi7g"), SubResource("Resource_ptgvs")])

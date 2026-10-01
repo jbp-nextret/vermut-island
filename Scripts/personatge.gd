@@ -75,6 +75,7 @@ var temps_darrera_magia: float = 0.0
 
 signal magia_no_disponible
 signal mana_insuficient
+signal magia_bloquejada
 
 # Mana: el gasten la bola de foc, l'estocada i llaurar. Es recupera sol.
 const MANA_BASE := 50.0
@@ -437,6 +438,9 @@ func _crear_trail():
 	tween.tween_callback(ghost.queue_free)
 
 func disparar_bola_foc(direccio := Vector3.ZERO):
+	if not Progressio.te("bola_foc"):
+		magia_bloquejada.emit()
+		return
 	if temps_darrera_magia < recarrega_magia():
 		magia_no_disponible.emit()
 		return
@@ -526,7 +530,7 @@ func _actualitzar_marcador_objectiu():
 		marcador_objectiu.top_level = true
 		marcador_objectiu.visible = false
 		add_child(marcador_objectiu)
-	enemic_apuntat_actual = enemic_apuntat() if GameState.pot_atacar() and SettingsManager.valor("boles_guiades") else null
+	enemic_apuntat_actual = enemic_apuntat() if GameState.pot_atacar() and SettingsManager.valor("boles_guiades") and Progressio.te("bola_foc") else null
 	marcador_objectiu.visible = enemic_apuntat_actual != null
 	if enemic_apuntat_actual:
 		var punt: Vector3 = enemic_apuntat_actual.sprite.global_position if "sprite" in enemic_apuntat_actual else enemic_apuntat_actual.global_position

@@ -59,7 +59,7 @@ func _ready():
 
 	descripcio = RichTextLabel.new()
 	descripcio.bbcode_enabled = true
-	descripcio.custom_minimum_size = Vector2(0, 108)
+	descripcio.custom_minimum_size = Vector2(0, 124)
 	descripcio.add_theme_font_size_override("normal_font_size", 16)
 	descripcio.add_theme_font_size_override("bold_font_size", 18)
 	var fons_desc := StyleBoxFlat.new()
@@ -71,7 +71,7 @@ func _ready():
 
 	Progressio.habilitats_canviades.connect(_refrescar)
 
-func _crear_arbre(arbre: Dictionary):
+func _crear_arbre(arbre: ArbreDef):
 	var lienzo := ArbreDibuix.new()
 	lienzo.name = "%s %s" % [arbre.icona, arbre.nom]
 	lienzo.arbre = arbre
@@ -91,7 +91,7 @@ func _crear_arbre(arbre: Dictionary):
 		lienzo.add_child(b)
 		botons[h.id] = b
 
-static func posicio_node(h: Dictionary) -> Vector2:
+static func posicio_node(h) -> Vector2:
 	return Vector2(20 + h.col * SEPARACIO.x, 14 + h.fila * SEPARACIO.y)
 
 # ─────────────── Obrir / tancar
@@ -161,11 +161,18 @@ func _mostrar(id: String):
 	var t := "[b]%s %s[/b]" % [h.icona, h.nom]
 	if h.max > 0:
 		t += "   (rang %d de %d)\n" % [rang, h.max]
-		t += "Ara: %s\n" % (ArbreHabilitats.text_efecte(h, rang) if rang > 0 else "—")
+		t += "Ara: %s\n" % (h.text_efecte(rang) if rang > 0 else (h.text if h.textos.size() > 0 else "—"))
 		if rang < h.max:
-			t += "Al rang %d: [color=#ffd97a]%s[/color]\n" % [rang + 1, ArbreHabilitats.text_efecte(h, rang + 1)]
+			t += "Al rang %d: [color=#ffd97a]%s[/color]\n" % [rang + 1, h.text_efecte(rang + 1)]
 	else:
 		t += "\n" + h.text + "\n"
+	# Requisits per desbloquejar-la, marcats si ja es compleixen
+	if rang == 0 and h.requisits.size() > 0:
+		var parts := []
+		for r in h.requisits:
+			if r:
+				parts.append(("[color=#88ee88]✓ %s[/color]" if r.complert() else "[color=#ee8877]✗ %s[/color]") % r.text())
+		t += "Requisits: " + "  ".join(parts) + "\n"
 	var bloqueig := Progressio.motiu_bloqueig(id)
 	t += "[color=#88ee88]Clica per millorar-la (1 punt)[/color]" if bloqueig.is_empty() else "[color=#aaaaaa]%s[/color]" % bloqueig
 	descripcio.text = t
@@ -186,14 +193,15 @@ func _clicar(id: String):
 
 ## Les línies entre habilitats (de la que fa falta cap a la que en depèn)
 class ArbreDibuix extends Control:
-	var arbre: Dictionary
+	var arbre: ArbreDef
 	var menu
 	func _draw():
 		for h in arbre.habilitats:
-			if not h.has("requisit"):
-				continue
-			var r := ArbreHabilitats.habilitat(h.requisit[0])
-			var des_de: Vector2 = menu.posicio_node(r) + MIDA_NODE / 2.0
-			var fins_a: Vector2 = menu.posicio_node(h) + MIDA_NODE / 2.0
-			var complert: bool = Progressio.rang(r.id) >= h.requisit[1]
-			draw_line(des_de, fins_a, Color(arbre.color, 0.9) if complert else Color(1, 1, 1, 0.18), 4.0 if complert else 2.0)
+			for req in h.habilitats_requerides():
+				var r := ArbreHabilitats.habilitat(req.habilitat)
+				if r == null:
+					continue
+				var des_de: Vector2 = menu.posicio_node(r) + MIDA_NODE / 2.0
+				var fins_a: Vector2 = menu.posicio_node(h) + MIDA_NODE / 2.0
+				var complert: bool = req.complert()
+				draw_line(des_de, fins_a, Color(arbre.color, 0.9) if complert else Color(1, 1, 1, 0.18), 4.0 if complert else 2.0)

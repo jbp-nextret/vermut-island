@@ -9,16 +9,19 @@ class_name Llaurador
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
 
-const ABAST := 7.0              # l'habilitat "Aixada llarga" l'amplia
+const ABAST := 7.0
 const COST_MANA_PER_CELLA := 2.0
 const RECARREGA := 0.5
-const MIDA_AREA_BASE := 4       # cel·les per costat (l'habilitat "Aixada llarga" en suma)
-
+## Cel·les per costat de l'àrea: 1 (sense l'habilitat no es pot arrossegar) i, amb
+## "Aixada llarga", 3, 5 o 7
 func mida_maxima_area() -> int:
-	return MIDA_AREA_BASE + roundi(Progressio.valor("abast_llaurar"))
+	return 1 + 2 * Progressio.rang("abast_llaurar")
+
+func pot_arrossegar() -> bool:
+	return mida_maxima_area() > 1
 
 func abast() -> float:
-	return ABAST + Progressio.valor("abast_llaurar")
+	return ABAST
 const COLOR_MAGIA := Color(0.95, 0.75, 0.4)
 const COLOR_VALID := Color(0.85, 0.6, 0.3)
 const COLOR_INVALID := Color(1.0, 0.3, 0.3)

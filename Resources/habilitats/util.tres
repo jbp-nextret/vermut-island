@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="ArbreDef" format=3]
+
+[ext_resource type="Script" path="res://Scripts/progressio/habilitat.gd" id="1_fj1g0"]
+[ext_resource type="Script" path="res://Scripts/progressio/requisit.gd" id="2_w22lv"]
+[ext_resource type="Script" path="res://Scripts/progressio/arbre_def.gd" id="3_xv43i"]
+
+[sub_resource type="Resource" id="Resource_hcddg"]
+script = ExtResource("1_fj1g0")
+id = "mana_max"
+nom = "Reserva de mana"
+icona = "🔷"
+text = "+%d de mana màxim"
+textos = PackedStringArray()
+max = 3
+per_rang = 20.0
+col = 1
+
+[sub_resource type="Resource" id="Resource_uiv6x"]
+script = ExtResource("2_w22lv")
+habilitat = "mana_max"
+
+[sub_resource type="Resource" id="Resource_smt6g"]
+script = ExtResource("1_fj1g0")
+id = "abast_regar"
+nom = "Pluja ampla"
+icona = "💧"
+text = "Sense aquesta habilitat, l'encanteri de regar només rega la cel·la on apuntes"
+textos = PackedStringArray("Rega una àrea de 3×3 cel·les", "Rega una àrea de radi 2 (gairebé 5×5)")
+max = 2
+fila = 1
+requisits = Array[ExtResource("2_w22lv")]([SubResource("Resource_uiv6x")])
+
+[sub_resource type="Resource" id="Resource_vrlrl"]
+script = ExtResource("2_w22lv")
+habilitat = "mana_max"
+
+[sub_resource type="Resource" id="Resource_3e4pc"]
+script = ExtResource("1_fj1g0")
+id = "regen_mana"
+nom = "Flux arcà"
+icona = "✴"
+text = "+%d %% de recuperació de mana"
+textos = PackedStringArray()
+max = 3
+per_rang = 0.3
+percent = true
+col = 1
+fila = 1
+requisits = Array[ExtResource("2_w22lv")]([SubResource("Resource_vrlrl")])
+
+[sub_resource type="Resource" id="Resource_mynbj"]
+script = ExtResource("2_w22lv")
+habilitat = "mana_max"
+
+[sub_resource type="Resource" id="Resource_fcnen"]
+script = ExtResource("1_fj1g0")
+id = "abast_llaurar"
+nom = "Aixada llarga"
+icona = "⛏"
+text = "Sense aquesta habilitat, només llaures la cel·la on apuntes"
+textos = PackedStringArray("Pots arrossegar per llaurar àrees de fins a 3×3", "Àrees de fins a 5×5", "Àrees de fins a 7×7")
+max = 3
+col = 2
+fila = 1
+requisits = Array[ExtResource("2_w22lv")]([SubResource("Resource_mynbj")])
+
+[sub_resource type="Resource" id="Resource_r7gii"]
+script = ExtResource("2_w22lv")
+habilitat = "abast_regar"
+
+[sub_resource type="Resource" id="Resource_smpbh"]
+script = ExtResource("1_fj1g0")
+id = "aigua_regar"
+nom = "Núvol generós"
+icona = "🌧"
+text = "+%d càrregues d'aigua per regar"
+textos = PackedStringArray()
+max = 3
+per_rang = 2.0
+fila = 2
+requisits = Array[ExtResource("2_w22lv")]([SubResource("Resource_r7gii")])
+
+[resource]
+script = ExtResource("3_xv43i")
+id = "util"
+nom = "Màgia útil"
+color = Color(0.55, 0.8, 1, 1)
+habilitats = Array[ExtResource("1_fj1g0")]([SubResource("Resource_hcddg"), SubResource("Resource_smt6g"), SubResource("Resource_3e4pc"), SubResource("Resource_fcnen"), SubResource("Resource_smpbh")])

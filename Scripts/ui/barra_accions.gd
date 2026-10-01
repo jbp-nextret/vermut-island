@@ -66,6 +66,9 @@ func _ready():
 
 	regador.avis.connect(_mostrar_avis)
 	jugador.mana_insuficient.connect(func(): _mostrar_avis("No tens prou mana"))
+	jugador.magia_bloquejada.connect(func():
+		_mostrar_avis("Encara no saps llançar boles de foc (Habilitats → Màgia d'atac)")
+		botons.foc.sacsejar())
 	Inventari.motxilla_plena.connect(func(_item): _mostrar_avis("La motxilla és plena (amplia-la a Mundà → Motxilla gran)"))
 	llaurador.avis.connect(_mostrar_avis)
 	if jugador.has_signal("magia_no_disponible"):
@@ -105,7 +108,7 @@ func _process(_delta):
 	var en_combat: bool = jugador.estat == 1   # Estat.COMBAT
 	_actualitzar("combat", en_combat, jugador.combat.progres_tall())
 	_actualitzar("estocada", true, jugador.combat.progres_estocada())
-	_actualitzar("foc", true, jugador.progres_magia())
+	_actualitzar("foc", Progressio.te("bola_foc"), jugador.progres_magia() if Progressio.te("bola_foc") else 1.0)
 	_actualitzar("plantar", plantador.actiu, 1.0)
 	_actualitzar("regar", regador.actiu, regador.progres())
 	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
@@ -124,9 +127,9 @@ func _process(_delta):
 	elif regador.actiu:
 		label_info.text = "Clic: regar · Clic dret: sortir"
 	elif llaurador.actiu:
-		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir"
+		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir" if llaurador.pot_arrossegar() else "Clic: llaurar · Clic dret: sortir"
 	elif en_combat and not plantador.actiu:
-		label_info.text = "Clic: tall · Clic dret: estocada · E: bola de foc"
+		label_info.text = "Clic: tall · Clic dret: estocada" + (" · E: bola de foc" if Progressio.te("bola_foc") else "")
 	else:
 		label_info.text = ""
 
