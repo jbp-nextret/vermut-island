@@ -33,6 +33,15 @@ const PECES_AUTOTILE := ["001", "002", "003", "004", "005", "006", "007", "008",
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
+	# La casa i els arbres es tornen semitransparents quan tapen el personatge
+	get_node("Casa").add_to_group("ocultables")
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			node.add_to_group("ocultables")
+	var ocultadors := TransparenciaOcultadors.new()
+	ocultadors.jugador = $Personatge
+	add_child(ocultadors)
+
 	# HUD: vida i rellotge a dalt, diners a sota dels cors, barra d'accions a baix al centre
 	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
 	add_child(HudJoc.new())
