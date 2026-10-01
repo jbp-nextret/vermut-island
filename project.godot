@@ -30,6 +30,7 @@ Meteorologia="*res://autoloads/meteorologia.gd"
 Progres="*res://autoloads/progres.gd"
 MenuPausa="*res://Scripts/ui/menu_pausa.gd"
 MenuInventari="*res://Scripts/ui/menu_inventari.gd"
+Diagnostic="*res://Scripts/ui/diagnostic.gd"
 
 [display]
 
@@ -181,6 +182,7 @@ interactuar={
 [physics]
 
 common/physics_ticks_per_second=120
+common/physics_jitter_fix=0.0
 3d/physics_engine="Jolt Physics"
 
 [rendering]
