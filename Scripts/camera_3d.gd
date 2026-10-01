@@ -30,7 +30,11 @@ const SEGUIMENT_VERTICAL := 8.0
 const SUAVITAT_GIR := 12.0
 const SHADER_POSTPROCESSAT := preload("res://Shaders/postprocessat.gdshader")
 
-var target_zoom = 10.0
+## Distància de la càmera al personatge. Com que és ortogràfica, no canvia el que es veu
+## (això ho fa `size`): només serveix perquè la càmera quedi sempre per sobre del terreny.
+## Si fos a prop (abans era 10), quedava dins dels turons, arbres o parets que hi havia
+## entre ella i el personatge, i es veia l'interior buit dels blocs.
+const DISTANCIA := 45.0
 var target_size = 9.5   # més lluny que abans (7): es veu més tros de món
 
 var pivot: Node3D
@@ -44,7 +48,9 @@ var girant_amb_ratoli := false
 var postprocessat: MeshInstance3D
 
 func _ready():
-	position.z = target_zoom
+	position.z = DISTANCIA
+	near = 0.5
+	far = DISTANCIA + 200.0
 	pivot = get_parent() as Node3D
 	jugador = pivot.get_parent() as Node3D if pivot else null
 	if pivot and jugador is CharacterBody3D:

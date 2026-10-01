@@ -159,6 +159,10 @@ func _actualitzar_boira():
 		return
 	var env := entorn.environment
 	var densitat := Meteorologia.boira * 0.08 + Meteorologia.pluja * 0.015
+	# Pensat per a una càmera a 10 unitats: si és més lluny, la boira s'aprima en proporció
+	var camera := get_viewport().get_camera_3d()
+	if camera:
+		densitat *= 10.0 / maxf(10.0, camera.position.z)
 	env.fog_enabled = densitat > 0.001
 	env.fog_density = densitat
 	env.fog_light_color = Color(0.72, 0.76, 0.82)

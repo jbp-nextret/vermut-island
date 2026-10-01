@@ -29,6 +29,8 @@ func _ready():
 	meteo = get_node_or_null("../WeatherManager")
 	if llum_principal:
 		llum_principal.shadow_enabled = true
+		# La càmera és a 45 unitats: les ombres han d'arribar més enllà
+		llum_principal.directional_shadow_max_distance = 110.0
 	# Llum càlida al voltant del jugador, que només s'encén de nit
 	jugador = get_tree().get_first_node_in_group("player")
 	if jugador:
