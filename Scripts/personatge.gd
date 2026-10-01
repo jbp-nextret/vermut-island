@@ -39,7 +39,7 @@ var shake_intensitat: float = 0.0   # (ja no es fa servir: ara és `trauma`)
 ## Sacseig de càmera: cada cop suma "trauma" (0..1). El sacseig és trauma², i es mou
 ## amb soroll suau (no salts aleatoris). Una mica de desplaçament i una mica de rotació.
 const SACSEIG_DESPLACAMENT := 0.35
-const SACSEIG_ROTACIO := 0.035
+const SACSEIG_ROTACIO := 0.0     # sense inclinar la imatge: l'horitzó sempre recte
 const SACSEIG_RECUPERACIO := 1.6    # trauma que es perd per segon
 var trauma := 0.0
 var soroll_sacseig := FastNoiseLite.new()
