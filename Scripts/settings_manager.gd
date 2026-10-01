@@ -45,6 +45,20 @@ func _ready():
 	_crear_busos()
 	carregar()
 	aplicar_tot()
+	ajustar_fisica_al_monitor()
+	get_window().size_changed.connect(ajustar_fisica_al_monitor)
+
+## Tants tics de física com Hz té el monitor (entre 60 i 240): així cada fotograma de la
+## pantalla correspon a un tic i el moviment és igual de suau a 60, 120 o 144 Hz.
+## (Tot el codi de moviment fa servir `delta`, així que el joc va a la mateixa velocitat.)
+func ajustar_fisica_al_monitor():
+	var hz := DisplayServer.screen_get_refresh_rate(get_window().current_screen) if get_window() else -1.0
+	# Alguns controladors no la saben (retornen -1 o NaN): llavors, 120
+	var tics := 120 if is_nan(hz) or hz < 1.0 else clampi(roundi(hz), 60, 240)
+	if Engine.physics_ticks_per_second != tics:
+		Engine.physics_ticks_per_second = tics
+		# Si en un fotograma no hi caben tots els tics (el joc va lent), que no s'acumulin
+		Engine.max_physics_steps_per_frame = maxi(8, tics / 15)
 
 func valor(clau: String):
 	return valors.get(clau, PER_DEFECTE.get(clau))
