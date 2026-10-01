@@ -33,9 +33,6 @@ const PECES_AUTOTILE := ["001", "002", "003", "004", "005", "006", "007", "008",
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
-	# La imatge del joc sempre s'amplia un nombre enter de vegades (sense píxels desiguals)
-	EscalatPixel.aplicar(get_viewport() as SubViewport, self)
-
 	# HUD: vida i rellotge a dalt, diners a sota dels cors, barra d'accions a baix al centre
 	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
 	add_child(HudJoc.new())

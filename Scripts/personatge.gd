@@ -39,7 +39,7 @@ var shake_intensitat: float = 0.0   # (ja no es fa servir: ara és `trauma`)
 ## Sacseig de càmera: cada cop suma "trauma" (0..1). El sacseig és trauma², i es mou
 ## amb soroll suau (no salts aleatoris). Una mica de desplaçament i una mica de rotació.
 const SACSEIG_DESPLACAMENT := 0.35
-const SACSEIG_ROTACIO := 0.0     # sense inclinar: en pixel art, girar la imatge fa escales
+const SACSEIG_ROTACIO := 0.035
 const SACSEIG_RECUPERACIO := 1.6    # trauma que es perd per segon
 var trauma := 0.0
 var soroll_sacseig := FastNoiseLite.new()
@@ -242,18 +242,14 @@ func camera_shake(intensitat: float = 0.15):
 	# Els valors d'abans (0,08-0,2) equivalen a un terç-mig de trauma
 	trauma = minf(1.0, trauma + intensitat * 2.5 * SettingsManager.valor("sacseig"))
 
-static func _a_pixel(valor: float, px: float) -> float:
-	return round(valor / px) * px if px > 0.0 else valor
-
 func _actualitzar_sacseig(delta: float):
 	if trauma <= 0.0:
 		return
 	trauma = maxf(0.0, trauma - SACSEIG_RECUPERACIO * delta)
 	var forca := trauma * trauma
 	var t := Time.get_ticks_msec() * 0.06
-	var px: float = camera.mida_pixel() if camera.has_method("mida_pixel") else 0.0
-	camera.h_offset = _a_pixel(SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(t, 0.0), px)
-	camera.v_offset = _a_pixel(SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(0.0, t), px)
+	camera.h_offset = SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(t, 0.0)
+	camera.v_offset = SACSEIG_DESPLACAMENT * forca * soroll_sacseig.get_noise_2d(0.0, t)
 	camera.rotation.z = SACSEIG_ROTACIO * forca * soroll_sacseig.get_noise_2d(t, 100.0)
 	if trauma <= 0.0:
 		camera.h_offset = 0.0

@@ -9,8 +9,8 @@ extends Camera3D
 ##  - postprocessat (vores blanques i color): F10 l'activa o el desactiva
 
 const ZOOM_SPEED = 0.5
-const MIN_ZOOM = 7.0
-const MAX_ZOOM = 14.0
+const MIN_ZOOM = 6.0
+const MAX_ZOOM = 11.0
 const PAS_GIR := 45.0
 const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial
 const SENSIBILITAT_GIR := 0.008
@@ -19,7 +19,7 @@ const SUAVITAT_GIR := 12.0
 const SHADER_POSTPROCESSAT := preload("res://Shaders/postprocessat.gdshader")
 
 var target_zoom = 10.0
-var target_size = 9.5   # més lluny que abans (7): es veu més tros de món
+var target_size = 7.0
 
 var pivot: Node3D
 var jugador: Node3D
@@ -28,8 +28,6 @@ var gir_inicial := 0.0
 var gir_objectiu := 0.0
 var girant_amb_ratoli := false
 var postprocessat: MeshInstance3D
-## On seria el pivot si no l'ajustéssim als píxels (el seguiment suau es fa sobre aquest)
-var posicio_suau := Vector3.ZERO
 
 func _ready():
 	position.z = target_zoom
@@ -41,38 +39,21 @@ func _ready():
 		gir_objectiu = gir_inicial
 		# El pivot deixa d'anar enganxat al jugador i el segueix amb suavitat
 		pivot.top_level = true
-		posicio_suau = jugador.global_position + offset_pivot
-		pivot.global_position = posicio_suau
+		pivot.global_position = jugador.global_position + offset_pivot
 	_crear_postprocessat()
 
 func _physics_process(delta: float) -> void:
 	size = lerp(size, target_size, delta * 8.0)
 	if pivot and jugador is CharacterBody3D:
 		var desti := jugador.global_position + offset_pivot
-		posicio_suau = posicio_suau.lerp(desti, 1.0 - exp(-SUAVITAT_SEGUIMENT * delta))
+		pivot.global_position = pivot.global_position.lerp(desti, 1.0 - exp(-SUAVITAT_SEGUIMENT * delta))
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
-		pivot.global_position = ajustar_a_pixels(posicio_suau)
-
-## Mida d'un píxel de la pantalla del joc, en unitats del món
-func mida_pixel() -> float:
-	return size / maxf(1.0, get_viewport().get_visible_rect().size.y)
-
-## Mou el punt (en el pla de la càmera) al píxel sencer més proper. Si la càmera queda
-## entre píxels, la imatge de baixa resolució "llisca" i fa pampallugues en moure's.
-func ajustar_a_pixels(punt: Vector3) -> Vector3:
-	var px := mida_pixel()
-	var base := global_basis.orthonormalized()
-	var local := base.inverse() * punt
-	local.x = round(local.x / px) * px
-	local.y = round(local.y / px) * px
-	return base * local
 
 ## Quan el jugador apareix en un altre lloc (porta, càrrega...), la càmera hi salta de cop
 func centrar_de_cop():
 	if pivot and jugador:
-		posicio_suau = jugador.global_position + offset_pivot
+		pivot.global_position = jugador.global_position + offset_pivot
 		pivot.rotation.y = gir_objectiu
-		pivot.global_position = ajustar_a_pixels(posicio_suau)
 
 func _input(event):
 	if not current:
