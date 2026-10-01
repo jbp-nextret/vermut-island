@@ -1,7 +1,8 @@
 extends Node
 ## Experiència, nivells i habilitats del jugador. Es desa a user://progressio.save.
 ##  - guanyar_xp("collir") cada vegada que el jugador fa alguna cosa
-##  - cada nivell dona un punt d'habilitat, que es gasta als arbres (menú K)
+##  - cada nivell dona PUNTS_PER_NIVELL punts d'habilitat (un per arbre), que es gasten
+##    als arbres (menú K)
 ##  - valor("dany_espasa") retorna l'efecte total d'una habilitat (rangs × per_rang)
 
 signal xp_guanyada(quantitat: int, motiu: String)
@@ -16,6 +17,11 @@ const XP := {
 	"plantar": 2, "regar": 1, "collir": 5, "llaurar": 1,
 	"servir": 4, "obrir_vermuteria": 10,
 }
+
+## Un punt per a cada arbre (màgia d'atac, màgia útil i mundà), però es poden gastar on es vulgui
+const PUNTS_PER_NIVELL := 3
+## Versió del fitxer desat (2: tres punts per nivell)
+const VERSIO := 2
 
 const VIDA_BASE := 100
 const ESPAIS_BASE := 8
@@ -43,7 +49,7 @@ func guanyar_xp(motiu: String, multiplicador: float = 1.0) -> void:
 	while xp >= xp_per_nivell(nivell):
 		xp -= xp_per_nivell(nivell)
 		nivell += 1
-		punts += 1
+		punts += PUNTS_PER_NIVELL
 		SalutJugador.curar(SalutJugador.vida_maxima)   # pujar de nivell et cura
 		nivell_pujat.emit(nivell)
 	_desar_aviat()
@@ -74,7 +80,7 @@ func motiu_bloqueig(id: String) -> String:
 			if r and not r.complert():
 				return "Cal: " + r.text()
 	if punts <= 0:
-		return "No tens punts (en guanyes un per nivell)"
+		return "No tens punts (en guanyes %d per nivell)" % PUNTS_PER_NIVELL
 	return ""
 
 func millorar(id: String) -> bool:
@@ -110,7 +116,7 @@ func guardar():
 	_desat_pendent = false
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"nivell": nivell, "xp": xp, "punts": punts, "habilitats": habilitats}))
+		f.store_string(JSON.stringify({"versio": VERSIO, "nivell": nivell, "xp": xp, "punts": punts, "habilitats": habilitats}))
 
 func carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -122,6 +128,9 @@ func carregar():
 	nivell = int(d.get("nivell", 1))
 	xp = int(d.get("xp", 0))
 	punts = int(d.get("punts", 0))
+	# Partides d'abans, quan només es guanyava un punt per nivell: els que falten
+	if int(d.get("versio", 1)) < 2:
+		punts += (nivell - 1) * (PUNTS_PER_NIVELL - 1)
 	habilitats = {}
 	var h = d.get("habilitats", {})
 	if h is Dictionary:
