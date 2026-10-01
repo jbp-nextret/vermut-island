@@ -20,6 +20,7 @@
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
 [ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
 [ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
+[ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
 
@@ -285,3 +286,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049
 
 [node name="Casa" parent="." unique_id=523738415 instance=ExtResource("18_rwt1y")]
 transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)
+
+[node name="Roca1" parent="." instance=ExtResource("99_roca")]
+transform = Transform3D(0.9397, 0, -0.3420, 0, 1.0000, 0, 0.3420, 0, 0.9397, 3.5, 1.0, -10.5)
+
+[node name="Roca2" parent="." instance=ExtResource("99_roca")]
+transform = Transform3D(0.2200, 0, -0.8210, 0, 0.8500, 0, 0.8210, 0, 0.2200, -3.5, 1.0, -7.5)
+
+[node name="Roca3" parent="." instance=ExtResource("99_roca")]
+transform = Transform3D(-0.8810, 0, -0.7392, 0, 1.1500, 0, 0.7392, 0, -0.8810, 5.5, 1.0, -14.5)

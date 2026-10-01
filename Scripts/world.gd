@@ -11,6 +11,7 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 @onready var roda_seleccio = $RodaSeleccio
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
+var recolector: Recolector
 var regador: Regador
 var llaurador: Llaurador
 
@@ -38,6 +39,18 @@ func _ready():
 	for node in get_children():
 		if node is Sprite3D and node.name.begins_with("Tree"):
 			node.add_to_group("ocultables")
+	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			_afegir_recurs(node, RecursNatural.Tipus.ARBRE, 3, "fusta", 2, 4, 3, "talar")
+		elif node is Sprite3D and node.name.begins_with("Grass"):
+			_afegir_recurs(node, RecursNatural.Tipus.HERBA, 1, "fibra", 1, 2, 1, "herba")
+	recolector = Recolector.new()
+	recolector.name = "Recolector"
+	recolector.mon = self
+	recolector.jugador = $Personatge
+	add_child(recolector)
+
 	var ocultadors := TransparenciaOcultadors.new()
 	ocultadors.jugador = $Personatge
 	add_child(ocultadors)
@@ -66,6 +79,7 @@ func _ready():
 	for eina in [plantador, regador, llaurador]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
+	recolector.eines_actives = [plantador, regador, llaurador]
 	var barra := BarraAccions.new()
 	barra.jugador = $Personatge
 	barra.plantador = plantador
@@ -192,6 +206,18 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
+func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min: int, q_max: int, dies: int, xp: String):
+	var r := RecursNatural.new()
+	r.name = "Recurs"
+	r.tipus = tipus
+	r.cops = cops
+	r.objecte = objecte
+	r.quantitat_min = q_min
+	r.quantitat_max = q_max
+	r.dies_per_tornar = dies
+	r.motiu_xp = xp
+	node.add_child(r)
+
 ## En entrar en un mode d'eina, surt dels altres
 func _nomes_una_eina(eina: Node) -> void:
 	for altra in [plantador, regador, llaurador]:
@@ -278,6 +304,7 @@ func guardar_mundo():
 	
 	var mundo_data = {
 		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
+		"recursos": RecursNatural.estats(self),
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -316,6 +343,7 @@ func carregar_mundo():
 	
 	# Carrega cultius
 	# Terra que el jugador havia llaurat
+	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
 	for c in mundo_data.get("llaurades", []):
 		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])

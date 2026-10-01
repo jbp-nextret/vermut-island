@@ -15,6 +15,7 @@ const FITXER := "user://progressio.save"
 const XP := {
 	"enemic_petit": 8, "enemic": 15, "onada": 30,
 	"plantar": 2, "regar": 1, "collir": 5, "llaurar": 1,
+	"talar": 3, "picar": 3, "herba": 1,
 	"servir": 4, "obrir_vermuteria": 10,
 }
 
