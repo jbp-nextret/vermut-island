@@ -39,11 +39,17 @@ var direccio_fuga := Vector3.ZERO
 
 @onready var sprite = $Sprite
 
+# Dibuix suau entre tics de física (vegeu personatge.gd)
+var pos_fisica_anterior := Vector3.ZERO
+var offset_sprite := Vector3.ZERO
+
 # Recursos de les partícules de mort, compartits per tots els enemics
 static var _particules_mat: ParticleProcessMaterial
 static var _particules_quad: QuadMesh
 
 func _ready():
+	offset_sprite = sprite.position
+	pos_fisica_anterior = global_position
 	vida_actual = vida_maxima
 	add_to_group("enemics")
 	add_to_group("enemics_voladors" if es_volador else "enemics_terrestres")
@@ -66,7 +72,14 @@ func _ready():
 	if jugador == null:
 		jugador = get_parent().get_node_or_null("Personatge")
 
+func _process(_delta):
+	if pos_fisica_anterior.distance_to(global_position) > 2.0:
+		pos_fisica_anterior = global_position   # acaba d'aparèixer: sense interpolar
+	var fraccio := Engine.get_physics_interpolation_fraction()
+	sprite.position = offset_sprite + (pos_fisica_anterior.lerp(global_position, fraccio) - global_position)
+
 func _physics_process(delta):
+	pos_fisica_anterior = global_position
 	if temps_feedback > 0:
 		temps_feedback -= delta
 		if temps_feedback <= 0:

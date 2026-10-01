@@ -52,10 +52,13 @@ func _ready():
 		pivot.global_position = jugador.global_position + offset_pivot
 	_crear_postprocessat()
 
-func _physics_process(delta: float) -> void:
+## A cada fotograma (no a cada tic de física): en monitors de més de 60 Hz, si la càmera
+## només es mogués a 60 Hz faria batzegades
+func _process(delta: float) -> void:
 	size = lerp(size, target_size, delta * 8.0)
 	if pivot and jugador is CharacterBody3D:
-		var desti := jugador.global_position + offset_pivot
+		var posicio_jugador: Vector3 = jugador.posicio_visual if "posicio_visual" in jugador else jugador.global_position
+		var desti := posicio_jugador + offset_pivot
 		pivot.global_position = pivot.global_position.lerp(desti, 1.0 - exp(-SUAVITAT_SEGUIMENT * delta))
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 		pivot.rotation.x = lerp_angle(pivot.rotation.x, inclinacio_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))

@@ -30,6 +30,12 @@ var estat: Estat = Estat.NORMAL
 var atacant: bool = false
 
 @onready var skeleton: Node3D = $Skeleton
+
+# Moviment suau en monitors de més de 60 Hz: la física va a 60 tics per segon, però el
+# sprite es dibuixa en un punt intermedi entre l'últim tic i l'actual (interpolació).
+var pos_fisica_anterior := Vector3.ZERO
+var posicio_visual := Vector3.ZERO
+var offset_esquelet := Vector3.ZERO
 @onready var pivot_espasa: Node3D = $Skeleton/PivotEspasa
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 var te_espasa: bool = true
@@ -80,6 +86,9 @@ const SEPARACIO_CAPES := 0.002
 var posicions_capes := {}
 
 func _ready():
+	offset_esquelet = skeleton.position
+	pos_fisica_anterior = global_position
+	posicio_visual = global_position
 	add_to_group("player")
 	# Interaccions (barrica, clients...) i objecte a la mà
 	var interaccio := InteraccioJugador.new()
@@ -99,6 +108,7 @@ func _ready():
 	call_deferred("_reset_interpolacio")
 	
 func _physics_process(delta):
+	pos_fisica_anterior = global_position
 	temps_darrera_magia += delta
 	if temps_cua > 0.0:
 		temps_cua -= delta
@@ -159,6 +169,7 @@ func _physics_process(delta):
 		get_tree().reload_current_scene()
 	
 func _process(delta):
+	_interpolar_visual()
 	_separar_capes()
 	for sprite in sprites:
 		if sprite == skin:
@@ -453,7 +464,17 @@ func _direccio_cap_al_cursor() -> Vector3:
 	direccio.y = 0
 	return direccio.normalized()
 
+## On es dibuixa el personatge: entre la posició del tic de física anterior i l'actual
+func _interpolar_visual():
+	if pos_fisica_anterior.distance_to(global_position) > 2.0:
+		pos_fisica_anterior = global_position   # ha aparegut en un altre lloc: sense interpolar
+	var fraccio := Engine.get_physics_interpolation_fraction()
+	posicio_visual = pos_fisica_anterior.lerp(global_position, fraccio)
+	skeleton.position = offset_esquelet + (posicio_visual - global_position)
+
 func _reset_interpolacio():
+	pos_fisica_anterior = global_position
+	posicio_visual = global_position
 	reset_physics_interpolation()
 	$CameraPivot.reset_physics_interpolation()
 	$CameraPivot/Camera3D.reset_physics_interpolation()
