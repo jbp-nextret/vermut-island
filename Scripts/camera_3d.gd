@@ -16,7 +16,9 @@ const MIN_ZOOM = 7.0
 const MAX_ZOOM = 14.0
 const PAS_GIR := 45.0
 const PAS_INCLINACIO := 10.0
-const INCLINACIO_MINIMA := -75.0   # gairebé des de dalt
+## Com de des de dalt pot arribar a mirar (la vista inicial és -24°). Més avall de -40°
+## ja comença a semblar una vista zenital i es perd la sensació de volum.
+const INCLINACIO_MINIMA := -40.0
 const INCLINACIO_MAXIMA := -12.0   # gairebé de costat
 const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial
 const SENSIBILITAT_GIR := 0.008
