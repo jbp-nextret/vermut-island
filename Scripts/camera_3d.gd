@@ -51,6 +51,7 @@ func _ready():
 	position.z = DISTANCIA
 	near = 0.5
 	far = DISTANCIA + 200.0
+	_ajustar_desenfocament()
 	pivot = get_parent() as Node3D
 	jugador = pivot.get_parent() as Node3D if pivot else null
 	if pivot and jugador is CharacterBody3D:
@@ -63,6 +64,23 @@ func _ready():
 		pivot.top_level = true
 		pivot.global_position = jugador.global_position + offset_pivot
 	_crear_postprocessat()
+
+## El desenfocament de profunditat (CameraAttributes) es va configurar amb la càmera a 10
+## unitats: es desenfocava el que quedava a més de 20 (és a dir, 10 per darrere del
+## personatge). Amb la càmera a DISTANCIA, ho desplacem igual perquè tot l'escenari
+## proper al personatge continuï enfocat.
+const DISTANCIA_ORIGINAL := 10.0
+
+func _ajustar_desenfocament():
+	var atributs := attributes as CameraAttributesPractical
+	if atributs == null:
+		return
+	atributs = atributs.duplicate()   # no modificar el recurs compartit de l'escena
+	var desplacament := DISTANCIA - DISTANCIA_ORIGINAL
+	if atributs.dof_blur_far_enabled:
+		atributs.dof_blur_far_distance += desplacament
+	# El de prop només afectava el que tocava la càmera: ara ja no hi ha res tan a prop
+	attributes = atributs
 
 ## A cada fotograma (no a cada tic de física): en monitors de més de 60 Hz, si la càmera
 ## només es mogués a 60 Hz faria batzegades
