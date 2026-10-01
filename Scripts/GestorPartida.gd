@@ -22,6 +22,7 @@ func guardar_mundo() -> void:
 	Inventari.guardar()   # l'inventari i els diners es desen sempre, siguis on siguis
 	GestorTemps.guardar()
 	Progres.guardar()
+	Progressio.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	

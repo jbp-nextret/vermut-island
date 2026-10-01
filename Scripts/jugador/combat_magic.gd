@@ -210,6 +210,8 @@ func _colpejar_con(direccio: Vector3, abast: float, mig_angle: float, dany: int)
 		_colpejar(enemic, dany)
 
 func _colpejar(enemic: Node3D, dany: int):
+	# L'habilitat "Fil espectral" augmenta el mal de l'espasa
+	dany = roundi(dany * (1.0 + Progressio.valor("dany_espasa")))
 	enemic.prendre_dany(dany, jugador.global_position)
 	cop_encertat.emit(enemic, dany)
 

@@ -74,6 +74,20 @@ var temps_darrera_magia: float = 0.0
 @export var cercle_durada_visible: float = 1.5
 
 signal magia_no_disponible
+signal mana_insuficient
+
+# Mana: el gasten la bola de foc, l'estocada i llaurar. Es recupera sol.
+const MANA_BASE := 50.0
+const REGEN_MANA_BASE := 5.0       # per segon
+const COST_BOLA_FOC := 12.0
+const COST_ESTOCADA := 8.0
+var mana := MANA_BASE
+
+# Regeneració de vida (habilitat "Recuperació")
+const INTERVAL_REGENERACIO := 3.0
+const ESPERA_REGENERACIO := 5.0     # segons sense rebre mal abans de començar
+var temps_sense_mal := 0.0
+var temps_regeneracio := 0.0
 
 # Atacs màgics a curta distància (substitueixen l'espasa)
 var combat: CombatMagic
@@ -159,7 +173,7 @@ func _physics_process(delta):
 	if direction.length() > 0:
 		direction = direction.normalized()
 		direction = direction.rotated(Vector3.UP, angle_camera())
-	var current_speed = SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED
+	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat"))
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
 	move_and_slide()
@@ -170,6 +184,7 @@ func _physics_process(delta):
 	
 func _process(delta):
 	_interpolar_visual()
+	_recuperar(delta)
 	_actualitzar_marcador_objectiu()
 	_separar_capes()
 	for sprite in sprites:
@@ -292,7 +307,12 @@ func _unhandled_input(event):
 func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 	if direccio == Vector3.ZERO:
 		direccio = _direccio_cap_al_cursor()
+	if tipus == "estocada" and mana < COST_ESTOCADA:
+		mana_insuficient.emit()
+		return
 	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.estocada(direccio)
+	if fet and tipus == "estocada":
+		mana -= COST_ESTOCADA
 	if not fet:
 		if atac_en_cua != tipus:
 			atac_en_cua = tipus
@@ -305,7 +325,7 @@ func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 	if tipus == "estocada":
 		dash_actiu = true
 		dash_direccio = direccio
-		dash_temps_restant = dash_estocada_durada
+		dash_temps_restant = dash_estocada_durada * (1.0 + Progressio.valor("abast_dash"))
 		# Invulnerable mentre dura el dash (per travessar enemics sense rebre)
 		SalutJugador.invulnerable_fins = maxf(SalutJugador.invulnerable_fins, Time.get_ticks_msec() / 1000.0 + dash_estocada_durada + 0.1)
 	atacant = true
@@ -346,6 +366,7 @@ func _hitstop(durada: float):
 ## Quan el jugador rep mal: parpelleig vermell i sacseig
 func _on_vida_canviat(actual, _maxima):
 	if actual < vida_anterior:
+		temps_sense_mal = 0.0
 		camera_shake(0.2)
 		for sprite in sprites:
 			if sprite:
@@ -356,8 +377,33 @@ func _on_vida_canviat(actual, _maxima):
 				t.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.3)
 	vida_anterior = actual
 
+## Recàrrega de la bola de foc (l'habilitat "Foc ràpid" l'escurça)
+func recarrega_magia() -> float:
+	return cooldown_magia * (1.0 - Progressio.valor("recarrega_foc"))
+
 func progres_magia() -> float:
-	return clampf(temps_darrera_magia / cooldown_magia, 0.0, 1.0)
+	return clampf(temps_darrera_magia / recarrega_magia(), 0.0, 1.0)
+
+func mana_max() -> float:
+	return MANA_BASE + Progressio.valor("mana_max")
+
+func gastar_mana(quantitat: float) -> bool:
+	if mana < quantitat:
+		mana_insuficient.emit()
+		return false
+	mana -= quantitat
+	return true
+
+## Mana i vida que es recuperen amb el temps
+func _recuperar(delta: float):
+	mana = minf(mana_max(), mana + REGEN_MANA_BASE * (1.0 + Progressio.valor("regen_mana")) * delta)
+	temps_sense_mal += delta
+	var regen := roundi(Progressio.valor("regeneracio"))
+	if regen > 0 and temps_sense_mal >= ESPERA_REGENERACIO and SalutJugador.vida_actual < SalutJugador.vida_maxima:
+		temps_regeneracio += delta
+		if temps_regeneracio >= INTERVAL_REGENERACIO:
+			temps_regeneracio = 0.0
+			SalutJugador.curar(regen)
 
 func toggle_mode_combat():
 	estat = Estat.COMBAT if estat == Estat.NORMAL else Estat.NORMAL
@@ -391,8 +437,10 @@ func _crear_trail():
 	tween.tween_callback(ghost.queue_free)
 
 func disparar_bola_foc(direccio := Vector3.ZERO):
-	if temps_darrera_magia < cooldown_magia:
+	if temps_darrera_magia < recarrega_magia():
 		magia_no_disponible.emit()
+		return
+	if not gastar_mana(COST_BOLA_FOC):
 		return
 	temps_darrera_magia = 0.0
 
@@ -401,6 +449,7 @@ func disparar_bola_foc(direccio := Vector3.ZERO):
 	var bola = bola_foc_scene.instantiate()
 	get_tree().current_scene.add_child(bola)
 	bola.global_position = global_position + Vector3(0, 1.0, 0)
+	bola.dany = roundi(bola.dany * (1.0 + Progressio.valor("dany_foc")))
 	bola.direccio = direccio if direccio != Vector3.ZERO else _direccio_cap_al_cursor()
 	# Si el ratolí és sobre un enemic, la bola el persegueix
 	if direccio == Vector3.ZERO and SettingsManager.valor("boles_guiades"):

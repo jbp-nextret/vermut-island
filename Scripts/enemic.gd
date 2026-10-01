@@ -203,6 +203,7 @@ func restaurar_aparenca():
 	scale = escala_original
 
 func morir():
+	Progressio.guanyar_xp("enemic" if vida_maxima >= 40 else "enemic_petit")
 	GestorOnades.enemic_mort(self)
 	mostrar_particules_mort()
 	queue_free()

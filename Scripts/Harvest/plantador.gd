@@ -217,12 +217,22 @@ func sortir():
 	mode_canviat.emit(false)
 
 func seleccionar(nou_index: int):
-	index = clampi(nou_index, 0, opcions.size() - 1)
+	nou_index = clampi(nou_index, 0, opcions.size() - 1)
+	if not CatalegCultius.desbloquejat(nou_index):
+		avis.emit(CatalegCultius.text_bloqueig(nou_index))
+		return
+	index = nou_index
 	seleccio_canviada.emit(index)
 
 ## Passa al cultiu anterior (-1) o següent (+1), fent la volta
 func canviar_amb_tecla(direccio: int):
-	seleccionar(posmod(index + direccio, opcions.size()))
+	# Se salta els cultius que encara no s'han desbloquejat
+	var nou := index
+	for i in opcions.size():
+		nou = posmod(nou + direccio, opcions.size())
+		if CatalegCultius.desbloquejat(nou):
+			break
+	seleccionar(nou)
 	canviat_amb_tecla.emit(index, direccio)
 	# La vista prèvia fa un bot i el nom apareix un moment sobre el cursor
 	var o := opcio()

@@ -10,7 +10,11 @@ class_name Regador
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
 
-const RADI := 1.5             # rega la cel·la i les 8 del voltant
+const RADI := 1.5             # rega la cel·la i les 8 del voltant (l'habilitat "Pluja ampla" l'amplia)
+## Càrregues d'aigua: cada encanteri en gasta una i es recuperen soles (o de cop si plou).
+## L'habilitat "Núvol generós" en dona més.
+const CARREGUES_BASE := 4.0
+const SEGONS_PER_CARREGA := 8.0
 const ABAST := 7.0            # distància màxima des del jugador
 const RECARREGA := 0.6
 const COLOR_AIGUA := Color(0.45, 0.75, 1.0)
@@ -22,6 +26,14 @@ var jugador: Node3D
 var actiu := false
 var cella: Dictionary = {}
 var temps_des_del_rec := 99.0
+var carregues := CARREGUES_BASE
+var radi_actual := RADI
+
+func radi() -> float:
+	return RADI * (1.0 + Progressio.valor("abast_regar"))
+
+func carregues_max() -> float:
+	return CARREGUES_BASE + Progressio.valor("aigua_regar")
 var anell: AnellAbast
 
 static var _material_cercle: StandardMaterial3D
@@ -40,8 +52,9 @@ func _ready():
 	add_child(anell)
 	anell.configurar(RADI, COLOR_AIGUA)
 
+## L'anell del botó: quantes càrregues d'aigua queden
 func progres() -> float:
-	return clampf(temps_des_del_rec / RECARREGA, 0.0, 1.0)
+	return clampf(carregues / carregues_max(), 0.0, 1.0)
 
 # ─────────────── Entrada
 
@@ -86,6 +99,12 @@ func sortir():
 
 func _process(delta):
 	temps_des_del_rec += delta
+	# L'aigua es recupera sola; si plou, s'omple de cop
+	var maxim := carregues_max()
+	carregues = maxim if Meteorologia.pluja > 0.3 else minf(maxim, carregues + delta / SEGONS_PER_CARREGA)
+	if not is_equal_approx(radi_actual, radi()):
+		radi_actual = radi()
+		anell.configurar(radi_actual, COLOR_AIGUA)
 	if not actiu:
 		return
 	if not GameState.pot_atacar():
@@ -116,6 +135,10 @@ func _intentar_regar():
 		return
 	if temps_des_del_rec < RECARREGA:
 		return
+	if carregues < 1.0:
+		avis.emit("No queda aigua (es recupera sola, o amb la pluja)")
+		return
+	carregues -= 1.0
 	temps_des_del_rec = 0.0
 	var centre: Vector3 = cella.superficie
 
@@ -136,9 +159,10 @@ func _mullar(centre: Vector3):
 	for c in get_tree().get_nodes_in_group("cultius"):
 		if not is_instance_valid(c):
 			continue
-		if Vector2(c.global_position.x - centre.x, c.global_position.z - centre.z).length() <= RADI:
+		if Vector2(c.global_position.x - centre.x, c.global_position.z - centre.z).length() <= radi():
 			if c.necessita_aigua():
 				regats += 1
+				Progressio.guanyar_xp("regar")
 			c.regar()
 	if regats > 0:
 		GestorPartida.call_deferred("guardar_mundo")
@@ -160,7 +184,7 @@ func _cercle_magic(centre: Vector3):
 	cercle.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mon.add_child(cercle)
 	cercle.global_position = CombatMagic.terra_sota(jugador, centre) + Vector3.UP * 0.02
-	var mida_final: float = RADI * 2.0 / (TEXTURA_CERCLE.get_width() * cercle.pixel_size)
+	var mida_final: float = radi() * 2.0 / (TEXTURA_CERCLE.get_width() * cercle.pixel_size)
 	cercle.scale = Vector3.ONE * mida_final * 0.3
 	var t := cercle.create_tween().set_parallel(true)
 	t.tween_property(cercle, "scale", Vector3.ONE * mida_final, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -190,6 +214,7 @@ func _pluja(centre: Vector3):
 		mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 		mat.vertex_color_use_as_albedo = true
 		_malla_gota.material = mat
+	_material_gotes.emission_sphere_radius = radi()
 	var gotes := GPUParticles3D.new()
 	gotes.process_material = _material_gotes
 	gotes.draw_pass_1 = _malla_gota

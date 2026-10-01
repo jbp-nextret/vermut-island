@@ -9,9 +9,16 @@ class_name Llaurador
 signal mode_canviat(actiu: bool)
 signal avis(text: String)
 
-const ABAST := 7.0
+const ABAST := 7.0              # l'habilitat "Aixada llarga" l'amplia
+const COST_MANA_PER_CELLA := 2.0
 const RECARREGA := 0.5
-const MIDA_MAXIMA_AREA := 8
+const MIDA_AREA_BASE := 4       # cel·les per costat (l'habilitat "Aixada llarga" en suma)
+
+func mida_maxima_area() -> int:
+	return MIDA_AREA_BASE + roundi(Progressio.valor("abast_llaurar"))
+
+func abast() -> float:
+	return ABAST + Progressio.valor("abast_llaurar")
 const COLOR_MAGIA := Color(0.95, 0.75, 0.4)
 const COLOR_VALID := Color(0.85, 0.6, 0.3)
 const COLOR_INVALID := Color(1.0, 0.3, 0.3)
@@ -135,7 +142,7 @@ func _info(c: Vector3i) -> Dictionary:
 	elif not mon.es_herba(nom):
 		info.valida = false
 		info.motiu = "Només es pot llaurar l'herba"
-	elif Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() > ABAST:
+	elif Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() > abast():
 		info.valida = false
 		info.motiu = "Massa lluny"
 	elif _hi_ha_obstacle(superficie):
@@ -159,9 +166,9 @@ func _hi_ha_obstacle(superficie: Vector3) -> bool:
 
 func _area(a: Vector3i, b: Vector3i) -> Array:
 	var x0 := mini(a.x, b.x)
-	var x1 := mini(maxi(a.x, b.x), x0 + MIDA_MAXIMA_AREA - 1)
+	var x1 := mini(maxi(a.x, b.x), x0 + mida_maxima_area() - 1)
 	var z0 := mini(a.z, b.z)
-	var z1 := mini(maxi(a.z, b.z), z0 + MIDA_MAXIMA_AREA - 1)
+	var z1 := mini(maxi(a.z, b.z), z0 + mida_maxima_area() - 1)
 	var resultat := []
 	for x in range(x0, x1 + 1):
 		for z in range(z0, z1 + 1):
@@ -212,6 +219,11 @@ func _llaurar_seleccio():
 	if temps_des_de_llaurar < RECARREGA:
 		_cancel_lar()
 		return
+	# Cada cel·la costa una mica de mana
+	if jugador.has_method("gastar_mana") and not jugador.gastar_mana(COST_MANA_PER_CELLA * valides.size()):
+		avis.emit("No tens prou mana")
+		_cancel_lar()
+		return
 	temps_des_de_llaurar = 0.0
 
 	# L'aixada cau al centre de l'àrea
@@ -236,6 +248,7 @@ func _llaurar_seleccio():
 
 func _convertir(info: Dictionary):
 	mon.llaurar_cella(info.cella)
+	Progressio.guanyar_xp("llaurar")
 	_terrossos(info.superficie)
 
 ## Aixada espectral: s'alça, cau de cop i s'esvaeix. Retorna quant triga a tocar a terra.

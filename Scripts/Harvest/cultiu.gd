@@ -227,6 +227,9 @@ func passar_dia():
 	if not estava_regat:
 		return   # sense aigua no creix
 	dies_passats += 1
+	# Habilitat "Mà verda": de vegades creix el doble
+	if randf() < Progressio.valor("ma_verda"):
+		dies_passats += 1
 	if dies_passats >= dies_per_fase:
 		dies_passats = 0
 		if estat_actual < Estat.MADUR:
@@ -419,6 +422,7 @@ func text_interaccio(_jugador) -> String:
 	return "Collir raïm"
 
 func interactuar(_jugador) -> void:
+	Progressio.guanyar_xp("collir")
 	var raim := randi_range(raim_min, raim_max)
 	Inventari.afegir("raim", raim)
 	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.2, "+%d 🍇" % raim, Color(0.75, 0.55, 1.0))

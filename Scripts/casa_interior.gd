@@ -102,7 +102,7 @@ func _ready():
 	hud_joc.mostrar_rellotge = false
 	add_child(hud_joc)
 	var hud_diners := HudDiners.new()
-	hud_diners.marge_superior = 30
+	hud_diners.marge_superior = 50   # a sota dels cors, el mana i l'experiència
 	add_child(hud_diners)
 
 	panel_ui.visible = false

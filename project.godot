@@ -28,8 +28,10 @@ GameState="*res://autoloads/game_state.gd"
 GestorOnades="*res://autoloads/gestor_onades.gd"
 Meteorologia="*res://autoloads/meteorologia.gd"
 Progres="*res://autoloads/progres.gd"
+Progressio="*res://autoloads/progressio.gd"
 MenuPausa="*res://Scripts/ui/menu_pausa.gd"
 MenuInventari="*res://Scripts/ui/menu_inventari.gd"
+MenuHabilitats="*res://Scripts/ui/menu_habilitats.gd"
 Diagnostic="*res://Scripts/ui/diagnostic.gd"
 
 [display]
@@ -155,6 +157,11 @@ inclinar_camera_avall={
 inclinar_camera_amunt={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":86,"key_label":0,"unicode":118,"location":0,"echo":false,"script":null)
+]
+}
+habilitats={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":75,"key_label":0,"unicode":107,"location":0,"echo":false,"script":null)
 ]
 }
 llaurar={

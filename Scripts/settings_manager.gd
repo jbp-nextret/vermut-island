@@ -34,7 +34,7 @@ const ACCIONS_REMAPEJABLES := [
 	["plantar", "Plantar"], ["regar", "Regar"], ["llaurar", "Llaurar"],
 	["girar_camera_esquerra", "Girar càmera ←"], ["girar_camera_dreta", "Girar càmera →"],
 	["inclinar_camera_avall", "Càmera més de costat"], ["inclinar_camera_amunt", "Càmera més des de dalt"],
-	["decorar", "Construir (a casa)"], ["inventari", "Motxilla"],
+	["decorar", "Construir (a casa)"], ["inventari", "Motxilla"], ["habilitats", "Habilitats"],
 ]
 
 const BUSOS := {"volum_general": "Master", "volum_musica": "Music", "volum_efectes": "SFX"}

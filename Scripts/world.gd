@@ -46,7 +46,7 @@ func _ready():
 	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
 	add_child(HudJoc.new())
 	var hud_diners := HudDiners.new()
-	hud_diners.marge_superior = 30
+	hud_diners.marge_superior = 50   # a sota dels cors, el mana i l'experiència
 	add_child(hud_diners)
 	add_child(HudOnades.new())
 
@@ -162,6 +162,12 @@ func aplicar_spawn_player(posicio: Vector3):
 
 ## Planta un cultiu a `posicio` (ja validada pel Plantador). Gasta una llavor.
 func plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
+	var plantat := _plantar_cultiu(escena, posicio)
+	if plantat:
+		Progressio.guanyar_xp("plantar")
+	return plantat
+
+func _plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
 	if not Inventari.treure("llavor_raim"):
 		return false
 	var cultiu = escena.instantiate()
