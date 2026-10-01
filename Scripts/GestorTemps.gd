@@ -15,6 +15,26 @@ var hora_actual: float = 6.0  # comença a les 6 del matí (0-24)
 # Pausa manual (menús, cinemàtiques...). Dins de casa el temps també s'atura.
 var pausat := false
 
+const FITXER := "user://temps.save"
+
+func _ready():
+	carregar()
+
+## El dia i l'hora es desen amb la partida (GestorPartida)
+func guardar():
+	var f := FileAccess.open(FITXER, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"dia": dia_actual, "hora": hora_actual}))
+
+func carregar():
+	var f := FileAccess.open(FITXER, FileAccess.READ)
+	if f == null:
+		return
+	var dades = JSON.parse_string(f.get_as_text())
+	if dades is Dictionary:
+		dia_actual = int(dades.get("dia", dia_actual))
+		hora_actual = float(dades.get("hora", hora_actual))
+
 func _process(delta):
 	if pausat or GameState.dins_casa:
 		return

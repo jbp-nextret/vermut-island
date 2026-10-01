@@ -5,6 +5,8 @@ signal diners_canviats(diners: int)
 signal items_canviats
 
 const FITXER := "user://inventari.save"
+const VERSIO := 2
+const RAIM_INICIAL := 10
 
 var items = {}
 var diners: int = 0
@@ -13,8 +15,9 @@ var _desat_pendent := false
 
 func _ready():
 	if not carregar():
-		# Partida nova: per provar, comencem amb llavors de raïm
+		# Partida nova: per provar, comencem amb llavors i una mica de raïm
 		afegir("llavor_raim", 150)
+		afegir("raim", RAIM_INICIAL)
 
 func afegir(item: String, quantitat: int = 1):
 	items[item] = items.get(item, 0) + quantitat
@@ -57,7 +60,7 @@ func guardar() -> void:
 	_desat_pendent = false
 	var fitxer := FileAccess.open(FITXER, FileAccess.WRITE)
 	if fitxer:
-		fitxer.store_string(JSON.stringify({"items": items, "diners": diners}))
+		fitxer.store_string(JSON.stringify({"versio": VERSIO, "items": items, "diners": diners}))
 	else:
 		push_error("No es pot desar l'inventari")
 
@@ -75,6 +78,10 @@ func carregar() -> bool:
 		for clau in items_desats:
 			items[clau] = int(items_desats[clau])   # el JSON ho torna com a float
 	diners = int(dades.get("diners", 0))
+	if int(dades.get("versio", 1)) < 2:
+		# Ara el vermut es fa amb raïm: les partides d'abans en reben una mica per començar
+		items["raim"] = items.get("raim", 0) + RAIM_INICIAL
+		_desar_aviat()
 	return true
 
 func _notification(what):

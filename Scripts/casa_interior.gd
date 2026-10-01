@@ -98,7 +98,12 @@ func _ready():
 	_configurar_llista_mobles()
 	_crear_hud()
 	_crear_gestor_servei()
-	add_child(HudDiners.new())
+	var hud_joc := HudJoc.new()
+	hud_joc.mostrar_rellotge = false
+	add_child(hud_joc)
+	var hud_diners := HudDiners.new()
+	hud_diners.marge_superior = 30
+	add_child(hud_diners)
 
 	panel_ui.visible = false
 	item_list.visible = false
@@ -378,6 +383,8 @@ func _on_boto_vermuteria():
 	if not gestor_servei.obert and _seients_utilitzables() == 0:
 		_mostrar_avis("Necessites almenys una cadira amb una barra al costat")
 		return
+	if not gestor_servei.obert and Barrica.vermuts_disponibles() == 0:
+		_mostrar_avis("No tens raïm: no podràs servir vermut. Cull-ne a l'hort!")
 	gestor_servei.alternar()
 
 func _seients_utilitzables() -> int:

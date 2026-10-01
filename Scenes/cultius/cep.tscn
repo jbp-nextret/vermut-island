@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/Cultiu.tscn" id="1_base"]
+
+[node name="Cep" instance=ExtResource("1_base")]
+nom_cultiu = "Cep"
+descripcio = "Dona raïm per fer vermut. Després de collir torna a créixer."
+tint = Color(0.75, 0.6, 1, 1)
+tipus_cultiu = 3
+raim_min = 2
+raim_max = 3
+vida_maxima = 8

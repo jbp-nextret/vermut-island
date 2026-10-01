@@ -3,12 +3,14 @@
 [ext_resource type="PackedScene" uid="uid://bvwuvfobkmlh8" path="res://Models/Casa.glb" id="1_tih8w"]
 [ext_resource type="Script" uid="uid://chcdq30i3s66u" path="res://Scripts/porta_casa.gd" id="2_qvg44"]
 [ext_resource type="PackedScene" uid="uid://djg0q2wme880f" path="res://Scenes/CasaInterior.tscn" id="3_gckqx"]
+[ext_resource type="Script" path="res://Scripts/utils/materials_retallats.gd" id="4_retall"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_py0th"]
 size = Vector3(0.07754883, 0.33458984, 0.24)
 
 [node name="Casa" unique_id=523738415 instance=ExtResource("1_tih8w")]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+script = ExtResource("4_retall")
 
 [node name="Porta" type="Area3D" parent="." index="8" unique_id=1875717420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70461273, -0.48849487, -0.22509766)

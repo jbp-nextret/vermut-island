@@ -15,6 +15,18 @@ var mode: Mode = Mode.EXPLORAR:
 
 var dins_casa := false
 
+# Preferències: ara les porta el SettingsManager (aquí queden com a dreceres)
+var postprocessat_actiu: bool:
+	get: return SettingsManager.valor("postprocessat")
+	set(valor): SettingsManager.canviar("postprocessat", valor)
+var pantalla_completa: bool:
+	get: return SettingsManager.valor("pantalla_completa")
+	set(valor): SettingsManager.canviar("pantalla_completa", valor)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pantalla_completa"):
+		pantalla_completa = not pantalla_completa
+
 func pot_atacar() -> bool:
 	return mode == Mode.EXPLORAR and not dins_casa
 
