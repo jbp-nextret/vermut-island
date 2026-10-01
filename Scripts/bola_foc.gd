@@ -4,6 +4,9 @@ extends Area3D
 @export var vida_util: float = 3.0
 @onready var particules: GPUParticles3D = $GPUParticles3D
 var direccio: Vector3 = Vector3.ZERO
+## Si es dispara apuntant un enemic, el persegueix girant fins a `gir` radians per segon
+var objectiu: Node3D = null
+@export var gir: float = 9.0
 var temps_viu: float = 0.0
 const TEXTURA_TRAIL := preload("res://Sprites/Misc/particle_3.PNG")
 const TEXTURA_EXPLOSIO := preload("res://Sprites/Misc/particle_0.PNG")
@@ -43,6 +46,9 @@ func _nou_trail_mat() -> ParticleProcessMaterial:
 	return mat
 
 func _physics_process(delta):
+	if is_instance_valid(objectiu) and objectiu.is_in_group("enemics"):
+		var cap_objectiu := (objectiu.global_position + Vector3.UP * 0.3 - global_position).normalized()
+		direccio = direccio.slerp(cap_objectiu, minf(1.0, gir * delta)).normalized()
 	global_position += direccio * velocitat * delta
 	temps_viu += delta
 	if temps_viu >= vida_util:

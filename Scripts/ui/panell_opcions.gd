@@ -75,10 +75,12 @@ func _pestanya_grafics():
 	_interruptor(l, "Vores al voltant dels objectes", "vores")
 	_interruptor(l, "Pluja i partícules del temps", "particules_meteo")
 	_control_lliscant(l, "Sacseig de càmera", "sacseig")
+	_control_lliscant(l, "Suavitat de la càmera", "suavitat_camera")
 
 func _pestanya_joc():
 	var l := _pestanya("Joc")
 	_interruptor(l, "Números de dany", "numeros_dany")
+	_interruptor(l, "Boles de foc guiades cap a l'enemic apuntat", "boles_guiades")
 	_interruptor(l, "Ajudes de controls a la pantalla", "ajudes")
 
 func _pestanya_controls():

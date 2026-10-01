@@ -36,6 +36,11 @@ var atacant: bool = false
 var pos_fisica_anterior := Vector3.ZERO
 var posicio_visual := Vector3.ZERO
 var offset_esquelet := Vector3.ZERO
+
+# Apuntar enemics amb el ratolí (boles de foc guiades)
+const RADI_APUNTAR := 0.06   # fracció de l'alçada de la pantalla
+var marcador_objectiu: Sprite3D
+var enemic_apuntat_actual: Node3D = null
 @onready var pivot_espasa: Node3D = $Skeleton/PivotEspasa
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 var te_espasa: bool = true
@@ -170,6 +175,7 @@ func _physics_process(delta):
 	
 func _process(delta):
 	_interpolar_visual()
+	_actualitzar_marcador_objectiu()
 	_separar_capes()
 	for sprite in sprites:
 		if sprite == skin:
@@ -407,6 +413,9 @@ func disparar_bola_foc(direccio := Vector3.ZERO):
 	get_tree().current_scene.add_child(bola)
 	bola.global_position = global_position + Vector3(0, 1.0, 0)
 	bola.direccio = direccio if direccio != Vector3.ZERO else _direccio_cap_al_cursor()
+	# Si el ratolí és sobre un enemic, la bola el persegueix
+	if direccio == Vector3.ZERO and SettingsManager.valor("boles_guiades"):
+		bola.objectiu = enemic_apuntat()
 
 
 func _crear_cercle_alquimia():
@@ -446,6 +455,61 @@ func _crear_cercle_alquimia():
 		fade_out.tween_property(cercle, "scale", Vector3.ONE * 1.3, 0.5)
 		fade_out.chain().tween_callback(cercle.queue_free)
 	)
+
+## L'enemic que hi ha sota el ratolí (el més proper al cursor, dins d'un petit radi), o null
+func enemic_apuntat() -> Node3D:
+	var camera_activa := get_viewport().get_camera_3d()
+	if camera_activa == null:
+		return null
+	var ratoli := get_viewport().get_mouse_position()
+	var radi := get_viewport().get_visible_rect().size.y * RADI_APUNTAR
+	var millor: Node3D = null
+	var millor_distancia := radi
+	for enemic in get_tree().get_nodes_in_group("enemics"):
+		var punt: Vector3 = enemic.sprite.global_position if "sprite" in enemic else enemic.global_position
+		if camera_activa.is_position_behind(punt):
+			continue
+		var distancia := camera_activa.unproject_position(punt).distance_to(ratoli)
+		if distancia < millor_distancia:
+			millor = enemic
+			millor_distancia = distancia
+	return millor
+
+## Una mira vermella sobre l'enemic apuntat (on aniria la bola de foc)
+func _actualitzar_marcador_objectiu():
+	if marcador_objectiu == null:
+		marcador_objectiu = Sprite3D.new()
+		marcador_objectiu.texture = _textura_mira()
+		marcador_objectiu.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		marcador_objectiu.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		marcador_objectiu.no_depth_test = true
+		marcador_objectiu.pixel_size = 0.06
+		marcador_objectiu.modulate = Color(1.0, 0.35, 0.3, 0.9)
+		marcador_objectiu.top_level = true
+		marcador_objectiu.visible = false
+		add_child(marcador_objectiu)
+	enemic_apuntat_actual = enemic_apuntat() if GameState.pot_atacar() and SettingsManager.valor("boles_guiades") else null
+	marcador_objectiu.visible = enemic_apuntat_actual != null
+	if enemic_apuntat_actual:
+		var punt: Vector3 = enemic_apuntat_actual.sprite.global_position if "sprite" in enemic_apuntat_actual else enemic_apuntat_actual.global_position
+		marcador_objectiu.global_position = punt
+		marcador_objectiu.scale = Vector3.ONE * (1.0 + 0.12 * sin(Time.get_ticks_msec() * 0.012))
+		# Més apagada si la bola de foc encara es recarrega
+		marcador_objectiu.modulate.a = 0.9 if progres_magia() >= 1.0 else 0.35
+
+static var _mira: ImageTexture
+static func _textura_mira() -> ImageTexture:
+	if _mira:
+		return _mira
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	for y in 16:
+		for x in 16:
+			var d := Vector2(x - 7.5, y - 7.5).length()
+			var a_la_creu := (absi(x * 2 - 15) <= 1 or absi(y * 2 - 15) <= 1) and (d > 3.5 and d < 7.5)
+			if (d > 5.5 and d < 7.0) or a_la_creu:
+				img.set_pixel(x, y, Color.WHITE)
+	_mira = ImageTexture.create_from_image(img)
+	return _mira
 
 func _direccio_cap_al_cursor() -> Vector3:
 	var camera = get_viewport().get_camera_3d()

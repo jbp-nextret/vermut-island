@@ -20,7 +20,10 @@ const INCLINACIO_MINIMA := -75.0   # gairebé des de dalt
 const INCLINACIO_MAXIMA := -12.0   # gairebé de costat
 const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial
 const SENSIBILITAT_GIR := 0.008
-const SUAVITAT_SEGUIMENT := 10.0
+## Com de ràpid segueix el jugador, segons l'opció "Suavitat de la càmera":
+## 0 % = enganxada (sense retard) · 25 % (per defecte) ≈ 30 · 100 % = 6 (molt suau)
+const SEGUIMENT_MES_RAPID := 40.0
+const SEGUIMENT_MES_SUAU := 6.0
 const SUAVITAT_GIR := 12.0
 const SHADER_POSTPROCESSAT := preload("res://Shaders/postprocessat.gdshader")
 
@@ -59,7 +62,12 @@ func _process(delta: float) -> void:
 	if pivot and jugador is CharacterBody3D:
 		var posicio_jugador: Vector3 = jugador.posicio_visual if "posicio_visual" in jugador else jugador.global_position
 		var desti := posicio_jugador + offset_pivot
-		pivot.global_position = pivot.global_position.lerp(desti, 1.0 - exp(-SUAVITAT_SEGUIMENT * delta))
+		var suavitat: float = SettingsManager.valor("suavitat_camera")
+		if suavitat <= 0.01:
+			pivot.global_position = desti
+		else:
+			var rapidesa := lerpf(SEGUIMENT_MES_RAPID, SEGUIMENT_MES_SUAU, suavitat)
+			pivot.global_position = pivot.global_position.lerp(desti, 1.0 - exp(-rapidesa * delta))
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 		pivot.rotation.x = lerp_angle(pivot.rotation.x, inclinacio_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 

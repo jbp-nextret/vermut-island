@@ -14,9 +14,11 @@ const PER_DEFECTE := {
 	"postprocessat": true,
 	"vores": true,
 	"sacseig": 1.0,
+	"suavitat_camera": 0.25,   # 0 = enganxada al personatge, 1 = molt suau
 	"particules_meteo": true,
 	# Joc
 	"numeros_dany": true,
+	"boles_guiades": true,
 	"ajudes": true,
 	# So (0..1)
 	"volum_general": 0.8,
