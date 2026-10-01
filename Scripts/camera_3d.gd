@@ -24,6 +24,7 @@ const SENSIBILITAT_GIR := 0.008
 ## 0 % = enganxada (sense retard) · 25 % (per defecte) ≈ 30 · 100 % = 6 (molt suau)
 const SEGUIMENT_MES_RAPID := 40.0
 const SEGUIMENT_MES_SUAU := 6.0
+const SEGUIMENT_VERTICAL := 8.0
 const SUAVITAT_GIR := 12.0
 const SHADER_POSTPROCESSAT := preload("res://Shaders/postprocessat.gdshader")
 
@@ -63,11 +64,19 @@ func _process(delta: float) -> void:
 		var posicio_jugador: Vector3 = jugador.posicio_visual if "posicio_visual" in jugador else jugador.global_position
 		var desti := posicio_jugador + offset_pivot
 		var suavitat: float = SettingsManager.valor("suavitat_camera")
+		var actual := pivot.global_position
+		# En horitzontal, segons l'opció (0 % = enganxada)
 		if suavitat <= 0.01:
-			pivot.global_position = desti
+			actual.x = desti.x
+			actual.z = desti.z
 		else:
 			var rapidesa := lerpf(SEGUIMENT_MES_RAPID, SEGUIMENT_MES_SUAU, suavitat)
-			pivot.global_position = pivot.global_position.lerp(desti, 1.0 - exp(-rapidesa * delta))
+			var t := 1.0 - exp(-rapidesa * delta)
+			actual.x = lerpf(actual.x, desti.x, t)
+			actual.z = lerpf(actual.z, desti.z, t)
+		# En vertical, sempre una mica esmorteïda: pujar o baixar un graó no la sacseja
+		actual.y = lerpf(actual.y, desti.y, 1.0 - exp(-SEGUIMENT_VERTICAL * delta))
+		pivot.global_position = actual
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 		pivot.rotation.x = lerp_angle(pivot.rotation.x, inclinacio_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 

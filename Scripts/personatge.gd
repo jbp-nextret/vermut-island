@@ -158,12 +158,7 @@ func _physics_process(delta):
 	var direction = Vector3(input_dir.x, 0, input_dir.y)
 	if direction.length() > 0:
 		direction = direction.normalized()
-		var camera = get_viewport().get_camera_3d()
-		var cam_angle = atan2(
-			camera.global_position.x - global_position.x,
-			camera.global_position.z - global_position.z
-		)
-		direction = direction.rotated(Vector3.UP, cam_angle)
+		direction = direction.rotated(Vector3.UP, angle_camera())
 	var current_speed = SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
@@ -319,9 +314,7 @@ func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 
 ## Converteix una direcció del món en "up/down/right" (+ mirall) relatiu a la càmera
 func _mirar_cap_a(direccio: Vector3):
-	var camera = get_viewport().get_camera_3d()
-	var cam_angle = atan2(camera.global_position.x - global_position.x, camera.global_position.z - global_position.z)
-	var local := direccio.rotated(Vector3.UP, -cam_angle)
+	var local := direccio.rotated(Vector3.UP, -angle_camera())
 	if absf(local.x) > absf(local.z):
 		ultima_direccio = "right"
 		mirall_horitzontal = local.x < 0
@@ -380,11 +373,7 @@ func _direccio_mirada() -> Vector3:
 		"up": dir = Vector3(0, 0, -1)
 		"right": dir = Vector3(1 if not mirall_horitzontal else -1, 0, 0)
 	# Rota segons la càmera, igual que fas amb el moviment normal
-	var camera = get_viewport().get_camera_3d()
-	var cam_angle = atan2(
-		camera.global_position.x - global_position.x,
-		camera.global_position.z - global_position.z
-	)
+	var cam_angle := angle_camera()
 	return dir.rotated(Vector3.UP, cam_angle)
 # Trail
 func _crear_trail():
@@ -527,6 +516,17 @@ func _direccio_cap_al_cursor() -> Vector3:
 	var direccio = (punt_impacte - global_position)
 	direccio.y = 0
 	return direccio.normalized()
+
+## Cap on mira la càmera (en horitzontal), en radians. Abans es calculava amb la posició
+## de la càmera respecte al jugador, però com que la càmera el segueix amb una mica de
+## retard, aquest angle anava canviant mentre caminaves: la direcció del moviment girava,
+## la càmera es tornava a desplaçar... i feia estirades. L'eix de la càmera no canvia.
+func angle_camera() -> float:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return 0.0
+	var enrere := cam.global_basis.z
+	return atan2(enrere.x, enrere.z)
 
 ## On es dibuixa el personatge: entre la posició del tic de física anterior i l'actual
 func _interpolar_visual():
