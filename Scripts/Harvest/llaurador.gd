@@ -148,6 +148,9 @@ func _info(c: Vector3i) -> Dictionary:
 	elif Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() > abast():
 		info.valida = false
 		info.motiu = "Massa lluny"
+	elif mon.has_method("recurs_a") and mon.recurs_a(superficie):
+		info.valida = false
+		info.motiu = "Hi ha %s" % ["un arbre", "una roca", "herba (talla-la amb l'espasa)"][mon.recurs_a(superficie).tipus]
 	elif _hi_ha_obstacle(superficie):
 		info.valida = false
 		info.motiu = "Hi ha alguna cosa a sobre"

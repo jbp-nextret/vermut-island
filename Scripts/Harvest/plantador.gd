@@ -358,6 +358,9 @@ func _info_cella(c: Vector3i) -> Dictionary:
 	elif mon.cultiu_a_prop(info.posicio):
 		info.valida = false
 		info.motiu = "Ja hi ha un cultiu"
+	elif mon.has_method("recurs_a") and mon.recurs_a(info.posicio):
+		info.valida = false
+		info.motiu = "Hi ha %s" % ["un arbre", "una roca", "herba (talla-la amb l'espasa)"][mon.recurs_a(info.posicio).tipus]
 	elif llavors() <= 0:
 		info.valida = false
 		info.motiu = "No tens llavors"

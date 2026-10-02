@@ -19,12 +19,17 @@ enum Tipus { ARBRE, ROCA, HERBA }
 @export var dies_per_tornar := 3
 ## Experiència en esgotar-lo (clau de Progressio.XP)
 @export var motiu_xp := "talar"
+## No torna a sortir si a aquesta distància hi ha cultius, terra llaurada o l'hort
+@export var marge_conreu := 1.5
+## Distància a què ocupa el terra: no s'hi pot plantar ni llaurar
+@export var radi_ocupat := 0.8
 
 const NOMS_ACCIO := {Tipus.ARBRE: "🪓 Talar", Tipus.ROCA: "⛏ Picar", Tipus.HERBA: "Tallar"}
 
 var cops_rebuts := 0
 var esgotat_dia := -1    # -1 = disponible
 var escala_original := Vector3.ONE
+var _dia_comprovat := -1
 
 func _ready():
 	add_to_group("recursos")
@@ -101,8 +106,29 @@ func _esgotar():
 	GestorPartida.call_deferred("guardar_mundo")
 
 func _process(_delta):
-	if not disponible() and GestorTemps.dia_actual >= esgotat_dia + dies_per_tornar:
-		reapareixer()
+	var dia: int = GestorTemps.dia_actual
+	if disponible() or dia < esgotat_dia + dies_per_tornar or dia == _dia_comprovat:
+		return
+	_dia_comprovat = dia
+	# Si mentrestant hi han plantat o llaurat a prop, no torna (ho prova l'endemà)
+	if conreu_a_prop():
+		return
+	reapareixer()
+
+## Hi ha cultius, terra llaurada o l'hort massa a prop?
+func conreu_a_prop() -> bool:
+	var mon := get_tree().current_scene
+	return mon != null and mon.has_method("zona_de_conreu_a_prop") and mon.zona_de_conreu_a_prop(global_position, marge_conreu)
+
+## L'amaga sense donar res (quan és en un lloc on ara es conrea)
+func retirar():
+	esgotat_dia = GestorTemps.dia_actual
+	cops_rebuts = 0
+	_mostrar(false)
+
+## Ocupa el terra en aquest punt? (per no plantar-hi ni llaurar-hi a sobre)
+func ocupa(punt: Vector3) -> bool:
+	return disponible() and Vector2(punt.x - global_position.x, punt.z - global_position.z).length() < radi_ocupat
 
 func reapareixer():
 	esgotat_dia = -1

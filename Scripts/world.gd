@@ -143,6 +143,7 @@ func _ready():
 	
 	# CARREGA EL WORLD
 	carregar_mundo()
+	_retirar_recursos_en_conflicte()
 	
 func _on_cultiu_recollit(posicio: Vector3):
 	print("Event rebut a posicio: ", posicio)
@@ -206,6 +207,43 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
+## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
+## tornen a sortir, per no ficar-se al mig dels camps)
+func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
+	for c in get_tree().get_nodes_in_group("cultius"):
+		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
+			return true
+	# Terra llaurada pel jugador o terra de l'hort (les cel·les del voltant)
+	var gridmap: GridMap = $GridMap
+	var centre: Vector3i = gridmap.local_to_map(gridmap.to_local(posicio))
+	var abast := ceili(radi)
+	for dx in range(-abast, abast + 1):
+		for dz in range(-abast, abast + 1):
+			for dy in range(-3, 3):
+				var cella := centre + Vector3i(dx, dy, dz)
+				var item := gridmap.get_cell_item(cella)
+				if item == GridMap.INVALID_CELL_ITEM or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+					continue   # buida, o no és la de dalt de tot
+				if not llaurades.has(cella) and not gridmap.mesh_library.get_item_name(item) in blocs_plantables:
+					continue
+				var p := gridmap.to_global(gridmap.map_to_local(cella))
+				if Vector2(p.x - posicio.x, p.z - posicio.z).length() < radi:
+					return true
+	return false
+
+## L'arbre, roca o herba que ocupa el terra en aquest punt (o null)
+func recurs_a(posicio: Vector3) -> RecursNatural:
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.ocupa(posicio):
+			return r
+	return null
+
+## En carregar: els recursos que han quedat dins de zones conreades es retiren
+func _retirar_recursos_en_conflicte():
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.disponible() and r.conreu_a_prop():
+			r.retirar()
+
 func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min: int, q_max: int, dies: int, xp: String):
 	var r := RecursNatural.new()
 	r.name = "Recurs"

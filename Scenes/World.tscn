@@ -291,7 +291,7 @@ transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5
 transform = Transform3D(0.9397, 0, -0.3420, 0, 1.0000, 0, 0.3420, 0, 0.9397, 3.5, 1.0, -10.5)
 
 [node name="Roca2" parent="." instance=ExtResource("99_roca")]
-transform = Transform3D(0.2200, 0, -0.8210, 0, 0.8500, 0, 0.8210, 0, 0.2200, -3.5, 1.0, -7.5)
+transform = Transform3D(0.2200, 0, -0.8210, 0, 0.8500, 0, 0.8210, 0, 0.2200, -4.5, 1, -13.5)
 
 [node name="Roca3" parent="." instance=ExtResource("99_roca")]
 transform = Transform3D(-0.8810, 0, -0.7392, 0, 1.1500, 0, 0.7392, 0, -0.8810, 5.5, 1.0, -14.5)
