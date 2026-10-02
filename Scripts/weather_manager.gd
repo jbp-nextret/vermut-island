@@ -4,6 +4,7 @@ extends Node3D
 ##  - pluja: gotes que segueixen la càmera i esquitxos a terra; si plou prou, rega els cultius
 ##  - tempesta: llamps (flaix de llum i sacseig de càmera)
 ##  - boira: la boira de l'entorn
+##  - fulles que volen pel mapa (més com més vent; el color depèn de l'estació)
 
 @export var wind_strength := 0.08   # es fa servir com a base; el temps el multiplica
 @export var wind_speed := 1.2
@@ -22,6 +23,24 @@ var temps_seguent_llamp := 5.0
 var dia_regat_per_pluja := -1
 var capa_flaix: ColorRect
 
+# Fulles que volen per l'ambient
+const FULLES_MAXIMES := 110
+const VIDA_FULLA := 5.0
+const AMPLE_FULLES := 28.0
+## Colors de les fulles per estació (quan hi hagi estacions, canvia `estacio`)
+const COLORS_FULLES := {
+	"primavera": [Color(0.45, 0.8, 0.3), Color(0.6, 0.9, 0.4), Color(0.95, 0.75, 0.85)],   # amb algun pètal
+	# Verds groguencs i foscos: que destaquin sobre l'herba
+	"estiu": [Color(0.7, 0.8, 0.25), Color(0.45, 0.62, 0.15), Color(0.85, 0.85, 0.35), Color(0.3, 0.45, 0.12)],
+	"tardor": [Color(0.75, 0.4, 0.12), Color(0.85, 0.55, 0.15), Color(0.6, 0.3, 0.1), Color(0.9, 0.7, 0.25)],
+	"hivern": [Color(0.55, 0.45, 0.35), Color(0.45, 0.38, 0.3)],
+}
+var estacio := "estiu":
+	set(valor):
+		estacio = valor
+		_aplicar_colors_fulles()
+var fulles: GPUParticles3D
+
 ## Des de fora: el flaix del llamp (el llegeix el cicle de dia i nit)
 var flaix := 0.0
 
@@ -30,6 +49,7 @@ func _ready():
 	entorn = get_parent().get_node_or_null("WorldEnvironment")
 	soroll_vent.frequency = 0.05
 	_crear_pluja()
+	_crear_fulles()
 	# Flaix blanc a tota la pantalla quan cau un llamp
 	var capa := CanvasLayer.new()
 	capa.layer = 5
@@ -51,6 +71,7 @@ func _process(delta):
 	RenderingServer.global_shader_parameter_set("wind_direction", direccio)
 
 	_actualitzar_pluja(direccio, forca)
+	_actualitzar_fulles(direccio, forca)
 	_actualitzar_llamps(delta)
 	_actualitzar_boira()
 	flaix = move_toward(flaix, 0.0, delta * 4.0)
@@ -134,6 +155,112 @@ func _actualitzar_pluja(direccio: Vector2, forca: float):
 	# Amb vent, la pluja cau inclinada
 	var mat: ParticleProcessMaterial = pluja.process_material
 	mat.direction = Vector3(direccio.x * forca * 8.0, -1.0, direccio.y * forca * 8.0).normalized()
+
+# ─────────────── Fulles
+
+func _crear_fulles():
+	fulles = GPUParticles3D.new()
+	var mat := ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(AMPLE_FULLES / 2.0, 2.5, AMPLE_FULLES / 2.0)
+	mat.direction = Vector3(1, -0.2, 0)
+	mat.spread = 25.0
+	mat.initial_velocity_min = 0.6
+	mat.initial_velocity_max = 1.4
+	mat.gravity = Vector3(0, -0.35, 0)
+	# Voleiar: turbulència suau i girs
+	mat.turbulence_enabled = true
+	mat.turbulence_noise_strength = 1.4
+	mat.turbulence_noise_scale = 3.0
+	mat.turbulence_influence_min = 0.05
+	mat.turbulence_influence_max = 0.15
+	mat.angle_min = -180.0
+	mat.angle_max = 180.0
+	mat.angular_velocity_min = -120.0
+	mat.angular_velocity_max = 120.0
+	mat.scale_min = 0.7
+	mat.scale_max = 1.2
+	# Apareixen i desapareixen fent fos
+	var alfa := Gradient.new()
+	alfa.set_color(0, Color(1, 1, 1, 0))
+	alfa.add_point(0.15, Color(1, 1, 1, 1))
+	alfa.add_point(0.85, Color(1, 1, 1, 1))
+	alfa.set_color(alfa.get_point_count() - 1, Color(1, 1, 1, 0))
+	var rampa := GradientTexture1D.new()
+	rampa.gradient = alfa
+	mat.color_ramp = rampa
+	fulles.process_material = mat
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.24, 0.24)
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = _textura_fulla()
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	m.vertex_color_use_as_albedo = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad.material = m
+	fulles.draw_pass_1 = quad
+	fulles.amount = FULLES_MAXIMES
+	fulles.lifetime = VIDA_FULLA
+	fulles.preprocess = VIDA_FULLA   # en començar ja n'hi ha pel mapa
+	fulles.local_coords = false
+	fulles.visibility_aabb = AABB(Vector3(-AMPLE_FULLES, -8, -AMPLE_FULLES), Vector3(AMPLE_FULLES * 2.0, 16, AMPLE_FULLES * 2.0))
+	add_child(fulles)
+	_aplicar_colors_fulles()
+
+## Cada fulla agafa un dels colors de l'estació
+func _aplicar_colors_fulles():
+	if fulles == null:
+		return
+	var colors: Array = COLORS_FULLES.get(estacio, COLORS_FULLES["estiu"])
+	var g := Gradient.new()
+	g.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
+	g.remove_point(1)
+	g.set_color(0, colors[0])
+	g.set_offset(0, 0.0)
+	for i in range(1, colors.size()):
+		g.add_point(float(i) / colors.size(), colors[i])
+	var t := GradientTexture1D.new()
+	t.gradient = g
+	(fulles.process_material as ParticleProcessMaterial).color_initial_ramp = t
+
+func _actualitzar_fulles(direccio: Vector2, forca: float):
+	fulles.emitting = SettingsManager.valor("particules_meteo")
+	if not fulles.emitting or not is_instance_valid(jugador):
+		return
+	# Amb vent hi ha més fulles i van més de pressa, cap on bufa
+	fulles.amount_ratio = clampf(0.2 + forca * 4.0, 0.2, 1.0)
+	var mat := fulles.process_material as ParticleProcessMaterial
+	var cap := Vector3(direccio.x, 0.0, direccio.y).normalized()
+	mat.direction = Vector3(cap.x, -0.25, cap.z).normalized()
+	mat.initial_velocity_min = 0.4 + forca * 3.0
+	mat.initial_velocity_max = 0.9 + forca * 6.0
+	# Neixen a contravent: així creuen la pantalla en lloc de marxar-ne de seguida
+	var recorregut := (mat.initial_velocity_min + mat.initial_velocity_max) * 0.5 * VIDA_FULLA
+	fulles.global_position = jugador.global_position + Vector3.UP * 3.0 - cap * recorregut * 0.5
+
+## Una fulla de 8x8 en pixel art (el color el posa cada partícula)
+static func _textura_fulla() -> ImageTexture:
+	var dibuix := [
+		"........",
+		".....##.",
+		"...####.",
+		"..#####.",
+		".#####..",
+		".####...",
+		"#.##....",
+		"#.......",
+	]
+	var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	for y in 8:
+		for x in 8:
+			if dibuix[y][x] == "#":
+				# Una mica més fosc al nervi central, per donar-li forma
+				var fosc := 0.8 if x + y == 7 else 1.0
+				img.set_pixel(x, y, Color(fosc, fosc, fosc, 1))
+	return ImageTexture.create_from_image(img)
 
 # ─────────────── Tempesta i boira
 

@@ -110,6 +110,7 @@ shader_parameter/texture_albedo = ExtResource("10_7yo87")
 render_priority = 0
 shader = ExtResource("11_kwl8l")
 shader_parameter/texture_albedo = ExtResource("11_ti1bm")
+shader_parameter/nomes_fulles = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_rwt1y"]
 size = Vector3(3.385, 0.8, 3.845)
