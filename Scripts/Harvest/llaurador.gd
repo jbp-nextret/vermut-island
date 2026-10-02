@@ -139,7 +139,7 @@ func _info(c: Vector3i) -> Dictionary:
 	local.y = c.y + (0.5 if nom.contains("half") else 1.0)
 	var superficie := gridmap.to_global(local)
 	var info := {"cella": c, "superficie": superficie, "valida": true, "motiu": ""}
-	if mon.llaurades.has(c) or nom in mon.blocs_plantables:
+	if mon.llaurades.has(c):
 		info.valida = false
 		info.motiu = "Aquesta terra ja és cultivable"
 	elif not mon.es_herba(nom):

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dc800gk60usnc"]
 
 [ext_resource type="Script" uid="uid://bqdkml2h2on76" path="res://Scripts/world.gd" id="1_45d1s"]
-[ext_resource type="Script" uid="uid://dfdbphggu0u2j" path="res://Scripts/Harvest/zona_hort.gd" id="2_y7y61"]
 [ext_resource type="PackedScene" uid="uid://cxg75mbja24wq" path="res://Scenes/Personatge.tscn" id="3_waglr"]
 [ext_resource type="PackedScene" uid="uid://ctejgorirlgtp" path="res://Scenes/BolaFoc.tscn" id="4_mvfa8"]
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="6_q2d71"]
@@ -21,8 +20,6 @@
 [ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
 [ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
 [ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_5nsto"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
 sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
@@ -141,13 +138,6 @@ cultiu_escena = ExtResource("6_q2d71")
 
 [node name="Personatge" parent="." unique_id=1584712923 instance=ExtResource("3_waglr")]
 bola_foc_scene = ExtResource("4_mvfa8")
-
-[node name="ZonaHort" type="Area3D" parent="." unique_id=1516069919]
-transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, 0)
-script = ExtResource("2_y7y61")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ZonaHort" unique_id=1547884258]
-shape = SubResource("BoxShape3D_5nsto")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1785597727]
 environment = SubResource("Environment_dwbse")

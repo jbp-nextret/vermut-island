@@ -1,7 +1,6 @@
 extends Node3D
 
 @export var cultiu_escena: PackedScene
-@onready var zona_hort = $ZonaHort
 @onready var cursor = $CursorPlantacio
 @onready var particules_plantar = $ParticulesPlantar
 @onready var particules_collir = $ParticulesCollir
@@ -15,7 +14,8 @@ var recolector: Recolector
 var regador: Regador
 var llaurador: Llaurador
 
-# Terra llaurada pel jugador (fora de la ZonaHort també s'hi pot plantar)
+# Terra llaurada: l'única on es pot plantar. Hi ha la que ha llaurat el jugador i l'hort
+# original (vegeu _marcar_hort_original)
 var llaurades := {}   # Vector3i -> true
 const NOMS_HERBA := ["cube-top", "cube_half-top"]
 ## Peça de terra i gir (graus) segons quins veïns són herba (W=oest, E=est, N=nord, S=sud).
@@ -142,6 +142,7 @@ func _ready():
 		print("Signal cultiu_recollit no existeix a EventBus")
 	
 	# CARREGA EL WORLD
+	_marcar_hort_original()
 	carregar_mundo()
 	_retirar_recursos_en_conflicte()
 	
@@ -213,7 +214,7 @@ func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
 	for c in get_tree().get_nodes_in_group("cultius"):
 		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
 			return true
-	# Terra on es pot plantar: llaurada pel jugador o terra de l'hort (dins de la ZonaHort)
+	# Terra on es pot plantar (la llaurada; la sorra de la platja no compta)
 	var gridmap: GridMap = $GridMap
 	var centre: Vector3i = gridmap.local_to_map(gridmap.to_local(posicio))
 	var abast := ceili(radi)
@@ -263,11 +264,23 @@ func _nomes_una_eina(eina: Node) -> void:
 		if altra != eina and altra.actiu:
 			altra.sortir()
 
-## Es pot plantar a la cel·la? A la ZonaHort (peces de terra) o on el jugador ha llaurat
-func es_plantable(cella: Vector3i, nom: String, posicio: Vector3) -> bool:
-	if llaurades.has(cella):
-		return true
-	return nom in blocs_plantables and dins_zona_hort(posicio)
+## Es pot plantar a la cel·la? Només a la terra llaurada (també l'hort original)
+func es_plantable(cella: Vector3i, _nom: String = "", _posicio: Vector3 = Vector3.ZERO) -> bool:
+	return llaurades.has(cella)
+
+## Sota aquesta alçada, les peces de terra són la sorra de la platja (no l'hort)
+const ALCADA_MINIMA_HORT := 0
+
+## L'hort que ja ve fet a l'escena: les peces de terra de la superfície per sobre del nivell
+## del mar compten com a llaurades des del principi (la platja usa les mateixes peces, però
+## queda més avall).
+func _marcar_hort_original():
+	var gridmap: GridMap = $GridMap
+	for cella in gridmap.get_used_cells():
+		if cella.y < ALCADA_MINIMA_HORT or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella)) in blocs_plantables:
+			llaurades[cella] = true
 
 func es_herba(nom: String) -> bool:
 	return nom in NOMS_HERBA
@@ -314,8 +327,6 @@ func _es_terra(cella: Vector3i) -> bool:
 		return false
 	return llaurades.has(cella) or gridmap.mesh_library.get_item_name(item) in blocs_plantables
 
-func dins_zona_hort(posicio: Vector3) -> bool:
-	return zona_hort.conte_punt(posicio)
 	
 func guardar_mundo():
 	var cultius_data = []
