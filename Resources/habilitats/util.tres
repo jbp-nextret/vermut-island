@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="ArbreDef" format=3]
+[gd_resource type="Resource" script_class="ArbreDef" format=3 uid="uid://cyxclu0o5h0xu"]
 
-[ext_resource type="Script" path="res://Scripts/progressio/habilitat.gd" id="1_fj1g0"]
-[ext_resource type="Script" path="res://Scripts/progressio/requisit.gd" id="2_w22lv"]
-[ext_resource type="Script" path="res://Scripts/progressio/arbre_def.gd" id="3_xv43i"]
+[ext_resource type="Script" uid="uid://cv15bu85gjw5d" path="res://Scripts/progressio/habilitat.gd" id="1_fj1g0"]
+[ext_resource type="Script" uid="uid://86vpb21204uj" path="res://Scripts/progressio/requisit.gd" id="2_w22lv"]
+[ext_resource type="Script" uid="uid://v3n5o5c6t07" path="res://Scripts/progressio/arbre_def.gd" id="3_xv43i"]
 
 [sub_resource type="Resource" id="Resource_hcddg"]
 script = ExtResource("1_fj1g0")

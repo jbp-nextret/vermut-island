@@ -194,6 +194,17 @@ texture = ExtResource("10_7yo87")
 region_enabled = true
 region_rect = Rect2(64, 0, 32, 32)
 
+[node name="Grass10" type="Sprite3D" parent="." unique_id=1293176127]
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 2.1777368, 1.6110908, -3.3727732)
+material_override = SubResource("ShaderMaterial_kwl8l")
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(64, 0, 32, 32)
+
 [node name="Grass3" type="Sprite3D" parent="." unique_id=253991404]
 transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, -3.6057067, 2.602907, 1.7626657)
 material_override = SubResource("ShaderMaterial_kwl8l")
@@ -217,8 +228,31 @@ texture = ExtResource("10_7yo87")
 region_enabled = true
 region_rect = Rect2(128, 0, 32, 32)
 
+[node name="Grass7" type="Sprite3D" parent="." unique_id=817346894]
+transform = Transform3D(3.4485557, 0, -4.1098285, 0, 5.365, 0, 4.1098285, 0, 3.4485557, -7.828014, 1.8218305, 1.7442658)
+material_override = SubResource("ShaderMaterial_kwl8l")
+flip_h = true
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(128, 0, 32, 32)
+
 [node name="Grass4" type="Sprite3D" parent="." unique_id=1631846648]
 transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 3.4722872, 1.6147404, 0.0074152946)
+material_override = SubResource("ShaderMaterial_kwl8l")
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(192, 0, 32, 32)
+
+[node name="Grass9" type="Sprite3D" parent="." unique_id=1281021011]
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 7.6463594, 1.6147404, 9.899384)
 material_override = SubResource("ShaderMaterial_kwl8l")
 billboard = 2
 shaded = true
@@ -239,6 +273,17 @@ texture = ExtResource("10_7yo87")
 region_enabled = true
 region_rect = Rect2(224, 0, 32, 32)
 
+[node name="Grass8" type="Sprite3D" parent="." unique_id=2031167428]
+transform = Transform3D(2.5711505, 0, -3.0641778, 0, 4, 0, 3.0641778, 0, 2.5711505, 5.0488496, 1.6097503, -7.232484)
+material_override = SubResource("ShaderMaterial_kwl8l")
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("10_7yo87")
+region_enabled = true
+region_rect = Rect2(224, 0, 32, 32)
+
 [node name="Tree1" type="Sprite3D" parent="." unique_id=372274798]
 transform = Transform3D(5.142301, 0, -6.1283555, 0, 8, 0, 6.1283555, 0, 5.142301, 9.412313, 3.2075734, 1.7006369)
 material_override = SubResource("ShaderMaterial_waglr")
@@ -249,6 +294,17 @@ texture_filter = 0
 texture = ExtResource("11_ti1bm")
 region_enabled = true
 region_rect = Rect2(5, 0, 64, 64)
+
+[node name="Tree2" type="Sprite3D" parent="." unique_id=1037149039]
+transform = Transform3D(5.142301, 0, -6.1283555, 0, 8, 0, 6.1283555, 0, 5.142301, 4.501028, 3.2075734, 11.190505)
+material_override = SubResource("ShaderMaterial_waglr")
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("11_ti1bm")
+region_enabled = true
+region_rect = Rect2(134, 8, 55, 56)
 
 [node name="GridMap" parent="." unique_id=708098584 instance=ExtResource("12_waglr")]
 data = {
@@ -270,18 +326,18 @@ mesh = SubResource("BoxMesh_rwt1y")
 surface_material_override/0 = SubResource("ShaderMaterial_rwt1y")
 
 [node name="SpawnCasa" type="Node3D" parent="." unique_id=1056946412]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.311059, 1.6989269, -12.049037)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8358393, 1.6989269, -13.024989)
 
 [node name="RodaSeleccio" parent="." unique_id=524196177 instance=ExtResource("20_b5aes")]
 
 [node name="Casa" parent="." unique_id=523738415 instance=ExtResource("18_rwt1y")]
 transform = Transform3D(-2.1855695e-07, 0, -5, 0, 5, 0, 5, 0, -2.1855695e-07, -5.208633, 4.2, -17.680328)
 
-[node name="Roca1" parent="." instance=ExtResource("99_roca")]
-transform = Transform3D(0.9397, 0, -0.3420, 0, 1.0000, 0, 0.3420, 0, 0.9397, 3.5, 1.0, -10.5)
+[node name="Roca1" parent="." unique_id=437181336 instance=ExtResource("99_roca")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, 5.283722, 1, -10.5)
 
-[node name="Roca2" parent="." instance=ExtResource("99_roca")]
-transform = Transform3D(0.2200, 0, -0.8210, 0, 0.8500, 0, 0.8210, 0, 0.2200, -4.5, 1, -13.5)
+[node name="Roca2" parent="." unique_id=2056468196 instance=ExtResource("99_roca")]
+transform = Transform3D(0.22, 0, -0.821, 0, 0.85, 0, 0.821, 0, 0.22, -8.799194, 1, -11.689697)
 
-[node name="Roca3" parent="." instance=ExtResource("99_roca")]
-transform = Transform3D(-0.8810, 0, -0.7392, 0, 1.1500, 0, 0.7392, 0, -0.8810, 5.5, 1.0, -14.5)
+[node name="Roca3" parent="." unique_id=786235828 instance=ExtResource("99_roca")]
+transform = Transform3D(-0.881, 0, -0.7392, 0, 1.15, 0, 0.7392, 0, -0.881, 5.5, 1, -14.5)
