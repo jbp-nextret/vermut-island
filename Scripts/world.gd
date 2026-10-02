@@ -213,7 +213,7 @@ func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
 	for c in get_tree().get_nodes_in_group("cultius"):
 		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
 			return true
-	# Terra llaurada pel jugador o terra de l'hort (les cel·les del voltant)
+	# Terra on es pot plantar: llaurada pel jugador o terra de l'hort (dins de la ZonaHort)
 	var gridmap: GridMap = $GridMap
 	var centre: Vector3i = gridmap.local_to_map(gridmap.to_local(posicio))
 	var abast := ceili(radi)
@@ -224,9 +224,10 @@ func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
 				var item := gridmap.get_cell_item(cella)
 				if item == GridMap.INVALID_CELL_ITEM or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
 					continue   # buida, o no és la de dalt de tot
-				if not llaurades.has(cella) and not gridmap.mesh_library.get_item_name(item) in blocs_plantables:
-					continue
 				var p := gridmap.to_global(gridmap.map_to_local(cella))
+				# La mateixa regla que per plantar (així la sorra de la platja no compta)
+				if not es_plantable(cella, gridmap.mesh_library.get_item_name(item), p):
+					continue
 				if Vector2(p.x - posicio.x, p.z - posicio.z).length() < radi:
 					return true
 	return false
