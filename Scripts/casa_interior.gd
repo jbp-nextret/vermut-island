@@ -38,9 +38,13 @@ var camera_anterior: Camera3D = null
 
 @onready var panel_ui: Panel = $CanvasLayer/Panel
 @onready var item_list: ItemList = $CanvasLayer/ItemList
-@onready var porta_sortida = $PortaSortida
+## La porta és una escena (Scenes/mobles/porta_casa.tscn) que es pot moure a l'editor:
+## porta la zona per sortir, el punt per on entren els clients i on apareix el jugador
+@onready var porta_casa: Node3D = $PortaCasa
+@onready var porta_sortida = $PortaCasa/PortaSortida
 @onready var camera_construccio: Camera3D = $Camera3D
-@onready var porta_clients: Marker3D = $Door
+@onready var porta_clients: Marker3D = $PortaCasa/EntradaClients
+var paret_porta: Dictionary = {}   # la paret on és la porta (per abaixar-la amb ella)
 @onready var rellotge: Label = $CanvasLayer/Rellotge
 
 # HUD (es crea per codi)
@@ -197,9 +201,10 @@ func crear_interior():
 	crear_paret("Paret Fons", Vector3(0, 0, -m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, -1))
 	crear_paret("Paret Davant", Vector3(0, 0, m), Vector3(ample, ALCADA_PARET, GRUIX_PARET), Vector3(0, 0, 1))
 	crear_paret("Paret Esquerra", Vector3(-m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(-1, 0, 0))
-	var dreta := crear_paret("Paret Dreta", Vector3(m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(1, 0, 0))
+	crear_paret("Paret Dreta", Vector3(m, 0, 0), Vector3(GRUIX_PARET, ALCADA_PARET, ample), Vector3(1, 0, 0))
 
-	crear_porta_visual(dreta, Vector3(0, 0.95, 2), Vector3(GRUIX_PARET + 0.04, 1.9, 1))
+	_trobar_paret_porta()
+	_situar_jugador_a_la_porta()
 
 ## Retorna el node visual de la paret (per penjar-hi porta o finestra)
 func crear_paret(nom: String, posicio: Vector3, mida: Vector3, normal: Vector3) -> Node3D:
@@ -231,21 +236,26 @@ func crear_paret(nom: String, posicio: Vector3, mida: Vector3, normal: Vector3) 
 	parets.append({"cos": paret_static, "visual": visual, "normal": normal})
 	return visual
 
-func crear_porta_visual(paret: Node3D, posicio: Vector3, mida: Vector3):
-	var porta = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = mida
-	porta.mesh = box
-	porta.position = posicio
-	porta.name = "PortaVisual"
-	paret.add_child(porta)
+## En entrar, el jugador apareix just davant de la porta (sigui on sigui)
+func _situar_jugador_a_la_porta():
+	var jugador := get_node_or_null("Personatge")
+	if jugador == null:
+		return
+	jugador.global_position = porta_casa.get_node("EntradaJugador").global_position + Vector3.UP * 0.2
+	if jugador.has_method("_reset_interpolacio"):
+		jugador._reset_interpolacio()
+	var camera = jugador.get_node_or_null("CameraPivot/Camera3D")
+	if camera and camera.has_method("centrar_de_cop"):
+		camera.centrar_de_cop()
 
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 0.8, 0.0)
-	material.emission_enabled = true
-	material.emission = Color(0.8, 0.6, 0.0)
-	material.emission_energy_multiplier = 0.6
-	porta.material_override = material
+## La paret més propera a la porta: quan s'abaixa, la porta també
+func _trobar_paret_porta():
+	var millor := INF
+	for p in parets:
+		var d: float = absf((porta_casa.global_position - p.cos.global_position).dot(p.normal))
+		if d < millor:
+			millor = d
+			paret_porta = p
 
 ## Abaixa les parets que queden entre la càmera i la sala, i aixeca les altres
 func _actualitzar_parets(delta: float):
@@ -257,6 +267,8 @@ func _actualitzar_parets(delta: float):
 		var tapa := _paret_tapa(i, camera)
 		var objectiu := ESCALA_PARET_BAIXADA if tapa else 1.0
 		paret.visual.scale.y = move_toward(paret.visual.scale.y, objectiu, delta * 4.0)
+	if not paret_porta.is_empty():
+		porta_casa.get_node("Model").scale.y = paret_porta.visual.scale.y
 	# Els objectes d'una paret abaixada s'amaguen (la llum de les finestres continua)
 	for objecte in get_tree().get_nodes_in_group("objectes_paret"):
 		var amagat := _paret_tapa(objecte.get_meta("paret", -1), camera)
