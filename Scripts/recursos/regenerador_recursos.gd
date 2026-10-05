@@ -25,7 +25,9 @@ var mon: Node3D
 var gridmap: GridMap
 ## [{nom, factor (multiplica la densitat), celles: Array[Vector3i]}]
 var zones: Array = []
-## Nodes del món que es fan servir de model (l'arbre i l'herba de l'escena)
+## Còpies de l'arbre i l'herba de l'escena, fetes en carregar el món. No es fan servir
+## els originals directament: si el Tree1 estava talat (amagat) o semitransparent,
+## totes les còpies sortien igual (invisibles).
 var model_arbre: Node3D
 var model_herba: Node3D
 var rng := RandomNumberGenerator.new()
@@ -35,9 +37,29 @@ var recursos: Array[RecursNatural] = []
 func configurar(p_mon: Node3D, p_gridmap: GridMap, p_model_arbre: Node3D, p_model_herba: Node3D):
 	mon = p_mon
 	gridmap = p_gridmap
-	model_arbre = p_model_arbre
-	model_herba = p_model_herba
+	model_arbre = _plantilla(p_model_arbre)
+	model_herba = _plantilla(p_model_herba)
 	rng.randomize()
+
+## Una còpia neta del model: visible, opac, a la mida d'adult i sense el seu Recurs
+func _plantilla(model: Node3D) -> Node3D:
+	if model == null:
+		return null
+	var copia := model.duplicate() as Node3D
+	var recurs := copia.get_node_or_null("Recurs")
+	if recurs:
+		copia.remove_child(recurs)
+		recurs.free()
+	copia.visible = true
+	if copia is GeometryInstance3D:
+		copia.transparency = 0.0
+	copia.set_meta("alcada_sobre_terra", model.get_meta("alcada_sobre_terra", 0.0))
+	return copia
+
+func _exit_tree():
+	for m in [model_arbre, model_herba]:
+		if is_instance_valid(m) and not m.is_inside_tree():
+			m.free()
 
 func afegir_zona(nom: String, celles: Array, factor: float = 1.0):
 	zones.append({"nom": nom, "factor": factor, "celles": celles})
@@ -84,10 +106,6 @@ func crear(tipus: int, cella: Vector3i, etapa: int, dia_etapa: int, zona: int) -
 		_:
 			var model := model_arbre if tipus == RecursNatural.Tipus.ARBRE else model_herba
 			visual = model.duplicate()
-			var vell := visual.get_node_or_null("Recurs")
-			if vell:
-				visual.remove_child(vell)
-				vell.free()
 			# A la mateixa alçada sobre el terra que el model de l'escena
 			var alcada_model: float = model.get_meta("alcada_sobre_terra", 0.0)
 			mon.add_child(visual)
