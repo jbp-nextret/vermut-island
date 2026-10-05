@@ -11,6 +11,8 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
 var recolector: Recolector
+var generador_illes: GeneradorIlles
+var regenerador: RegeneradorRecursos
 var regador: Regador
 var llaurador: Llaurador
 
@@ -39,12 +41,32 @@ func _ready():
 	for node in get_children():
 		if node is Sprite3D and node.name.begins_with("Tree"):
 			node.add_to_group("ocultables")
+	# Illetes al voltant de l'illa principal (sempre les mateixes per a la mateixa llavor)
+	generador_illes = GeneradorIlles.new()
+	generador_illes.name = "GeneradorIlles"
+	add_child(generador_illes)
+	generador_illes.generar($GridMap)
+
 	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
 	for node in get_children():
 		if node is Sprite3D and node.name.begins_with("Tree"):
 			_afegir_recurs(node, RecursNatural.Tipus.ARBRE, 3, "fusta", 2, 4, 3, "talar")
 		elif node is Sprite3D and node.name.begins_with("Grass"):
 			_afegir_recurs(node, RecursNatural.Tipus.HERBA, 1, "fibra", 1, 2, 1, "herba")
+	# Recursos que surten sols cada dia (a les illetes i, menys, a l'illa principal)
+	regenerador = RegeneradorRecursos.new()
+	regenerador.name = "RegeneradorRecursos"
+	var model_arbre := get_node_or_null("Tree1") as Node3D
+	var model_herba := get_node_or_null("Grass1") as Node3D
+	for model in [model_arbre, model_herba]:
+		if model:
+			model.set_meta("alcada_sobre_terra", model.global_position.y - _terra_sota(model.global_position).y)
+	regenerador.configurar(self, $GridMap, model_arbre, model_herba)
+	for i in generador_illes.illes.size():
+		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
+	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
+	add_child(regenerador)
+
 	recolector = Recolector.new()
 	recolector.name = "Recolector"
 	recolector.mon = self
@@ -208,6 +230,36 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
+## La superfície del terreny just a sota d'un punt (mirant les cel·les del GridMap, que en
+## el _ready encara no tenen col·lisions)
+func _terra_sota(punt: Vector3) -> Vector3:
+	var gridmap: GridMap = $GridMap
+	var c: Vector3i = gridmap.local_to_map(gridmap.to_local(punt))
+	for y in range(c.y, c.y - 12, -1):
+		if gridmap.get_cell_item(Vector3i(c.x, y, c.z)) != GridMap.INVALID_CELL_ITEM:
+			return Vector3(punt.x, gridmap.to_global(Vector3(0, y + 1, 0)).y, punt.z)
+	return punt
+
+## Les cel·les d'herba de l'illa principal (on poden sortir recursos nous)
+func _celles_herba_principals() -> Array:
+	var gridmap: GridMap = $GridMap
+	var illetes := {}
+	for illa in generador_illes.illes:
+		for c in illa.herba:
+			illetes[c] = true
+	var llista := []
+	for c in gridmap.get_used_cells():
+		if illetes.has(c) or gridmap.get_cell_item(c + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(c)) == "cube-top":
+			llista.append(c)
+	return llista
+
+## Alçada de la superfície del mar
+func nivell_aigua() -> float:
+	var mar := get_node_or_null("Sea") as Node3D
+	return mar.global_position.y if mar else -INF
+
 ## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
 ## tornen a sortir, per no ficar-se al mig dels camps)
 func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
@@ -355,6 +407,7 @@ func guardar_mundo():
 	var mundo_data = {
 		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
 		"recursos": RecursNatural.estats(self),
+		"recursos_dinamics": regenerador.estat(),
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -394,6 +447,8 @@ func carregar_mundo():
 	# Carrega cultius
 	# Terra que el jugador havia llaurat
 	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
+	if mundo_data.has("recursos_dinamics"):
+		regenerador.restaurar(mundo_data.recursos_dinamics)
 	for c in mundo_data.get("llaurades", []):
 		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])

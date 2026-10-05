@@ -84,6 +84,18 @@ const COST_BOLA_FOC := 12.0
 const COST_ESTOCADA := 8.0
 var mana := MANA_BASE
 
+# Aigua: el jugador no sap nedar. Si l'aigua li cobreix el cap, es queda sense oxigen
+# i perd vida. A l'aigua poc fonda camina més a poc a poc.
+signal oxigen_canviat(actual: float, maxim: float)
+const OXIGEN_MAXIM := 8.0          # segons que aguanta la respiració
+const ALCADA_CAP := 1.3            # on té el cap respecte als peus (el fons marí, a -2, ja el cobreix)
+const DANY_OFEGAR := 10            # vida que perd cada segon sense oxigen
+const ALENTIMENT_AIGUA := 0.6      # velocitat a l'aigua que li arriba per sobre dels genolls
+const CAIGUDA_MAXIMA := 8.0        # si cau tan per sota de l'aigua, torna a l'últim lloc segur
+var oxigen := OXIGEN_MAXIM
+var temps_ofegant := 0.0
+var ultim_lloc_segur := Vector3.ZERO
+
 # Regeneració de vida (habilitat "Recuperació")
 const INTERVAL_REGENERACIO := 3.0
 const ESPERA_REGENERACIO := 5.0     # segons sense rebre mal abans de començar
@@ -106,6 +118,7 @@ const SEPARACIO_CAPES := 0.002
 var posicions_capes := {}
 
 func _ready():
+	ultim_lloc_segur = global_position
 	offset_esquelet = skeleton.position
 	pos_fisica_anterior = global_position
 	posicio_visual = global_position
@@ -175,12 +188,17 @@ func _physics_process(delta):
 		direction = direction.normalized()
 		direction = direction.rotated(Vector3.UP, angle_camera())
 	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat"))
+	if profunditat_aigua() > 0.4:
+		current_speed *= ALENTIMENT_AIGUA
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
 	move_and_slide()
 	actualitza_animacio(input_dir)
+	_actualitzar_aigua(delta)
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
+		# Abans la vida es quedava a 0 en recarregar i tornava a morir sense parar
+		SalutJugador.restaurar_salut()
 		get_tree().reload_current_scene()
 	
 func _process(delta):
@@ -223,7 +241,9 @@ func actualitza_animacio(input_dir: Vector2):
 	if input_dir.length() < 0.1:
 		anim = "idle"
 	else:
-		if abs(input_dir.x) > abs(input_dir.y):
+		# En diagonal (els dos components iguals) mira de costat: caminar de costat mirant
+		# endavant o enrere quedava estrany
+		if abs(input_dir.x) >= abs(input_dir.y):
 			if input_dir.x > 0:
 				ultima_direccio = "right"
 				mirall_horitzontal = false
@@ -336,7 +356,7 @@ func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 ## Converteix una direcció del món en "up/down/right" (+ mirall) relatiu a la càmera
 func _mirar_cap_a(direccio: Vector3):
 	var local := direccio.rotated(Vector3.UP, -angle_camera())
-	if absf(local.x) > absf(local.z):
+	if absf(local.x) >= absf(local.z) * 0.8:   # les diagonals, també de costat
 		ultima_direccio = "right"
 		mirall_horitzontal = local.x < 0
 	else:
@@ -394,6 +414,44 @@ func gastar_mana(quantitat: float) -> bool:
 		return false
 	mana -= quantitat
 	return true
+
+## Quanta aigua hi ha per sobre dels peus (0 si no n'hi ha)
+func profunditat_aigua() -> float:
+	var mon := get_tree().current_scene
+	if mon == null or not mon.has_method("nivell_aigua"):
+		return 0.0
+	return maxf(0.0, mon.nivell_aigua() - global_position.y)
+
+func submergit() -> bool:
+	return profunditat_aigua() > ALCADA_CAP
+
+func _actualitzar_aigua(delta: float):
+	var mon := get_tree().current_scene
+	if mon == null or not mon.has_method("nivell_aigua"):
+		return
+	# Si cau a l'aigua fonda (on no hi ha terra), torna a l'últim lloc segur
+	if global_position.y < mon.nivell_aigua() - CAIGUDA_MAXIMA:
+		global_position = ultim_lloc_segur
+		velocity = Vector3.ZERO
+		_reset_interpolacio()
+		if camera.has_method("centrar_de_cop"):
+			camera.centrar_de_cop()
+		SalutJugador.prendre_dany(DANY_OFEGAR)
+		oxigen = OXIGEN_MAXIM
+		return
+	if submergit():
+		oxigen = maxf(0.0, oxigen - delta)
+		if oxigen <= 0.0:
+			temps_ofegant += delta
+			if temps_ofegant >= 1.0:
+				temps_ofegant = 0.0
+				SalutJugador.prendre_dany(DANY_OFEGAR)
+	else:
+		oxigen = minf(OXIGEN_MAXIM, oxigen + delta * 3.0)
+		temps_ofegant = 0.0
+		if is_on_floor() and profunditat_aigua() < 0.6:
+			ultim_lloc_segur = global_position
+	oxigen_canviat.emit(oxigen, OXIGEN_MAXIM)
 
 ## Mana i vida que es recuperen amb el temps
 func _recuperar(delta: float):

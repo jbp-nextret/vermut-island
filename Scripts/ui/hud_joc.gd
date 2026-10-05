@@ -15,6 +15,7 @@ var rellotge: Label
 var barra_mana: ProgressBar
 var barra_xp: ProgressBar
 var label_nivell: Label
+var label_oxigen: Label
 var label_xp_guanyada: Label
 var cartell_nivell: Label
 var xp_acumulada := 0
@@ -47,6 +48,14 @@ func _ready():
 	cartell_nivell.offset_top = 90
 	cartell_nivell.modulate.a = 0.0
 	add_child(cartell_nivell)
+	label_oxigen = _label(16, Color(0.75, 0.95, 1.0))
+	label_oxigen.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label_oxigen.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label_oxigen.offset_left = -200
+	label_oxigen.offset_right = 200
+	label_oxigen.offset_top = 60
+	label_oxigen.visible = false
+	add_child(label_oxigen)
 	Progressio.xp_guanyada.connect(_on_xp_guanyada)
 	Progressio.nivell_pujat.connect(_on_nivell_pujat)
 
@@ -147,6 +156,14 @@ func _on_nivell_pujat(nivell: int):
 
 func _process(_delta):
 	var jugador := get_tree().get_first_node_in_group("player")
+	# Bombolles d'oxigen quan és sota l'aigua (una per segon que li queda)
+	if jugador and "oxigen" in jugador:
+		var oxigen: float = jugador.oxigen
+		label_oxigen.visible = oxigen < jugador.OXIGEN_MAXIM - 0.05
+		if label_oxigen.visible:
+			var bombolles := ceili(oxigen)
+			label_oxigen.text = ("🫧".repeat(bombolles) if bombolles > 0 else "Sense aire!") + "\n" + ("No saps nedar: surt de l'aigua!" if jugador.submergit() else "")
+			label_oxigen.modulate = Color(1, 0.5, 0.45) if bombolles <= 2 else Color.WHITE
 	if jugador and "mana" in jugador:
 		barra_mana.max_value = jugador.mana_max()
 		barra_mana.value = jugador.mana

@@ -23,6 +23,17 @@ enum Tipus { ARBRE, ROCA, HERBA }
 @export var marge_conreu := 1.5
 ## Distància a què ocupa el terra: no s'hi pot plantar ni llaurar
 @export var radi_ocupat := 0.8
+## Creixement (arbres): 0 = brot, 1 = jove, 2 = adult. Cada etapa dura uns dies.
+@export_range(0, 2) var etapa := 2
+@export var dies_per_etapa := 2
+
+const ESCALA_ETAPA := [0.35, 0.65, 1.0]
+const PROPORCIO_ETAPA := [0.34, 0.67, 1.0]   # de cops i de recursos que dona
+
+## Creat pel regenerador de recursos: quan s'esgota desapareix (en surten de nous en un
+## altre lloc) en lloc de tornar a sortir al mateix lloc
+var dinamic := false
+var dia_etapa := 0
 
 const NOMS_ACCIO := {Tipus.ARBRE: "🪓 Talar", Tipus.ROCA: "⛏ Picar", Tipus.HERBA: "Tallar"}
 
@@ -36,6 +47,14 @@ func _ready():
 	if tipus == Tipus.HERBA:
 		add_to_group("herba")
 	escala_original = visual().scale
+	visual().scale = escala_actual()
+
+func escala_actual() -> Vector3:
+	return escala_original * ESCALA_ETAPA[etapa]
+
+## Cops que cal donar-li segons com és de gran
+func cops_necessaris() -> int:
+	return maxi(1, roundi(cops * PROPORCIO_ETAPA[etapa]))
 
 func visual() -> Node3D:
 	return get_parent() as Node3D
@@ -70,7 +89,7 @@ func rebre_cop() -> void:
 	cops_rebuts += 1
 	_sacsejar()
 	_estelles()
-	if cops_rebuts >= cops:
+	if cops_rebuts >= cops_necessaris():
 		_esgotar()
 
 ## L'espasa talla l'herba que queda dins de l'arc del tall
@@ -88,7 +107,7 @@ func rebre_tall(origen: Vector3, direccio: Vector3, abast: float, mig_angle: flo
 func _esgotar():
 	esgotat_dia = GestorTemps.dia_actual
 	cops_rebuts = 0
-	var quantitat := randi_range(quantitat_min, quantitat_max)
+	var quantitat := maxi(1, roundi(randi_range(quantitat_min, quantitat_max) * PROPORCIO_ETAPA[etapa]))
 	var info := CatalegObjectes.info(objecte)
 	if Inventari.afegir(objecte, quantitat):
 		TextFlotant.mostrar(get_tree().current_scene, global_position + Vector3.UP * 1.2, "+%d %s" % [quantitat, info.icona], Color(1.0, 0.9, 0.6))
@@ -102,11 +121,20 @@ func _esgotar():
 			t.tween_property(v, "scale", Vector3(escala_original.x * 1.1, escala_original.y * 0.05, escala_original.z), 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_:
 			t.tween_property(v, "scale", escala_original * 0.05, 0.2)
-	t.tween_callback(func(): _mostrar(false))
+	if dinamic:
+		t.tween_callback(visual().queue_free)
+	else:
+		t.tween_callback(func(): _mostrar(false))
 	GestorPartida.call_deferred("guardar_mundo")
 
 func _process(_delta):
 	var dia: int = GestorTemps.dia_actual
+	# Creix: brot → jove → adult
+	if disponible() and etapa < 2 and dia >= dia_etapa + dies_per_etapa:
+		etapa += 1
+		dia_etapa = dia
+		var v := visual()
+		v.create_tween().tween_property(v, "scale", escala_actual(), 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	if disponible() or dia < esgotat_dia + dies_per_tornar or dia == _dia_comprovat:
 		return
 	_dia_comprovat = dia
@@ -134,15 +162,15 @@ func reapareixer():
 	esgotat_dia = -1
 	_mostrar(true)
 	var v := visual()
-	v.scale = escala_original * 0.2
-	v.create_tween().tween_property(v, "scale", escala_original, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	v.scale = escala_actual() * 0.2
+	v.create_tween().tween_property(v, "scale", escala_actual(), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 ## Amaga o mostra el recurs (i desactiva les col·lisions, si en té)
 func _mostrar(visible_ara: bool):
 	var v := visual()
 	v.visible = visible_ara
 	if visible_ara:
-		v.scale = escala_original
+		v.scale = escala_actual()
 	for forma in v.find_children("*", "CollisionShape3D", true, false):
 		forma.set_deferred("disabled", not visible_ara)
 
@@ -188,7 +216,7 @@ func _estelles():
 static func estats(mon: Node) -> Dictionary:
 	var d := {}
 	for r in mon.get_tree().get_nodes_in_group("recursos"):
-		if not r.disponible():
+		if not r.disponible() and not r.dinamic:   # els dinàmics els desa el regenerador
 			d[str(mon.get_path_to(r))] = r.esgotat_dia
 	return d
 
