@@ -7,7 +7,7 @@ class_name RegeneradorRecursos
 
 ## Recursos per cel·la d'herba de la zona
 const DENSITAT := {
-	RecursNatural.Tipus.ARBRE: 1.0 / 12.0,
+	RecursNatural.Tipus.ARBRE: 1.0 / 16.0,
 	RecursNatural.Tipus.ROCA: 1.0 / 25.0,
 	RecursNatural.Tipus.HERBA: 1.0 / 7.0,
 }
@@ -93,6 +93,8 @@ func crear(tipus: int, cella: Vector3i, etapa: int, dia_etapa: int, zona: int) -
 			mon.add_child(visual)
 			visual.global_position = terra + Vector3.UP * alcada_model
 			recurs = RecursNatural.new()
+			recurs.terra_y = terra.y
+			recurs.alcada_adult = alcada_model
 			recurs.name = "Recurs"
 			recurs.tipus = tipus
 			# Abans d'afegir-lo: en el seu _ready ja es posa a la mida de l'etapa

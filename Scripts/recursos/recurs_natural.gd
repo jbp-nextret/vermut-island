@@ -34,6 +34,10 @@ const PROPORCIO_ETAPA := [0.34, 0.67, 1.0]   # de cops i de recursos que dona
 ## altre lloc) en lloc de tornar a sortir al mateix lloc
 var dinamic := false
 var dia_etapa := 0
+## Si el sprite té el centre a una alçada sobre el terra (com els arbres), en fer-se més
+## petit també ha de baixar; si no, els brots surarien. < 0: no cal (roques, escena)
+var terra_y := 0.0
+var alcada_adult := -1.0
 
 const NOMS_ACCIO := {Tipus.ARBRE: "🪓 Talar", Tipus.ROCA: "⛏ Picar", Tipus.HERBA: "Tallar"}
 
@@ -47,10 +51,27 @@ func _ready():
 	if tipus == Tipus.HERBA:
 		add_to_group("herba")
 	escala_original = visual().scale
-	visual().scale = escala_actual()
+	_aplicar_mida()
 
 func escala_actual() -> Vector3:
 	return escala_original * ESCALA_ETAPA[etapa]
+
+## L'alçada del node visual per a la mida actual
+func alcada_actual() -> float:
+	return terra_y + alcada_adult * ESCALA_ETAPA[etapa]
+
+## Posa el visual a la mida (i l'alçada) de l'etapa, de cop o amb una animació
+func _aplicar_mida(animat := false):
+	var v := visual()
+	if not animat:
+		v.scale = escala_actual()
+		if alcada_adult >= 0.0:
+			v.global_position.y = alcada_actual()
+		return
+	var t := v.create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(v, "scale", escala_actual(), 0.6)
+	if alcada_adult >= 0.0:
+		t.tween_property(v, "global_position:y", alcada_actual(), 0.6)
 
 ## Cops que cal donar-li segons com és de gran
 func cops_necessaris() -> int:
@@ -133,8 +154,7 @@ func _process(_delta):
 	if disponible() and etapa < 2 and dia >= dia_etapa + dies_per_etapa:
 		etapa += 1
 		dia_etapa = dia
-		var v := visual()
-		v.create_tween().tween_property(v, "scale", escala_actual(), 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_aplicar_mida(true)
 	if disponible() or dia < esgotat_dia + dies_per_tornar or dia == _dia_comprovat:
 		return
 	_dia_comprovat = dia
