@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
 [ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
 [ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
+[ext_resource type="PackedScene" path="res://Scenes/npcs/npc.tscn" id="99_npc"]
+[ext_resource type="PackedScene" path="res://Scenes/npcs/zona_missio.tscn" id="99_zona"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
 sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
@@ -342,3 +344,24 @@ transform = Transform3D(0.22, 0, -0.821, 0, 0.85, 0, 0.821, 0, 0.22, -8.799194, 
 
 [node name="Roca3" parent="." unique_id=786235828 instance=ExtResource("99_roca")]
 transform = Transform3D(-0.881, 0, -0.7392, 0, 1.15, 0, 0.7392, 0, -0.881, 5.5, 1, -14.5)
+
+[node name="Pere" parent="." instance=ExtResource("99_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 1.2, -12.5)
+id = "pere"
+nom = "Pere"
+dialeg = "pere"
+variants = {"boots": "black", "eyes": "blue", "hair": "black", "jeans": "blue", "skin": "dark", "tshirt": "blue"}
+ajudes = Array[String](["transportar"])
+
+[node name="Marta" parent="." instance=ExtResource("99_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.2, -8.5)
+id = "marta"
+nom = "Marta"
+dialeg = "marta"
+variants = {"boots": "brown", "eyes": "green", "hair": "blonde", "jeans": "brown", "skin": "tan", "tshirt": "red"}
+ajudes = Array[String](["regar"])
+
+[node name="Mirador" parent="." instance=ExtResource("99_zona")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, -13.5)
+id = "mirador"
+nom = "el mirador de la platja"

@@ -84,6 +84,7 @@ func _ready():
 	hud_diners.marge_superior = 50   # a sota dels cors, el mana i l'experiència
 	add_child(hud_diners)
 	add_child(HudOnades.new())
+	add_child(HudMissions.new())
 
 	plantador = Plantador.new()
 	plantador.name = "Plantador"

@@ -43,7 +43,7 @@ func _unhandled_input(event):
 		get_viewport().set_input_as_handled()
 
 func _buscar_objectiu() -> Node:
-	if GameState.mode == GameState.Mode.CONSTRUIR:
+	if GameState.mode == GameState.Mode.CONSTRUIR or GameState.en_dialeg:
 		return null
 	var millor: Node = null
 	var millor_distancia := radi

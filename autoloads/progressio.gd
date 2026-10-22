@@ -6,6 +6,8 @@ extends Node
 ##  - valor("dany_espasa") retorna l'efecte total d'una habilitat (rangs × per_rang)
 
 signal xp_guanyada(quantitat: int, motiu: String)
+## Cada acció que fa el jugador (encara que no doni experiència): la fan servir les missions
+signal accio_feta(motiu: String, quantitat: int)
 signal nivell_pujat(nivell: int)
 signal habilitats_canviades
 
@@ -42,7 +44,11 @@ static func xp_per_nivell(n: int) -> int:
 	return roundi(40.0 * pow(n, 1.5))
 
 func guanyar_xp(motiu: String, multiplicador: float = 1.0) -> void:
-	var quantitat := roundi(XP.get(motiu, 0) * multiplicador)
+	accio_feta.emit(motiu, 1)
+	guanyar_xp_directa(roundi(XP.get(motiu, 0) * multiplicador), motiu)
+
+## Experiència d'una quantitat concreta (p. ex. la recompensa d'una missió)
+func guanyar_xp_directa(quantitat: int, motiu: String) -> void:
 	if quantitat <= 0:
 		return
 	xp += quantitat
@@ -104,7 +110,7 @@ func _aplicar_efectes():
 	SalutJugador.vida_maxima = VIDA_BASE + roundi(valor("salut_max"))
 	SalutJugador.vida_actual = mini(SalutJugador.vida_actual, SalutJugador.vida_maxima)
 	SalutJugador.emit_signal("vida_canviat", SalutJugador.vida_actual, SalutJugador.vida_maxima)
-	Inventari.max_espais = ESPAIS_BASE + roundi(valor("motxilla"))
+	Inventari.max_espais = ESPAIS_BASE + roundi(valor("motxilla")) + (Grup.espais_extra() if has_node("/root/Grup") else 0)
 
 # ─────────────── Desar / carregar
 

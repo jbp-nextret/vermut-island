@@ -12,6 +12,8 @@ var caixa: PanelContainer
 var graella: GridContainer
 var descripcio: RichTextLabel
 var estat: RichTextLabel
+var pestanyes: TabContainer
+var text_missions: RichTextLabel
 var seleccionat := ""
 
 func _ready():
@@ -68,9 +70,15 @@ func _ready():
 	var dreta := VBoxContainer.new()
 	dreta.add_theme_constant_override("separation", 10)
 	cos.add_child(dreta)
-	dreta.add_child(_titol_seccio("La partida"))
-	estat = _text_ric(Vector2(400, 460))
-	dreta.add_child(estat)
+	# Dues pestanyes: l'estat de la partida i les missions
+	pestanyes = TabContainer.new()
+	dreta.add_child(pestanyes)
+	estat = _text_ric(Vector2(400, 430))
+	estat.name = "La partida"
+	pestanyes.add_child(estat)
+	text_missions = _text_ric(Vector2(400, 430))
+	text_missions.name = "Missions"
+	pestanyes.add_child(text_missions)
 
 func _titol_seccio(text: String) -> Label:
 	var l := Label.new()
@@ -106,13 +114,14 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func obrir():
-	if visible or not MenuPausa.en_partida():
+	if visible or not MenuPausa.en_partida() or GameState.en_dialeg:
 		return
 	visible = true
 	Engine.time_scale = 1.0
 	get_tree().paused = true
 	_omplir_objectes()
 	_omplir_estat()
+	_omplir_missions()
 
 func tancar():
 	visible = false
@@ -172,6 +181,37 @@ func _mostrar_descripcio(id: String):
 	descripcio.text = "[b]%s %s[/b]  ×%d\n%s" % [info.icona, info.nom, quantitat, info.descripcio]
 
 # ─────────────── Estat de la partida
+
+func _omplir_missions():
+	var t := ""
+	var actives := Missions.missions_actives()
+	if actives.is_empty():
+		t += "[color=#aaaaaa]No tens cap missió activa. Parla amb els habitants de l'illa: els que tenen feina per a tu porten un [color=#ffd94d]![/color] sobre el cap.[/color]\n\n"
+	for m in actives:
+		t += "[b][color=#ffd98a]%s[/color][/b]\n" % m.titol
+		if not m.descripcio.is_empty():
+			t += "[i]%s[/i]\n" % m.descripcio
+		for i in m.objectius.size():
+			var o: ObjectiuMissio = m.objectius[i]
+			var p := Missions.progres(m.id, i)
+			t += ("[color=#9ef59e]✓ %s[/color]\n" if p >= o.objectiu() else "• %s\n") % o.text(p)
+		if Missions.pot_lliurar(m.id):
+			t += "[color=#9ef59e]▸ Ja la pots lliurar[/color]\n"
+		var r: String = m.text_recompenses()
+		if not r.is_empty():
+			t += "[color=#bbbbbb]Recompensa: %s[/color]\n" % r
+		t += "\n"
+	var fetes := Missions.missions_completades()
+	if not fetes.is_empty():
+		t += "[b]Completades[/b]\n"
+		for m in fetes:
+			t += "[color=#888888]✓ %s[/color]\n" % m.titol
+	if not Grup.membres.is_empty():
+		t += "\n[b]El teu grup[/b]\n"
+		for n in Grup.npcs():
+			var ajuda := ", ".join(n.ajudes.map(func(a): return {"regar": "rega els cultius", "transportar": "porta coses (+%d espais)" % Grup.ESPAIS_TRANSPORT}.get(a, a)))
+			t += "• %s%s\n" % [n.nom, (": " + ajuda) if not ajuda.is_empty() else ""]
+	text_missions.text = t
 
 func _omplir_estat():
 	var dia: int = GestorTemps.dia_actual

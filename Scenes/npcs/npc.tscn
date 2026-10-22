@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/npcs/npc.gd" id="1_npc"]
+[ext_resource type="PackedScene" uid="uid://22rrq2tq8ykw" path="res://Scenes/PreviewPersonatge.tscn" id="2_aparenca"]
+
+[sub_resource type="BoxShape3D" id="Forma_npc"]
+size = Vector3(0.6, 1.56, 0.25)
+
+[node name="NPC" type="CharacterBody3D"]
+collision_layer = 16
+collision_mask = 3
+script = ExtResource("1_npc")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.59, 0)
+shape = SubResource("Forma_npc")
+
+[node name="Aparenca" parent="." instance=ExtResource("2_aparenca")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)

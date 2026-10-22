@@ -23,6 +23,8 @@ func guardar_mundo() -> void:
 	GestorTemps.guardar()
 	Progres.guardar()
 	Progressio.guardar()
+	Missions.guardar()
+	Grup.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	
