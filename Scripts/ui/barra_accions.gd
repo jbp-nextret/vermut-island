@@ -71,6 +71,7 @@ func _ready():
 		botons.foc.sacsejar())
 	Inventari.motxilla_plena.connect(func(_item): _mostrar_avis("La motxilla és plena (amplia-la a Mundà → Motxilla gran)"))
 	llaurador.avis.connect(_mostrar_avis)
+	EventBus.avis.connect(_mostrar_avis)
 	if jugador.has_signal("magia_no_disponible"):
 		jugador.magia_no_disponible.connect(func(): botons.foc.sacsejar())
 

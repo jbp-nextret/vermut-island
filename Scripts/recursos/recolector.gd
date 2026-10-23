@@ -48,11 +48,8 @@ func _unhandled_input(event: InputEvent):
 	temps_des_del_cop = 0.0
 	var recurs := recurs_sota_ratoli
 	# El personatge s'hi gira i fa el gest; l'eina apareix al costat del recurs
-	var cap := recurs.global_position - jugador.global_position
-	cap.y = 0
-	if cap.length() > 0.1 and jugador.has_method("_mirar_cap_a"):
-		jugador._mirar_cap_a(cap.normalized())
-		jugador.play_anim("attack_" + jugador.ultima_direccio, jugador.mirall_horitzontal)
+	if jugador.has_method("encarar"):
+		jugador.encarar(recurs.global_position, true, 1.6)
 	var punt := CombatMagic.terra_sota(jugador, recurs.global_position) + Vector3.UP * 0.4
 	var eina := "destral" if recurs.tipus == RecursNatural.Tipus.ARBRE else "pic"
 	var durada := EinaMagica.invocar(mon, punt, eina, COLOR_EINA)

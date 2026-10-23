@@ -375,7 +375,14 @@ func _intentar_plantar(_des_de_clic: bool = true):
 		avis.emit(cella.motiu)
 		return
 	if mon.plantar_cultiu(escena(), cella.posicio):
+		_encarar_jugador(cella.posicio)
 		seleccio_canviada.emit(index)
+
+## El personatge es gira cap on planta i fa el gest
+func _encarar_jugador(punt: Vector3):
+	var jugador := get_tree().get_first_node_in_group("player")
+	if jugador and jugador.has_method("encarar"):
+		jugador.encarar(punt)
 
 ## Totes les cel·les del rectangle entre `a` i `b` (seguint l'alçada del terreny)
 func _cel_les_area(a: Vector3i, b: Vector3i) -> Array:
@@ -416,6 +423,11 @@ func _plantar_area():
 				plantats += 1
 		elif motiu.is_empty():
 			motiu = info.motiu
+	if plantats > 0:
+		var centre := Vector3.ZERO
+		for info in seleccio_area:
+			centre += info.posicio
+		_encarar_jugador(centre / seleccio_area.size())
 	if plantats == 0 and not motiu.is_empty():
 		avis.emit(motiu)
 	seleccio_canviada.emit(index)

@@ -8,6 +8,7 @@ if Grup.es_membre("marta"):
 elif Missions.pot_lliurar("fusta_moll"):
 	marta: Has portat la fusta i la fibra! Amb això arreglaré el moll en un tres i no res.
 	do Missions.lliurar("fusta_moll")
+	marta: Ja està! El moll arreglat i la barca amarrada al final. Ja pots anar a les illetes quan vulguis.
 	marta: Moltes gràcies. I si mai vols que t'acompanyi, només m'ho has de dir: sé molt de regar.
 elif Missions.activa("fusta_moll"):
 	marta: Encara em falta material per al moll: 8 de fusta i 4 de fibra.

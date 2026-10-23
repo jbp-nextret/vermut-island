@@ -28,6 +28,10 @@ var mirall_horitzontal = false
 enum Estat { NORMAL, COMBAT }
 var estat: Estat = Estat.NORMAL
 var atacant: bool = false
+## Temps que el personatge es queda girat cap a allò amb què ha interactuat
+var temps_encarat := 0.0
+## La barca que condueix (null si va a peu)
+var barca: Barca = null
 
 @onready var skeleton: Node3D = $Skeleton
 
@@ -143,6 +147,10 @@ func _ready():
 func _physics_process(delta):
 	pos_fisica_anterior = global_position
 	temps_darrera_magia += delta
+	temps_encarat = maxf(0.0, temps_encarat - delta)
+	if barca:
+		_seure_a_barca()
+		return
 	if temps_cua > 0.0:
 		temps_cua -= delta
 		if temps_cua <= 0.0:
@@ -239,8 +247,13 @@ func actualitza_animacio(input_dir: Vector2):
 		return
 	var anim = ""
 	if input_dir.length() < 0.1:
+		# Acabat d'interactuar: es queda mirant cap a l'objecte una estona
+		if temps_encarat > 0.0 or GameState.en_dialeg:
+			_pose_encarat()
+			return
 		anim = "idle"
 	else:
+		temps_encarat = 0.0
 		# En diagonal (els dos components iguals) mira de costat: caminar de costat mirant
 		# endavant o enrere quedava estrany
 		if abs(input_dir.x) >= abs(input_dir.y):
@@ -352,6 +365,74 @@ func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 	atacant = true
 	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
 	create_tween().tween_callback(func(): atacant = false).set_delay(0.25)
+
+# ─────────────── Barca
+
+func pujar_a_barca(b: Barca):
+	barca = b
+	GameState.a_barca = true
+	velocity = Vector3.ZERO
+	dash_actiu = false
+	if estat == Estat.COMBAT:
+		toggle_mode_combat()
+	oxigen = OXIGEN_MAXIM
+	oxigen_canviat.emit(oxigen, OXIGEN_MAXIM)
+
+func baixar_de_barca(punt: Vector3):
+	barca = null
+	GameState.a_barca = false
+	global_position = punt
+	velocity = Vector3.ZERO
+	ultim_lloc_segur = punt
+
+## Dret a la popa, mirant cap a la proa
+func _seure_a_barca():
+	if SalutJugador.vida_actual <= 0:
+		SalutJugador.restaurar_salut()
+		get_tree().reload_current_scene()
+		return
+	velocity = Vector3.ZERO
+	global_position = barca.seient(0)
+	if not atacant:
+		_mirar_cap_a(barca.endavant())
+		_pose_encarat()
+
+## Gira el personatge cap a un punt del món (una roca, un cultiu, un NPC...).
+## Amb `gest` fa l'animació d'acció; després es queda mirant-hi `durada` segons
+## mentre no es mogui (l'"idle" només mira endavant).
+func encarar(punt: Vector3, gest := true, durada := 1.2):
+	var direccio := punt - global_position
+	direccio.y = 0.0
+	if direccio.length() < 0.05:
+		return
+	_mirar_cap_a(direccio.normalized())
+	temps_encarat = durada
+	if gest:
+		atacant = true
+		play_anim("attack_" + ultima_direccio, mirall_horitzontal)
+		create_tween().tween_callback(func(): atacant = false).set_delay(0.3)
+	else:
+		_pose_encarat()
+	_actualitzar_orientacio_espasa()
+
+## Quiet mirant cap a `ultima_direccio`: el primer fotograma de caminar (avall, l'idle)
+func _pose_encarat():
+	if ultima_direccio == "down":
+		play_anim("idle", mirall_horitzontal)
+		return
+	var anim: String = "walk_" + ultima_direccio
+	for sprite in sprites:
+		if sprite == null:
+			continue
+		var te := sprite.sprite_frames.has_animation(anim)
+		sprite.visible = te   # els ulls no tenen "d'esquena"
+		if not te:
+			continue
+		sprite.flip_h = mirall_horitzontal
+		if sprite.animation != anim or sprite.is_playing():
+			sprite.stop()
+			sprite.animation = anim
+			sprite.frame = 0
 
 ## Converteix una direcció del món en "up/down/right" (+ mirall) relatiu a la càmera
 func _mirar_cap_a(direccio: Vector3):

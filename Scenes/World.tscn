@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/npcs/npc.tscn" id="99_npc"]
 [ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
 [ext_resource type="PackedScene" path="res://Scenes/npcs/zona_missio.tscn" id="99_zona"]
+[ext_resource type="PackedScene" path="res://Scenes/barca/barca.tscn" id="99_barca"]
+[ext_resource type="Script" path="res://Scripts/barca/moll.gd" id="99_moll"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
 sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
@@ -384,3 +386,12 @@ ajudes = Array[String](["regar"])
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, -13.5)
 id = "mirador"
 nom = "el mirador de la platja"
+
+[node name="Moll" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19, 0, -9.5)
+script = ExtResource("99_moll")
+
+[node name="Barca" parent="." instance=ExtResource("99_barca")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -25.5, 0.41, -11.3)
+missio_requerida = "fusta_moll"
+

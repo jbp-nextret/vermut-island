@@ -109,7 +109,23 @@ func interactuar(jugador) -> void:
 
 # ─────────────── Cada frame
 
+var anava_en_barca := false
+
 func _physics_process(delta):
+	# Si el jugador va amb barca, els companys hi van asseguts a la proa
+	var barca = _barca_del_jugador()
+	if barca and Grup.es_membre(id):
+		if not anava_en_barca and estat == Estat.AJUDANT:
+			_acabar_feina()
+		anava_en_barca = true
+		velocity = Vector3.ZERO
+		global_position = barca.seient(1 + maxi(0, Grup.membres.find(id)))
+		_mirar_cap_a(barca.endavant())
+		_pose_quiet()
+		return
+	if anava_en_barca:
+		anava_en_barca = false
+		_apareixer_al_costat_del_jugador()
 	if not is_on_floor():
 		velocity.y -= GRAVETAT * delta
 	else:
@@ -153,6 +169,7 @@ func _physics_process(delta):
 
 func _process(_delta):
 	_separar_capes()
+	_sincronitzar_capes()
 	var m := Missions.marcador_npc(id)
 	marcador.text = m
 	marcador.visible = not m.is_empty() and Converses.npc_actual != self
@@ -252,8 +269,25 @@ func _apareixer_al_costat_del_jugador():
 	if jugador == null:
 		return
 	var index := maxi(0, Grup.membres.find(id))
-	global_position = jugador.global_position + Vector3(-1.2 if index == 0 else 1.2, 0.3, 0.8)
+	var costat := -1.0 if index == 0 else 1.0
+	global_position = jugador.global_position + Vector3(1.2 * costat, 0.3, 0.8)
+	# Que no aparegui a l'aigua fonda (p. ex. en baixar de la barca): busca terra a prop
+	var mon := get_tree().current_scene
+	var aigua: float = mon.nivell_aigua() if mon and mon.has_method("nivell_aigua") else -INF
+	var espai := get_world_3d().direct_space_state
+	for despl in [Vector3(1.2 * costat, 0, 0.8), Vector3(0.9 * costat, 0, -0.6), Vector3(0, 0, 1.0), Vector3(0, 0, -1.0), Vector3(-0.9 * costat, 0, 0.6), Vector3(0.6 * costat, 0, 0)]:
+		var p: Vector3 = jugador.global_position + despl
+		var raig := PhysicsRayQueryParameters3D.create(p + Vector3.UP * 1.5, p + Vector3.DOWN * 2.5, 1)
+		raig.exclude = [get_rid(), jugador.get_rid()]
+		var cop := espai.intersect_ray(raig)
+		if not cop.is_empty() and cop.normal.y > 0.7 and cop.position.y > aigua - 0.55:
+			global_position = cop.position + Vector3.UP * 0.25
+			break
 	velocity = Vector3.ZERO
+
+func _barca_del_jugador():
+	var jugador := _jugador()
+	return jugador.barca if jugador and "barca" in jugador else null
 
 func _jugador() -> Node3D:
 	return get_tree().get_first_node_in_group("player") as Node3D
@@ -288,15 +322,39 @@ func _reproduir(anim: String, mirall: bool):
 	for s in sprites.values():
 		if s.sprite_frames == null:
 			continue
-		var a := anim if s.sprite_frames.has_animation(anim) else "idle"
-		if s.animation != a:
-			s.play(a)
+		# Una capa sense aquesta animació (els ulls d'esquena) s'amaga, com al jugador.
+		# Abans es quedava fent "idle" pel seu compte i es desquadrava.
+		var te: bool = s.sprite_frames.has_animation(anim)
+		s.visible = te
 		s.flip_h = mirall
-	# Totes les capes al mateix fotograma
+		if te and (s.animation != anim or not s.is_playing()):
+			s.play(anim)
+	_sincronitzar_capes()
+
+## Quiet mirant cap a `_direccio` (l'"idle" només mira endavant): el primer fotograma de caminar
+func _pose_quiet():
+	if _direccio == "down":
+		_reproduir("idle", _mirall)
+		return
+	var anim := "walk_" + _direccio
+	for s in sprites.values():
+		if s.sprite_frames == null:
+			continue
+		var te: bool = s.sprite_frames.has_animation(anim)
+		s.visible = te
+		s.flip_h = _mirall
+		if te and (s.animation != anim or s.is_playing()):
+			s.stop()
+			s.animation = anim
+			s.frame = 0
+
+## Totes les capes al mateix fotograma I al mateix punt dins del fotograma
+func _sincronitzar_capes():
 	var skin: AnimatedSprite3D = sprites.skin
 	for s in sprites.values():
 		if s != skin and s.animation == skin.animation:
-			s.frame = skin.frame
+			s.set_frame_and_progress(skin.frame, skin.frame_progress)
+			s.speed_scale = skin.speed_scale
 
 ## Les capes s'avancen una mica cap a la càmera segons l'ordre (com el jugador)
 func _separar_capes():

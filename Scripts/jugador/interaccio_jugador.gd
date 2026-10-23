@@ -39,11 +39,16 @@ func _process(_delta):
 
 func _unhandled_input(event):
 	if event.is_action_pressed("interactuar") and objectiu:
+		# Es gira cap a allò que toca; amb la gent, sense gest (només s'hi encara)
+		var jugador := get_parent()
+		if jugador.has_method("encarar"):
+			var es_gent: bool = objectiu.is_in_group("npcs") or objectiu.is_in_group("porings")
+			jugador.encarar(objectiu.punt_interaccio(), not es_gent, 2.0 if es_gent else 1.2)
 		objectiu.interactuar(self)
 		get_viewport().set_input_as_handled()
 
 func _buscar_objectiu() -> Node:
-	if GameState.mode == GameState.Mode.CONSTRUIR or GameState.en_dialeg:
+	if GameState.mode == GameState.Mode.CONSTRUIR or GameState.en_dialeg or GameState.a_barca:
 		return null
 	var millor: Node = null
 	var millor_distancia := radi

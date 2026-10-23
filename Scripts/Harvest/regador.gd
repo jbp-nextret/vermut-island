@@ -145,11 +145,8 @@ func _intentar_regar():
 	var centre: Vector3 = cella.superficie
 
 	# El personatge es gira cap allà i fa el gest de l'encanteri
-	var direccio := centre - jugador.global_position
-	direccio.y = 0
-	if direccio.length() > 0.1 and jugador.has_method("_mirar_cap_a"):
-		jugador._mirar_cap_a(direccio.normalized())
-		jugador.play_anim("attack_" + jugador.ultima_direccio, jugador.mirall_horitzontal)
+	if jugador.has_method("encarar"):
+		jugador.encarar(centre)
 
 	_cercle_magic(centre)
 	_pluja(centre)
