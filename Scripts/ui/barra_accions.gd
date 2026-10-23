@@ -48,6 +48,7 @@ func _ready():
 	fila.add_child(separador2)
 	_boto("motxilla", "🎒", "inventari", Color(0.95, 0.8, 0.5), "Motxilla", func(): MenuInventari.obrir())
 	_boto("habilitats", "🌟", "habilitats", Color(1.0, 0.85, 0.4), "Habilitats", func(): MenuHabilitats.obrir())
+	_boto("mapa", "🗺️", "mapa", Color(0.6, 0.85, 0.95), "Mapa", func(): Mapa.obrir())
 
 	label_info = _label(11, Color(0.92, 0.95, 1.0))
 	add_child(label_info)
@@ -115,6 +116,7 @@ func _process(_delta):
 	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
 	_actualitzar("motxilla", true, 1.0)
 	_actualitzar("habilitats", true, 1.0)
+	_actualitzar("mapa", true, 1.0)
 	# Si tens punts per gastar, el botó d'habilitats batega
 	if Progressio.punts > 0 and Engine.get_process_frames() % 120 == 0:
 		botons.habilitats.bategar()

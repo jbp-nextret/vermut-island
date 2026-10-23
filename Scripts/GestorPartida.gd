@@ -25,6 +25,7 @@ func guardar_mundo() -> void:
 	Progressio.guardar()
 	Missions.guardar()
 	Grup.guardar()
+	Mapa.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	

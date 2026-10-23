@@ -106,7 +106,7 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func obrir():
-	if visible or not MenuPausa.en_partida() or GameState.en_dialeg:
+	if visible or not MenuPausa.en_partida() or GameState.en_dialeg or Mapa.visible:
 		return
 	visible = true
 	Engine.time_scale = 1.0
