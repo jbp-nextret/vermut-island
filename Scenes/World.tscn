@@ -19,11 +19,11 @@
 [ext_resource type="Script" uid="uid://datnpueolld0r" path="res://Scripts/spawn_enemics.gd" id="16_waglr"]
 [ext_resource type="PackedScene" uid="uid://ds3opcyv5ge8y" path="res://Scenes/buildings/Casa-col.tscn" id="18_rwt1y"]
 [ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
+[ext_resource type="PackedScene" path="res://Scenes/barca/barca.tscn" id="99_barca"]
+[ext_resource type="Script" uid="uid://cc0vgpr3qlsdg" path="res://Scripts/barca/moll.gd" id="99_moll"]
 [ext_resource type="PackedScene" path="res://Scenes/npcs/npc.tscn" id="99_npc"]
 [ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
 [ext_resource type="PackedScene" path="res://Scenes/npcs/zona_missio.tscn" id="99_zona"]
-[ext_resource type="PackedScene" path="res://Scenes/barca/barca.tscn" id="99_barca"]
-[ext_resource type="Script" path="res://Scripts/barca/moll.gd" id="99_moll"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_aqk2v"]
 sky_top_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
@@ -387,11 +387,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, -13.5)
 id = "mirador"
 nom = "el mirador de la platja"
 
-[node name="Moll" type="StaticBody3D" parent="."]
+[node name="Moll" type="StaticBody3D" parent="." unique_id=1096646336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19, 0, -9.5)
 script = ExtResource("99_moll")
 
-[node name="Barca" parent="." instance=ExtResource("99_barca")]
+[node name="Barca" parent="." unique_id=782731055 instance=ExtResource("99_barca")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -25.5, 0.41, -11.3)
 missio_requerida = "fusta_moll"
-
