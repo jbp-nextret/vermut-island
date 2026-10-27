@@ -2,6 +2,9 @@ extends CanvasLayer
 ## Comptador de rendiment (F3): fotogrames per segon, temps de cada fotograma (el pitjor
 ## dels últims segons), tics de física i resolució. Serveix per saber si les estrebades
 ## vénen del rendiment (el joc no arriba als Hz del monitor) o d'una altra cosa.
+##
+## Només en proves (executant des de l'editor): F4 dona un kit per provar la captura
+## de criatures i l'elaboració (olives, vermut hipnòtic, raïm, fibra).
 
 var label: Label
 var temps_fotogrames: Array[float] = []
@@ -21,6 +24,13 @@ func _ready():
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F3:
 		visible = not visible
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F4 and OS.is_debug_build():
+		_kit_de_proves()
+
+func _kit_de_proves():
+	for objecte in [["olives_marinades", 10], ["vermut_hipnotic", 6], ["olives", 9], ["raim", 5], ["fibra", 5]]:
+		Inventari.afegir(objecte[0], objecte[1])
+	EventBus.avis.emit("🧪 Kit de proves: olives marinades, vermut hipnòtic, olives, raïm i fibra")
 
 func _process(delta):
 	temps_fotogrames.append(delta * 1000.0)
