@@ -17,4 +17,10 @@ const OBJECTES := {
 static func info(id: String) -> Dictionary:
 	if OBJECTES.has(id):
 		return OBJECTES[id]
+	# Fòssils i tresors: els defineix l'arqueologia
+	var arbre := Engine.get_main_loop() as SceneTree
+	if arbre and arbre.root.has_node("Arqueologia"):
+		var i: Dictionary = arbre.root.get_node("Arqueologia").info_objecte(id)
+		if not i.is_empty():
+			return i
 	return {"nom": id.capitalize(), "icona": "📦", "descripcio": ""}

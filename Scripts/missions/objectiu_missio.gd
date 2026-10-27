@@ -23,6 +23,7 @@ const ACCIONS := {
 	"servir": "Serveix clients",
 	"obrir_vermuteria": "Obre la vermuteria",
 	"domesticar": "Domestica criatures",
+	"excavar": "Desenterra fòssils o tresors",
 }
 
 @export var tipus: Tipus = Tipus.PARLAR:
@@ -36,7 +37,7 @@ const ACCIONS := {
 ## PORTAR: l'id de l'objecte
 @export var objecte := ""
 ## ACCIO: quina acció
-@export_enum("enemic", "onada", "collir", "plantar", "regar", "llaurar", "talar", "picar", "herba", "servir", "obrir_vermuteria", "domesticar") var accio := "enemic"
+@export_enum("enemic", "onada", "collir", "plantar", "regar", "llaurar", "talar", "picar", "herba", "servir", "obrir_vermuteria", "domesticar", "excavar") var accio := "enemic"
 ## PORTAR i ACCIO: quantes
 @export var quantitat := 1
 ## ARRIBAR: l'id de la ZonaMissio

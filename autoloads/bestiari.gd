@@ -15,6 +15,10 @@ var detall_text: RichTextLabel
 var comptador: Label
 var seleccionada := ""
 var fitxes := {}   # id -> Button
+## "criatures" o "fossils" (les espècies extingides)
+var seccio := "criatures"
+var botons_seccio := {}
+var detall_icona: Label
 
 func _ready():
 	layer = 49
@@ -37,9 +41,16 @@ func obrir(especie_id := ""):
 	visible = true
 	Engine.time_scale = 1.0
 	get_tree().paused = true
+	if not especie_id.is_empty():
+		seccio = "criatures"
 	_omplir()
 	if not especie_id.is_empty():
 		seleccionada = especie_id
+	if seccio == "fossils":
+		if seleccionada.is_empty() or not Arqueologia.especies.has(seleccionada):
+			seleccionada = _extintes()[0].id if not _extintes().is_empty() else ""
+		_mostrar(seleccionada)
+		return
 	if seleccionada.is_empty() or not Criatures.especies.has(seleccionada):
 		seleccionada = _ordenades()[0].id if not _ordenades().is_empty() else ""
 	_mostrar(seleccionada)
@@ -78,6 +89,13 @@ func _construir_ui():
 	titol.text = "📖 Bestiari"
 	titol.add_theme_font_size_override("font_size", 28)
 	capcalera.add_child(titol)
+	for s in [["criatures", "🐾 Criatures"], ["fossils", "🦴 Fòssils"]]:
+		var b := Button.new()
+		b.text = s[1]
+		b.toggle_mode = true
+		b.pressed.connect(_canviar_seccio.bind(s[0]))
+		capcalera.add_child(b)
+		botons_seccio[s[0]] = b
 	comptador = Label.new()
 	comptador.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	comptador.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -121,6 +139,11 @@ func _construir_ui():
 	detall_imatge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	detall_imatge.custom_minimum_size = Vector2(0, 104)
 	detall.add_child(detall_imatge)
+	detall_icona = Label.new()
+	detall_icona.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detall_icona.add_theme_font_size_override("font_size", 80)
+	detall_icona.custom_minimum_size = Vector2(0, 104)
+	detall.add_child(detall_icona)
 	detall_nom = Label.new()
 	detall_nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detall_nom.add_theme_font_size_override("font_size", 26)
@@ -139,10 +162,30 @@ func _construir_ui():
 	detall_text.add_theme_color_override("default_color", Color(0.22, 0.15, 0.1))
 	detall.add_child(detall_text)
 
+func _canviar_seccio(nova: String):
+	seccio = nova
+	seleccionada = ""
+	_omplir()
+	var llista := _ordenades() if seccio == "criatures" else _extintes()
+	if not llista.is_empty():
+		_mostrar(llista[0].id)
+
+func _extintes() -> Array:
+	var llista: Array = Arqueologia.especies.values()
+	llista.sort_custom(func(a, b): return a.nom < b.nom)
+	return llista
+
 func _omplir():
 	for f in graella.get_children():
 		f.queue_free()
 	fitxes.clear()
+	for k in botons_seccio:
+		botons_seccio[k].button_pressed = k == seccio
+	detall_imatge.visible = seccio == "criatures"
+	detall_icona.visible = seccio == "fossils"
+	if seccio == "fossils":
+		_omplir_fossils()
+		return
 	var vistes := 0
 	var dom := 0
 	for e in _ordenades():
@@ -186,10 +229,89 @@ func _omplir():
 	var total := Criatures.especies.size()
 	comptador.text = "Vistes %d/%d  ·  Domesticades %d/%d" % [vistes, total, dom, total]
 
+func _omplir_fossils():
+	var trobades := 0
+	var completes := 0
+	for e in _extintes():
+		var n := Arqueologia.parts_trobades(e)
+		trobades += int(n > 0)
+		completes += int(n == e.parts.size())
+		var b := Button.new()
+		b.custom_minimum_size = MIDA_FITXA
+		b.toggle_mode = true
+		b.pressed.connect(_mostrar.bind(e.id))
+		var v := VBoxContainer.new()
+		v.set_anchors_preset(Control.PRESET_FULL_RECT)
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.alignment = BoxContainer.ALIGNMENT_CENTER
+		b.add_child(v)
+		var icona := Label.new()
+		icona.text = "🦴" if n > 0 else "❔"
+		icona.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icona.add_theme_font_size_override("font_size", 40)
+		icona.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(icona)
+		var nom := Label.new()
+		nom.text = e.nom if n > 0 else "???"
+		nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nom.add_theme_font_size_override("font_size", 13)
+		nom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(nom)
+		var marca := Label.new()
+		marca.text = "Parts %d/%d" % [n, e.parts.size()]
+		marca.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		marca.add_theme_font_size_override("font_size", 11)
+		marca.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4) if n == e.parts.size() else Color(0.75, 0.75, 0.85))
+		marca.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(marca)
+		graella.add_child(b)
+		fitxes[e.id] = b
+	var total := Arqueologia.especies.size()
+	comptador.text = "Descobertes %d/%d  ·  Completes %d/%d" % [trobades, total, completes, total]
+
+func _mostrar_fossil(id: String):
+	var e: EspecieExtinta = Arqueologia.especies.get(id)
+	if e == null:
+		return
+	var n := Arqueologia.parts_trobades(e)
+	var completa := n == e.parts.size()
+	detall_icona.text = "🦴" if n > 0 else "❔"
+	detall_nom.text = e.nom if n > 0 else "???"
+	if completa:
+		detall_estat.text = "✨ Esquelet complet"
+		detall_estat.add_theme_color_override("font_color", Color(0.65, 0.4, 0.05))
+	elif n > 0:
+		detall_estat.text = "🦴 %d de %d parts" % [n, e.parts.size()]
+		detall_estat.add_theme_color_override("font_color", Color(0.2, 0.4, 0.6))
+	else:
+		detall_estat.text = "Encara no n'has trobat cap fòssil"
+		detall_estat.add_theme_color_override("font_color", Color(0.45, 0.4, 0.35))
+	var t := ""
+	if n == 0:
+		t = "[i]Una espècie extingida que dorm sota terra. Busca les marques de terra remoguda (les que brillen amaguen coses importants) i llaura-hi amb l'aixada.[/i]"
+	else:
+		t += "[i]%s[/i]\n\n" % e.descripcio
+		if not e.epoca.is_empty():
+			t += "[b]Època:[/b] %s\n\n" % e.epoca
+		t += "[b]Parts:[/b]\n"
+		for p in e.parts:
+			var id_obj := e.id_objecte(p)
+			var color: String = PartFossil.COLORS_RARESA[p.raresa].darkened(0.35).to_html(false)
+			if Arqueologia.trobada(id_obj):
+				t += "  ✓ %s [color=#%s](%s)[/color]  ×%d\n" % [p.nom, color, PartFossil.NOMS_RARESA[p.raresa], int(Arqueologia.trobats[id_obj])]
+			else:
+				t += "  · ??? [color=#%s](%s)[/color]\n" % [color, PartFossil.NOMS_RARESA[p.raresa]]
+		t += "\n[b]Reviscuda:[/b] %s\n" % (e.habilitat_reviscuda if completa else "[i]completa l'esquelet per saber-ho[/i]")
+		t += "[i]Al laboratori (aviat) podràs barrejar-ne l'ADN per tornar-la a la vida.[/i]"
+	detall_text.text = t
+
 func _mostrar(id: String):
 	seleccionada = id
 	for k in fitxes:
 		fitxes[k].button_pressed = k == id
+	if seccio == "fossils":
+		_mostrar_fossil(id)
+		return
 	var e := Criatures.especie(id)
 	if e == null:
 		return

@@ -39,6 +39,7 @@ Converses="*res://autoloads/converses.gd"
 Missions="*res://autoloads/missions.gd"
 Grup="*res://autoloads/grup.gd"
 Criatures="*res://autoloads/criatures.gd"
+Arqueologia="*res://autoloads/arqueologia.gd"
 Bestiari="*res://autoloads/bestiari.gd"
 
 [dialogic]

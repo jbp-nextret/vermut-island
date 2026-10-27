@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="EspecieExtinta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/arqueologia/especie_extinta.gd" id="1_ext"]
+[ext_resource type="Script" path="res://Scripts/arqueologia/part_fossil.gd" id="2_part"]
+
+[sub_resource type="Resource" id="Part_ala"]
+script = ExtResource("2_part")
+id = "ala"
+nom = "Os d'ala"
+raresa = 0
+
+[sub_resource type="Resource" id="Part_bec"]
+script = ExtResource("2_part")
+id = "bec"
+nom = "Bec"
+raresa = 1
+
+[sub_resource type="Resource" id="Part_crani"]
+script = ExtResource("2_part")
+id = "crani"
+nom = "Crani"
+raresa = 2
+
+[resource]
+script = ExtResource("1_ext")
+id = "pterogot"
+nom = "Pterogot"
+descripcio = "Un rèptil volador amb el bec en forma de got. Planava sobre les illetes a la posta de sol."
+epoca = "Els cels antics"
+parts = Array[ExtResource("2_part")]([SubResource("Part_ala"), SubResource("Part_bec"), SubResource("Part_crani")])
+frequencia = 0.7
+habilitat_reviscuda = "Et porta volant d'una illa a l'altra."
+color = Color(0.75, 0.5, 0.55, 1)

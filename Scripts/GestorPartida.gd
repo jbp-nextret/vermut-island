@@ -27,6 +27,7 @@ func guardar_mundo() -> void:
 	Grup.guardar()
 	Mapa.guardar()
 	Criatures.guardar()
+	Arqueologia.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	

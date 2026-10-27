@@ -13,6 +13,7 @@ var plantador: Plantador
 var recolector: Recolector
 var llancador: Llancador
 var generador_criatures: GeneradorCriatures
+var punts_excavacio: PuntsExcavacio
 var generador_illes: GeneradorIlles
 var regenerador: RegeneradorRecursos
 var regador: Regador
@@ -76,6 +77,14 @@ func _ready():
 		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "illetes")
 	generador_criatures.afegir_zona("Illa principal", _celles_herba_principals(), GeneradorCriatures.A_LA_PRINCIPAL, "principal")
 	add_child(generador_criatures)
+	# Arqueologia: marques a terra on hi ha fòssils o tresors (es desenterren llaurant)
+	punts_excavacio = PuntsExcavacio.new()
+	punts_excavacio.name = "PuntsExcavacio"
+	punts_excavacio.configurar(self, $GridMap)
+	for i in generador_illes.illes.size():
+		punts_excavacio.afegir_zona(generador_illes.illes[i].herba, PuntsExcavacio.PER_ILLETA, "illetes")
+	punts_excavacio.afegir_zona(_celles_herba_principals(), PuntsExcavacio.A_LA_PRINCIPAL, "principal")
+	add_child(punts_excavacio)
 
 	recolector = Recolector.new()
 	recolector.name = "Recolector"
