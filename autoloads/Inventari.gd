@@ -3,6 +3,10 @@ extends Node
 
 signal diners_canviats(diners: int)
 signal items_canviats
+signal motxilla_plena(item: String)
+
+## Quants tipus d'objecte diferents hi caben (l'habilitat "Motxilla gran" ho amplia)
+var max_espais := 8
 
 const FITXER := "user://inventari.save"
 const VERSIO := 2
@@ -19,10 +23,18 @@ func _ready():
 		afegir("llavor_raim", 150)
 		afegir("raim", RAIM_INICIAL)
 
-func afegir(item: String, quantitat: int = 1):
+func espais_ocupats() -> int:
+	return items.values().filter(func(q): return q > 0).size()
+
+## Retorna false si l'objecte és nou i la motxilla ja és plena
+func afegir(item: String, quantitat: int = 1) -> bool:
+	if tenir(item) <= 0 and espais_ocupats() >= max_espais:
+		motxilla_plena.emit(item)
+		return false
 	items[item] = items.get(item, 0) + quantitat
 	items_canviats.emit()
 	_desar_aviat()
+	return true
 
 func treure(item: String, quantitat: int = 1) -> bool:
 	if tenir(item) < quantitat:

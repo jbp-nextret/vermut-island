@@ -31,6 +31,15 @@ const TIPUS := {
 }
 
 ## Llegeix de cada escena tot el que cal per a la roda, el HUD i la vista prèvia
+## Cultius que cal desbloquejar amb l'habilitat "Botànica": índex a TOTS -> rang necessari
+const BOTANICA := {3: 1, 5: 2, 4: 3}   # Calèndula, Ortiga, Carbassa esquer
+
+static func desbloquejat(index: int) -> bool:
+	return Progressio.rang("botanica") >= BOTANICA.get(index, 0)
+
+static func text_bloqueig(index: int) -> String:
+	return "🔒 Desbloqueja-ho a Mundà → Botànica (rang %d)" % BOTANICA.get(index, 0)
+
 static func opcions_roda() -> Array:
 	var opcions := []
 	for escena in TOTS:

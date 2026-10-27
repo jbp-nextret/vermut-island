@@ -144,6 +144,8 @@ func _acabar(superada: bool) -> void:
 	var diners := morts * DINERS_PER_ENEMIC + bonus
 	if diners > 0:
 		Inventari.afegir_diners(diners)
+	if superada:
+		Progressio.guanyar_xp("onada", dia_setmana(dia_onada) + 1)   # les onades del divendres donen més
 	Progres.registrar_onada(dia_onada, {"superada": superada, "morts": morts, "total": total, "cultius_perduts": cultius_perduts})
 	onada_acabada.emit({
 		"dia": nom_del_dia(dia_onada),

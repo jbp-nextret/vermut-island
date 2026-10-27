@@ -10,8 +10,18 @@ signal mode_canviat(actiu: bool)
 signal avis(text: String)
 
 const ABAST := 7.0
+const COST_MANA_PER_CELLA := 2.0
 const RECARREGA := 0.5
-const MIDA_MAXIMA_AREA := 8
+## Cel·les per costat de l'àrea: 1 (sense l'habilitat no es pot arrossegar) i, amb
+## "Aixada llarga", 3, 5 o 7
+func mida_maxima_area() -> int:
+	return 1 + 2 * Progressio.rang("abast_llaurar")
+
+func pot_arrossegar() -> bool:
+	return mida_maxima_area() > 1
+
+func abast() -> float:
+	return ABAST
 const COLOR_MAGIA := Color(0.95, 0.75, 0.4)
 const COLOR_VALID := Color(0.85, 0.6, 0.3)
 const COLOR_INVALID := Color(1.0, 0.3, 0.3)
@@ -129,15 +139,18 @@ func _info(c: Vector3i) -> Dictionary:
 	local.y = c.y + (0.5 if nom.contains("half") else 1.0)
 	var superficie := gridmap.to_global(local)
 	var info := {"cella": c, "superficie": superficie, "valida": true, "motiu": ""}
-	if mon.llaurades.has(c) or nom in mon.blocs_plantables:
+	if mon.llaurades.has(c):
 		info.valida = false
 		info.motiu = "Aquesta terra ja és cultivable"
 	elif not mon.es_herba(nom):
 		info.valida = false
 		info.motiu = "Només es pot llaurar l'herba"
-	elif Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() > ABAST:
+	elif Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() > abast():
 		info.valida = false
 		info.motiu = "Massa lluny"
+	elif mon.has_method("recurs_a") and mon.recurs_a(superficie):
+		info.valida = false
+		info.motiu = "Hi ha %s" % ["un arbre", "una roca", "herba (talla-la amb l'espasa)"][mon.recurs_a(superficie).tipus]
 	elif _hi_ha_obstacle(superficie):
 		info.valida = false
 		info.motiu = "Hi ha alguna cosa a sobre"
@@ -159,9 +172,9 @@ func _hi_ha_obstacle(superficie: Vector3) -> bool:
 
 func _area(a: Vector3i, b: Vector3i) -> Array:
 	var x0 := mini(a.x, b.x)
-	var x1 := mini(maxi(a.x, b.x), x0 + MIDA_MAXIMA_AREA - 1)
+	var x1 := mini(maxi(a.x, b.x), x0 + mida_maxima_area() - 1)
 	var z0 := mini(a.z, b.z)
-	var z1 := mini(maxi(a.z, b.z), z0 + MIDA_MAXIMA_AREA - 1)
+	var z1 := mini(maxi(a.z, b.z), z0 + mida_maxima_area() - 1)
 	var resultat := []
 	for x in range(x0, x1 + 1):
 		for z in range(z0, z1 + 1):
@@ -212,6 +225,11 @@ func _llaurar_seleccio():
 	if temps_des_de_llaurar < RECARREGA:
 		_cancel_lar()
 		return
+	# Cada cel·la costa una mica de mana
+	if jugador.has_method("gastar_mana") and not jugador.gastar_mana(COST_MANA_PER_CELLA * valides.size()):
+		avis.emit("No tens prou mana")
+		_cancel_lar()
+		return
 	temps_des_de_llaurar = 0.0
 
 	# L'aixada cau al centre de l'àrea
@@ -219,11 +237,8 @@ func _llaurar_seleccio():
 	for i in valides:
 		centre += i.superficie
 	centre /= valides.size()
-	var direccio := centre - jugador.global_position
-	direccio.y = 0
-	if direccio.length() > 0.1 and jugador.has_method("_mirar_cap_a"):
-		jugador._mirar_cap_a(direccio.normalized())
-		jugador.play_anim("attack_" + jugador.ultima_direccio, jugador.mirall_horitzontal)
+	if jugador.has_method("encarar"):
+		jugador.encarar(centre)
 
 	var durada := _aixada(centre)
 	# En tocar a terra, les cel·les es converteixen una darrere l'altra, des del centre
@@ -236,6 +251,7 @@ func _llaurar_seleccio():
 
 func _convertir(info: Dictionary):
 	mon.llaurar_cella(info.cella)
+	Progressio.guanyar_xp("llaurar")
 	_terrossos(info.superficie)
 
 ## Aixada espectral: s'alça, cau de cop i s'esvaeix. Retorna quant triga a tocar a terra.

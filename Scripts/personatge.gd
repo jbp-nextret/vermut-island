@@ -28,6 +28,10 @@ var mirall_horitzontal = false
 enum Estat { NORMAL, COMBAT }
 var estat: Estat = Estat.NORMAL
 var atacant: bool = false
+## Temps que el personatge es queda girat cap a allò amb què ha interactuat
+var temps_encarat := 0.0
+## La barca que condueix (null si va a peu)
+var barca: Barca = null
 
 @onready var skeleton: Node3D = $Skeleton
 
@@ -74,6 +78,33 @@ var temps_darrera_magia: float = 0.0
 @export var cercle_durada_visible: float = 1.5
 
 signal magia_no_disponible
+signal mana_insuficient
+signal magia_bloquejada
+
+# Mana: el gasten la bola de foc, l'estocada i llaurar. Es recupera sol.
+const MANA_BASE := 50.0
+const REGEN_MANA_BASE := 5.0       # per segon
+const COST_BOLA_FOC := 12.0
+const COST_ESTOCADA := 8.0
+var mana := MANA_BASE
+
+# Aigua: el jugador no sap nedar. Si l'aigua li cobreix el cap, es queda sense oxigen
+# i perd vida. A l'aigua poc fonda camina més a poc a poc.
+signal oxigen_canviat(actual: float, maxim: float)
+const OXIGEN_MAXIM := 8.0          # segons que aguanta la respiració
+const ALCADA_CAP := 1.3            # on té el cap respecte als peus (el fons marí, a -2, ja el cobreix)
+const DANY_OFEGAR := 10            # vida que perd cada segon sense oxigen
+const ALENTIMENT_AIGUA := 0.6      # velocitat a l'aigua que li arriba per sobre dels genolls
+const CAIGUDA_MAXIMA := 8.0        # si cau tan per sota de l'aigua, torna a l'últim lloc segur
+var oxigen := OXIGEN_MAXIM
+var temps_ofegant := 0.0
+var ultim_lloc_segur := Vector3.ZERO
+
+# Regeneració de vida (habilitat "Recuperació")
+const INTERVAL_REGENERACIO := 3.0
+const ESPERA_REGENERACIO := 5.0     # segons sense rebre mal abans de començar
+var temps_sense_mal := 0.0
+var temps_regeneracio := 0.0
 
 # Atacs màgics a curta distància (substitueixen l'espasa)
 var combat: CombatMagic
@@ -91,6 +122,7 @@ const SEPARACIO_CAPES := 0.002
 var posicions_capes := {}
 
 func _ready():
+	ultim_lloc_segur = global_position
 	offset_esquelet = skeleton.position
 	pos_fisica_anterior = global_position
 	posicio_visual = global_position
@@ -115,6 +147,10 @@ func _ready():
 func _physics_process(delta):
 	pos_fisica_anterior = global_position
 	temps_darrera_magia += delta
+	temps_encarat = maxf(0.0, temps_encarat - delta)
+	if barca:
+		_seure_a_barca()
+		return
 	if temps_cua > 0.0:
 		temps_cua -= delta
 		if temps_cua <= 0.0:
@@ -159,17 +195,23 @@ func _physics_process(delta):
 	if direction.length() > 0:
 		direction = direction.normalized()
 		direction = direction.rotated(Vector3.UP, angle_camera())
-	var current_speed = SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED
+	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat"))
+	if profunditat_aigua() > 0.4:
+		current_speed *= ALENTIMENT_AIGUA
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
 	move_and_slide()
 	actualitza_animacio(input_dir)
+	_actualitzar_aigua(delta)
 	if SalutJugador.vida_actual <= 0:
 		print("Has mort!")
+		# Abans la vida es quedava a 0 en recarregar i tornava a morir sense parar
+		SalutJugador.restaurar_salut()
 		get_tree().reload_current_scene()
 	
 func _process(delta):
 	_interpolar_visual()
+	_recuperar(delta)
 	_actualitzar_marcador_objectiu()
 	_separar_capes()
 	for sprite in sprites:
@@ -205,9 +247,16 @@ func actualitza_animacio(input_dir: Vector2):
 		return
 	var anim = ""
 	if input_dir.length() < 0.1:
+		# Acabat d'interactuar: es queda mirant cap a l'objecte una estona
+		if temps_encarat > 0.0 or GameState.en_dialeg:
+			_pose_encarat()
+			return
 		anim = "idle"
 	else:
-		if abs(input_dir.x) > abs(input_dir.y):
+		temps_encarat = 0.0
+		# En diagonal (els dos components iguals) mira de costat: caminar de costat mirant
+		# endavant o enrere quedava estrany
+		if abs(input_dir.x) >= abs(input_dir.y):
 			if input_dir.x > 0:
 				ultima_direccio = "right"
 				mirall_horitzontal = false
@@ -292,7 +341,12 @@ func _unhandled_input(event):
 func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 	if direccio == Vector3.ZERO:
 		direccio = _direccio_cap_al_cursor()
+	if tipus == "estocada" and mana < COST_ESTOCADA:
+		mana_insuficient.emit()
+		return
 	var fet: bool = combat.tall(direccio) if tipus == "tall" else combat.estocada(direccio)
+	if fet and tipus == "estocada":
+		mana -= COST_ESTOCADA
 	if not fet:
 		if atac_en_cua != tipus:
 			atac_en_cua = tipus
@@ -305,17 +359,85 @@ func _atac_magic(tipus: String, direccio := Vector3.ZERO):
 	if tipus == "estocada":
 		dash_actiu = true
 		dash_direccio = direccio
-		dash_temps_restant = dash_estocada_durada
+		dash_temps_restant = dash_estocada_durada * (1.0 + Progressio.valor("abast_dash"))
 		# Invulnerable mentre dura el dash (per travessar enemics sense rebre)
 		SalutJugador.invulnerable_fins = maxf(SalutJugador.invulnerable_fins, Time.get_ticks_msec() / 1000.0 + dash_estocada_durada + 0.1)
 	atacant = true
 	play_anim("attack_" + ultima_direccio, mirall_horitzontal)
 	create_tween().tween_callback(func(): atacant = false).set_delay(0.25)
 
+# ─────────────── Barca
+
+func pujar_a_barca(b: Barca):
+	barca = b
+	GameState.a_barca = true
+	velocity = Vector3.ZERO
+	dash_actiu = false
+	if estat == Estat.COMBAT:
+		toggle_mode_combat()
+	oxigen = OXIGEN_MAXIM
+	oxigen_canviat.emit(oxigen, OXIGEN_MAXIM)
+
+func baixar_de_barca(punt: Vector3):
+	barca = null
+	GameState.a_barca = false
+	global_position = punt
+	velocity = Vector3.ZERO
+	ultim_lloc_segur = punt
+
+## Dret a la popa, mirant cap a la proa
+func _seure_a_barca():
+	if SalutJugador.vida_actual <= 0:
+		SalutJugador.restaurar_salut()
+		get_tree().reload_current_scene()
+		return
+	velocity = Vector3.ZERO
+	global_position = barca.seient(0)
+	if not atacant:
+		_mirar_cap_a(barca.endavant())
+		_pose_encarat()
+
+## Gira el personatge cap a un punt del món (una roca, un cultiu, un NPC...).
+## Amb `gest` fa l'animació d'acció; després es queda mirant-hi `durada` segons
+## mentre no es mogui (l'"idle" només mira endavant).
+func encarar(punt: Vector3, gest := true, durada := 1.2):
+	var direccio := punt - global_position
+	direccio.y = 0.0
+	if direccio.length() < 0.05:
+		return
+	_mirar_cap_a(direccio.normalized())
+	temps_encarat = durada
+	if gest:
+		atacant = true
+		play_anim("attack_" + ultima_direccio, mirall_horitzontal)
+		create_tween().tween_callback(func(): atacant = false).set_delay(0.3)
+	else:
+		_pose_encarat()
+	_actualitzar_orientacio_espasa()
+
+## Quiet mirant cap a `ultima_direccio`: el primer fotograma de caminar (avall, l'idle)
+func _pose_encarat():
+	if ultima_direccio == "down":
+		play_anim("idle", mirall_horitzontal)
+		return
+	var anim: String = "walk_" + ultima_direccio
+	for sprite in sprites:
+		if sprite == null:
+			continue
+		var te := sprite.sprite_frames.has_animation(anim)
+		sprite.visible = te   # els ulls no tenen "d'esquena"
+		if not te:
+			continue
+		sprite.flip_h = mirall_horitzontal
+		if sprite.animation != anim or sprite.is_playing():
+			sprite.stop()
+			sprite.animation = anim
+			sprite.frame = 0
+
 ## Converteix una direcció del món en "up/down/right" (+ mirall) relatiu a la càmera
 func _mirar_cap_a(direccio: Vector3):
 	var local := direccio.rotated(Vector3.UP, -angle_camera())
-	if absf(local.x) > absf(local.z):
+	if absf(local.x) >= absf(local.z) * 0.8:   # les diagonals, també de costat
 		ultima_direccio = "right"
 		mirall_horitzontal = local.x < 0
 	else:
@@ -346,6 +468,7 @@ func _hitstop(durada: float):
 ## Quan el jugador rep mal: parpelleig vermell i sacseig
 func _on_vida_canviat(actual, _maxima):
 	if actual < vida_anterior:
+		temps_sense_mal = 0.0
 		camera_shake(0.2)
 		for sprite in sprites:
 			if sprite:
@@ -356,8 +479,71 @@ func _on_vida_canviat(actual, _maxima):
 				t.parallel().tween_property(sprite, "modulate", Color.WHITE, 0.3)
 	vida_anterior = actual
 
+## Recàrrega de la bola de foc (l'habilitat "Foc ràpid" l'escurça)
+func recarrega_magia() -> float:
+	return cooldown_magia * (1.0 - Progressio.valor("recarrega_foc"))
+
 func progres_magia() -> float:
-	return clampf(temps_darrera_magia / cooldown_magia, 0.0, 1.0)
+	return clampf(temps_darrera_magia / recarrega_magia(), 0.0, 1.0)
+
+func mana_max() -> float:
+	return MANA_BASE + Progressio.valor("mana_max")
+
+func gastar_mana(quantitat: float) -> bool:
+	if mana < quantitat:
+		mana_insuficient.emit()
+		return false
+	mana -= quantitat
+	return true
+
+## Quanta aigua hi ha per sobre dels peus (0 si no n'hi ha)
+func profunditat_aigua() -> float:
+	var mon := get_tree().current_scene
+	if mon == null or not mon.has_method("nivell_aigua"):
+		return 0.0
+	return maxf(0.0, mon.nivell_aigua() - global_position.y)
+
+func submergit() -> bool:
+	return profunditat_aigua() > ALCADA_CAP
+
+func _actualitzar_aigua(delta: float):
+	var mon := get_tree().current_scene
+	if mon == null or not mon.has_method("nivell_aigua"):
+		return
+	# Si cau a l'aigua fonda (on no hi ha terra), torna a l'últim lloc segur
+	if global_position.y < mon.nivell_aigua() - CAIGUDA_MAXIMA:
+		global_position = ultim_lloc_segur
+		velocity = Vector3.ZERO
+		_reset_interpolacio()
+		if camera.has_method("centrar_de_cop"):
+			camera.centrar_de_cop()
+		SalutJugador.prendre_dany(DANY_OFEGAR)
+		oxigen = OXIGEN_MAXIM
+		return
+	if submergit():
+		oxigen = maxf(0.0, oxigen - delta)
+		if oxigen <= 0.0:
+			temps_ofegant += delta
+			if temps_ofegant >= 1.0:
+				temps_ofegant = 0.0
+				SalutJugador.prendre_dany(DANY_OFEGAR)
+	else:
+		oxigen = minf(OXIGEN_MAXIM, oxigen + delta * 3.0)
+		temps_ofegant = 0.0
+		if is_on_floor() and profunditat_aigua() < 0.6:
+			ultim_lloc_segur = global_position
+	oxigen_canviat.emit(oxigen, OXIGEN_MAXIM)
+
+## Mana i vida que es recuperen amb el temps
+func _recuperar(delta: float):
+	mana = minf(mana_max(), mana + REGEN_MANA_BASE * (1.0 + Progressio.valor("regen_mana")) * delta)
+	temps_sense_mal += delta
+	var regen := roundi(Progressio.valor("regeneracio"))
+	if regen > 0 and temps_sense_mal >= ESPERA_REGENERACIO and SalutJugador.vida_actual < SalutJugador.vida_maxima:
+		temps_regeneracio += delta
+		if temps_regeneracio >= INTERVAL_REGENERACIO:
+			temps_regeneracio = 0.0
+			SalutJugador.curar(regen)
 
 func toggle_mode_combat():
 	estat = Estat.COMBAT if estat == Estat.NORMAL else Estat.NORMAL
@@ -391,8 +577,13 @@ func _crear_trail():
 	tween.tween_callback(ghost.queue_free)
 
 func disparar_bola_foc(direccio := Vector3.ZERO):
-	if temps_darrera_magia < cooldown_magia:
+	if not Progressio.te("bola_foc"):
+		magia_bloquejada.emit()
+		return
+	if temps_darrera_magia < recarrega_magia():
 		magia_no_disponible.emit()
+		return
+	if not gastar_mana(COST_BOLA_FOC):
 		return
 	temps_darrera_magia = 0.0
 
@@ -401,6 +592,7 @@ func disparar_bola_foc(direccio := Vector3.ZERO):
 	var bola = bola_foc_scene.instantiate()
 	get_tree().current_scene.add_child(bola)
 	bola.global_position = global_position + Vector3(0, 1.0, 0)
+	bola.dany = roundi(bola.dany * (1.0 + Progressio.valor("dany_foc")))
 	bola.direccio = direccio if direccio != Vector3.ZERO else _direccio_cap_al_cursor()
 	# Si el ratolí és sobre un enemic, la bola el persegueix
 	if direccio == Vector3.ZERO and SettingsManager.valor("boles_guiades"):
@@ -477,7 +669,7 @@ func _actualitzar_marcador_objectiu():
 		marcador_objectiu.top_level = true
 		marcador_objectiu.visible = false
 		add_child(marcador_objectiu)
-	enemic_apuntat_actual = enemic_apuntat() if GameState.pot_atacar() and SettingsManager.valor("boles_guiades") else null
+	enemic_apuntat_actual = enemic_apuntat() if GameState.pot_atacar() and SettingsManager.valor("boles_guiades") and Progressio.te("bola_foc") else null
 	marcador_objectiu.visible = enemic_apuntat_actual != null
 	if enemic_apuntat_actual:
 		var punt: Vector3 = enemic_apuntat_actual.sprite.global_position if "sprite" in enemic_apuntat_actual else enemic_apuntat_actual.global_position

@@ -1,0 +1,145 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/barca/barca.gd" id="1_barca"]
+
+[sub_resource type="CapsuleShape3D" id="Forma"]
+radius = 0.85
+height = 4.3
+
+[sub_resource type="StandardMaterial3D" id="Fusta_fosca"]
+albedo_color = Color(0.45, 0.28, 0.16, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Fusta_clara"]
+albedo_color = Color(0.62, 0.43, 0.25, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Coberta_mat"]
+albedo_color = Color(0.68, 0.52, 0.33, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Pintura"]
+albedo_color = Color(0.2, 0.5, 0.55, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="Casc_mesh"]
+material = SubResource("Fusta_fosca")
+size = Vector3(1.7, 0.35, 3.3)
+
+[sub_resource type="PrismMesh" id="Proa_mesh"]
+material = SubResource("Fusta_fosca")
+size = Vector3(1.7, 1.0, 0.65)
+
+[sub_resource type="BoxMesh" id="Franja_mesh"]
+material = SubResource("Pintura")
+size = Vector3(1.72, 0.08, 3.32)
+
+[sub_resource type="PrismMesh" id="Franja_proa_mesh"]
+material = SubResource("Pintura")
+size = Vector3(1.72, 1.0, 0.08)
+
+[sub_resource type="BoxMesh" id="Coberta_mesh"]
+material = SubResource("Coberta_mat")
+size = Vector3(1.46, 0.02, 3.1)
+
+[sub_resource type="BoxMesh" id="Borda_mesh"]
+material = SubResource("Fusta_clara")
+size = Vector3(0.12, 0.3, 3.3)
+
+[sub_resource type="BoxMesh" id="Popa_mesh"]
+material = SubResource("Fusta_clara")
+size = Vector3(1.7, 0.3, 0.12)
+
+[sub_resource type="BoxMesh" id="Banc_mesh"]
+material = SubResource("Fusta_clara")
+size = Vector3(1.46, 0.07, 0.32)
+
+[sub_resource type="BoxMesh" id="Timo_mesh"]
+material = SubResource("Fusta_fosca")
+size = Vector3(0.07, 0.07, 0.75)
+
+[sub_resource type="StandardMaterial3D" id="Escuma_mat"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="Escuma_mesh"]
+material = SubResource("Escuma_mat")
+size = Vector2(0.28, 0.28)
+
+[sub_resource type="Gradient" id="Escuma_color"]
+colors = PackedColorArray(1, 1, 1, 0.85, 1, 1, 1, 0)
+
+[node name="Barca" type="CharacterBody3D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_barca")
+
+[node name="Forma" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.56, -0.4)
+shape = SubResource("Forma")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Casc" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0.1)
+mesh = SubResource("Casc_mesh")
+
+[node name="Proa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.225, -2.05)
+mesh = SubResource("Proa_mesh")
+
+[node name="Franja" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.1)
+mesh = SubResource("Franja_mesh")
+
+[node name="FranjaProa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.12, -2.05)
+mesh = SubResource("Franja_proa_mesh")
+
+[node name="Coberta" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.255, 0.1)
+mesh = SubResource("Coberta_mesh")
+
+[node name="BordaEsquerra" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.79, 0.4, 0.1)
+mesh = SubResource("Borda_mesh")
+
+[node name="BordaDreta" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.79, 0.4, 0.1)
+mesh = SubResource("Borda_mesh")
+
+[node name="Popa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 1.69)
+mesh = SubResource("Popa_mesh")
+
+[node name="BancPopa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 1.4)
+mesh = SubResource("Banc_mesh")
+
+[node name="BancProa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, -0.95)
+mesh = SubResource("Banc_mesh")
+
+[node name="Timo" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.62, 1.75)
+mesh = SubResource("Timo_mesh")
+
+[node name="Estela" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 1.8)
+emitting = false
+amount = 48
+lifetime = 1.2
+local_coords = false
+mesh = SubResource("Escuma_mesh")
+emission_shape = 3
+emission_box_extents = Vector3(0.6, 0, 0.1)
+direction = Vector3(0, 0, 1)
+spread = 30.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.8
+scale_amount_min = 0.6
+scale_amount_max = 1.3
+color_ramp = SubResource("Escuma_color")

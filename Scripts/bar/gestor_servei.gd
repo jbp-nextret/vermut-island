@@ -54,6 +54,8 @@ func tancar() -> void:
 		p.marxar()
 	GameState.mode = GameState.Mode.EXPLORAR
 	Progres.registrar_servei(GestorTemps.dia_actual, clients_servits, guanys, clients_enfadats)
+	if clients_servits > 0:
+		Progressio.guanyar_xp("obrir_vermuteria")
 	# Com a Dave the Diver: després del servei ja és de nit
 	GestorTemps.avancar_fins(GestorTemps.hora_nit)
 	servei_tancat.emit()

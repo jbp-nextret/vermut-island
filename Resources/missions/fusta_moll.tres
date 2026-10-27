@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Missio" format=3]
+
+[ext_resource type="Script" path="res://Scripts/missions/objectiu_missio.gd" id="1_0pnmb"]
+[ext_resource type="Script" path="res://Scripts/progressio/requisit.gd" id="2_6dk6m"]
+[ext_resource type="Script" path="res://Scripts/missions/missio.gd" id="3_baijg"]
+
+[sub_resource type="Resource" id="Resource_0dasb"]
+script = ExtResource("1_0pnmb")
+tipus = 1
+objecte = "fusta"
+quantitat = 8
+
+[sub_resource type="Resource" id="Resource_4hknb"]
+script = ExtResource("1_0pnmb")
+tipus = 1
+objecte = "fibra"
+quantitat = 4
+
+[resource]
+script = ExtResource("3_baijg")
+id = "fusta_moll"
+titol = "Fusta per al moll"
+descripcio = "La Marta vol arreglar el moll per poder anar a les illetes del voltant."
+donant = "marta"
+objectius = Array[ExtResource("1_0pnmb")]([SubResource("Resource_0dasb"), SubResource("Resource_4hknb")])
+missions_previes = PackedStringArray("benvinguda")
+diners = 50
+xp = 40

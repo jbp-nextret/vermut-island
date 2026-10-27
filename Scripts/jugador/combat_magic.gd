@@ -67,12 +67,18 @@ func tall(direccio: Vector3) -> bool:
 		_efecte_cercle(REMOLI.radi, COLORS_TALL[2])
 		for enemic in _enemics_propers(REMOLI.radi):
 			_colpejar(enemic, dany)
+		_tallar_herba(direccio, REMOLI.radi, 180.0)
 	else:
 		var sentit := 1.0 if combo == 1 else -1.0
 		_escombrada(direccio, sentit, TALL.mig_angle * 2.0, 0.11, 1.0, COLORS_TALL[combo - 1])
 		_efecte_mitja_lluna(direccio, TALL.abast, COLORS_TALL[combo - 1])
 		_colpejar_con(direccio, TALL.abast, TALL.mig_angle, TALL.dany)
+		_tallar_herba(direccio, TALL.abast, TALL.mig_angle)
 	return true
+
+## L'herba que queda dins del tall es talla (i dona fibra)
+func _tallar_herba(direccio: Vector3, abast: float, mig_angle: float):
+	jugador.get_tree().call_group("herba", "rebre_tall", jugador.global_position, direccio, abast, mig_angle)
 
 ## L'espasa apareix, gira `obertura` graus al voltant del jugador i s'esvaeix
 func _escombrada(direccio: Vector3, sentit: float, obertura: float, durada: float, mida: float, color: Color):
@@ -210,6 +216,8 @@ func _colpejar_con(direccio: Vector3, abast: float, mig_angle: float, dany: int)
 		_colpejar(enemic, dany)
 
 func _colpejar(enemic: Node3D, dany: int):
+	# L'habilitat "Fil espectral" augmenta el mal de l'espasa
+	dany = roundi(dany * (1.0 + Progressio.valor("dany_espasa")))
 	enemic.prendre_dany(dany, jugador.global_position)
 	cop_encertat.emit(enemic, dany)
 

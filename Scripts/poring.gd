@@ -157,6 +157,7 @@ func _acabar_de_beure() -> void:
 	_change_state(State.LEAVING)
 
 func _pagar() -> void:
+	Progressio.guanyar_xp("servir")
 	var quantitat := preu_base + propina
 	Inventari.afegir_diners(quantitat)
 	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.4, "+%d" % quantitat, COLOR_DINERS)

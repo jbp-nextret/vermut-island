@@ -1,7 +1,6 @@
 extends Node3D
 
 @export var cultiu_escena: PackedScene
-@onready var zona_hort = $ZonaHort
 @onready var cursor = $CursorPlantacio
 @onready var particules_plantar = $ParticulesPlantar
 @onready var particules_collir = $ParticulesCollir
@@ -11,10 +10,14 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 @onready var roda_seleccio = $RodaSeleccio
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
+var recolector: Recolector
+var generador_illes: GeneradorIlles
+var regenerador: RegeneradorRecursos
 var regador: Regador
 var llaurador: Llaurador
 
-# Terra llaurada pel jugador (fora de la ZonaHort també s'hi pot plantar)
+# Terra llaurada: l'única on es pot plantar. Hi ha la que ha llaurat el jugador i l'hort
+# original (vegeu _marcar_hort_original)
 var llaurades := {}   # Vector3i -> true
 const NOMS_HERBA := ["cube-top", "cube_half-top"]
 ## Peça de terra i gir (graus) segons quins veïns són herba (W=oest, E=est, N=nord, S=sud).
@@ -38,6 +41,38 @@ func _ready():
 	for node in get_children():
 		if node is Sprite3D and node.name.begins_with("Tree"):
 			node.add_to_group("ocultables")
+	# Illetes al voltant de l'illa principal (sempre les mateixes per a la mateixa llavor)
+	generador_illes = GeneradorIlles.new()
+	generador_illes.name = "GeneradorIlles"
+	add_child(generador_illes)
+	generador_illes.generar($GridMap)
+
+	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			_afegir_recurs(node, RecursNatural.Tipus.ARBRE, 3, "fusta", 2, 4, 3, "talar")
+		elif node is Sprite3D and node.name.begins_with("Grass"):
+			_afegir_recurs(node, RecursNatural.Tipus.HERBA, 1, "fibra", 1, 2, 1, "herba")
+	# Recursos que surten sols cada dia (a les illetes i, menys, a l'illa principal)
+	regenerador = RegeneradorRecursos.new()
+	regenerador.name = "RegeneradorRecursos"
+	var model_arbre := get_node_or_null("Tree1") as Node3D
+	var model_herba := get_node_or_null("Grass1") as Node3D
+	for model in [model_arbre, model_herba]:
+		if model:
+			model.set_meta("alcada_sobre_terra", model.global_position.y - _terra_sota(model.global_position).y)
+	regenerador.configurar(self, $GridMap, model_arbre, model_herba)
+	for i in generador_illes.illes.size():
+		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
+	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
+	add_child(regenerador)
+
+	recolector = Recolector.new()
+	recolector.name = "Recolector"
+	recolector.mon = self
+	recolector.jugador = $Personatge
+	add_child(recolector)
+
 	var ocultadors := TransparenciaOcultadors.new()
 	ocultadors.jugador = $Personatge
 	add_child(ocultadors)
@@ -46,9 +81,10 @@ func _ready():
 	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
 	add_child(HudJoc.new())
 	var hud_diners := HudDiners.new()
-	hud_diners.marge_superior = 30
+	hud_diners.marge_superior = 50   # a sota dels cors, el mana i l'experiència
 	add_child(hud_diners)
 	add_child(HudOnades.new())
+	add_child(HudMissions.new())
 
 	plantador = Plantador.new()
 	plantador.name = "Plantador"
@@ -66,6 +102,7 @@ func _ready():
 	for eina in [plantador, regador, llaurador]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
+	recolector.eines_actives = [plantador, regador, llaurador]
 	var barra := BarraAccions.new()
 	barra.jugador = $Personatge
 	barra.plantador = plantador
@@ -128,7 +165,9 @@ func _ready():
 		print("Signal cultiu_recollit no existeix a EventBus")
 	
 	# CARREGA EL WORLD
+	_marcar_hort_original()
 	carregar_mundo()
+	_retirar_recursos_en_conflicte()
 	
 func _on_cultiu_recollit(posicio: Vector3):
 	print("Event rebut a posicio: ", posicio)
@@ -162,6 +201,12 @@ func aplicar_spawn_player(posicio: Vector3):
 
 ## Planta un cultiu a `posicio` (ja validada pel Plantador). Gasta una llavor.
 func plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
+	var plantat := _plantar_cultiu(escena, posicio)
+	if plantat:
+		Progressio.guanyar_xp("plantar")
+	return plantat
+
+func _plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
 	if not Inventari.treure("llavor_raim"):
 		return false
 	var cultiu = escena.instantiate()
@@ -186,17 +231,109 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
+## La superfície del terreny just a sota d'un punt (mirant les cel·les del GridMap, que en
+## el _ready encara no tenen col·lisions)
+func _terra_sota(punt: Vector3) -> Vector3:
+	var gridmap: GridMap = $GridMap
+	var c: Vector3i = gridmap.local_to_map(gridmap.to_local(punt))
+	for y in range(c.y, c.y - 12, -1):
+		if gridmap.get_cell_item(Vector3i(c.x, y, c.z)) != GridMap.INVALID_CELL_ITEM:
+			return Vector3(punt.x, gridmap.to_global(Vector3(0, y + 1, 0)).y, punt.z)
+	return punt
+
+## Les cel·les d'herba de l'illa principal (on poden sortir recursos nous)
+func _celles_herba_principals() -> Array:
+	var gridmap: GridMap = $GridMap
+	var illetes := {}
+	for illa in generador_illes.illes:
+		for c in illa.herba:
+			illetes[c] = true
+	var llista := []
+	for c in gridmap.get_used_cells():
+		if illetes.has(c) or gridmap.get_cell_item(c + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(c)) == "cube-top":
+			llista.append(c)
+	return llista
+
+## Alçada de la superfície del mar
+func nivell_aigua() -> float:
+	var mar := get_node_or_null("Sea") as Node3D
+	return mar.global_position.y if mar else -INF
+
+## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
+## tornen a sortir, per no ficar-se al mig dels camps)
+func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
+	for c in get_tree().get_nodes_in_group("cultius"):
+		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
+			return true
+	# Terra on es pot plantar (la llaurada; la sorra de la platja no compta)
+	var gridmap: GridMap = $GridMap
+	var centre: Vector3i = gridmap.local_to_map(gridmap.to_local(posicio))
+	var abast := ceili(radi)
+	for dx in range(-abast, abast + 1):
+		for dz in range(-abast, abast + 1):
+			for dy in range(-3, 3):
+				var cella := centre + Vector3i(dx, dy, dz)
+				var item := gridmap.get_cell_item(cella)
+				if item == GridMap.INVALID_CELL_ITEM or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+					continue   # buida, o no és la de dalt de tot
+				var p := gridmap.to_global(gridmap.map_to_local(cella))
+				# La mateixa regla que per plantar (així la sorra de la platja no compta)
+				if not es_plantable(cella, gridmap.mesh_library.get_item_name(item), p):
+					continue
+				if Vector2(p.x - posicio.x, p.z - posicio.z).length() < radi:
+					return true
+	return false
+
+## L'arbre, roca o herba que ocupa el terra en aquest punt (o null)
+func recurs_a(posicio: Vector3) -> RecursNatural:
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.ocupa(posicio):
+			return r
+	return null
+
+## En carregar: els recursos que han quedat dins de zones conreades es retiren
+func _retirar_recursos_en_conflicte():
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.disponible() and r.conreu_a_prop():
+			r.retirar()
+
+func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min: int, q_max: int, dies: int, xp: String):
+	var r := RecursNatural.new()
+	r.name = "Recurs"
+	r.tipus = tipus
+	r.cops = cops
+	r.objecte = objecte
+	r.quantitat_min = q_min
+	r.quantitat_max = q_max
+	r.dies_per_tornar = dies
+	r.motiu_xp = xp
+	node.add_child(r)
+
 ## En entrar en un mode d'eina, surt dels altres
 func _nomes_una_eina(eina: Node) -> void:
 	for altra in [plantador, regador, llaurador]:
 		if altra != eina and altra.actiu:
 			altra.sortir()
 
-## Es pot plantar a la cel·la? A la ZonaHort (peces de terra) o on el jugador ha llaurat
-func es_plantable(cella: Vector3i, nom: String, posicio: Vector3) -> bool:
-	if llaurades.has(cella):
-		return true
-	return nom in blocs_plantables and dins_zona_hort(posicio)
+## Es pot plantar a la cel·la? Només a la terra llaurada (també l'hort original)
+func es_plantable(cella: Vector3i, _nom: String = "", _posicio: Vector3 = Vector3.ZERO) -> bool:
+	return llaurades.has(cella)
+
+## Sota aquesta alçada, les peces de terra són la sorra de la platja (no l'hort)
+const ALCADA_MINIMA_HORT := 0
+
+## L'hort que ja ve fet a l'escena: les peces de terra de la superfície per sobre del nivell
+## del mar compten com a llaurades des del principi (la platja usa les mateixes peces, però
+## queda més avall).
+func _marcar_hort_original():
+	var gridmap: GridMap = $GridMap
+	for cella in gridmap.get_used_cells():
+		if cella.y < ALCADA_MINIMA_HORT or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella)) in blocs_plantables:
+			llaurades[cella] = true
 
 func es_herba(nom: String) -> bool:
 	return nom in NOMS_HERBA
@@ -243,8 +380,6 @@ func _es_terra(cella: Vector3i) -> bool:
 		return false
 	return llaurades.has(cella) or gridmap.mesh_library.get_item_name(item) in blocs_plantables
 
-func dins_zona_hort(posicio: Vector3) -> bool:
-	return zona_hort.conte_punt(posicio)
 	
 func guardar_mundo():
 	var cultius_data = []
@@ -272,6 +407,8 @@ func guardar_mundo():
 	
 	var mundo_data = {
 		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
+		"recursos": RecursNatural.estats(self),
+		"recursos_dinamics": regenerador.estat(),
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -310,6 +447,9 @@ func carregar_mundo():
 	
 	# Carrega cultius
 	# Terra que el jugador havia llaurat
+	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
+	if mundo_data.has("recursos_dinamics"):
+		regenerador.restaurar(mundo_data.recursos_dinamics)
 	for c in mundo_data.get("llaurades", []):
 		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])

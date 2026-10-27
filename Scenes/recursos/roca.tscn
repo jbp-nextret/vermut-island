@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/recursos/recurs_natural.gd" id="1_recurs"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_roca"]
+radius = 0.55
+height = 0.75
+radial_segments = 7
+rings = 3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_roca"]
+albedo_color = Color(0.36, 0.35, 0.38, 1)
+roughness = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_pedra"]
+radius = 0.28
+height = 0.4
+radial_segments = 6
+rings = 2
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_roca"]
+radius = 0.5
+
+[node name="Roca" type="Node3D"]
+
+[node name="Malla" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("SphereMesh_roca")
+material_override = SubResource("StandardMaterial3D_roca")
+
+[node name="Pedra" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9, 0, 0.3, 0, 1, 0, -0.3, 0, 0.9, 0.45, 0.15, 0.25)
+mesh = SubResource("SphereMesh_pedra")
+material_override = SubResource("StandardMaterial3D_roca")
+
+[node name="Cos" type="StaticBody3D" parent="."]
+
+[node name="Forma" type="CollisionShape3D" parent="Cos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+shape = SubResource("SphereShape3D_roca")
+
+[node name="Recurs" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+script = ExtResource("1_recurs")
+tipus = 1
+cops = 4
+objecte = "pedra"
+quantitat_min = 1
+quantitat_max = 3
+dies_per_tornar = 4
+motiu_xp = "picar"

@@ -7,8 +7,14 @@ const VERMUT := preload("res://Scenes/Vermut.tscn")
 @export var producte := "vermut"
 @export var vermuts_per_raim := 3
 
+## Vermuts per raïm (l'habilitat "Mestre vermuter" n'hi afegeix)
+static func vermuts_per_cada_raim(base: int = 3) -> int:
+	return base + roundi(Progressio.valor("vermuter"))
+
 ## Vermuts que es poden servir amb el que hi ha a la barrica i a l'inventari
-static func vermuts_disponibles(per_raim: int = 3) -> int:
+static func vermuts_disponibles(per_raim: int = -1) -> int:
+	if per_raim < 0:
+		per_raim = vermuts_per_cada_raim()
 	return Inventari.tenir("dosis_vermut") + Inventari.tenir("raim") * per_raim
 
 func _ready():
@@ -26,7 +32,7 @@ func pot_interactuar(jugador: InteraccioJugador) -> bool:
 func text_interaccio(jugador: InteraccioJugador) -> String:
 	if jugador.porta_objecte():
 		return "Tornar el got"
-	var queden := vermuts_disponibles(vermuts_per_raim)
+	var queden := vermuts_disponibles(vermuts_per_cada_raim(vermuts_per_raim))
 	return "Omplir un %s (%d)" % [producte, queden] if queden > 0 else "Sense raïm per fer vermut"
 
 func interactuar(jugador: InteraccioJugador) -> void:
@@ -51,6 +57,6 @@ func _gastar_una_dosi() -> bool:
 	if Inventari.treure("dosis_vermut"):
 		return true
 	if Inventari.treure("raim"):
-		Inventari.afegir("dosis_vermut", vermuts_per_raim - 1)
+		Inventari.afegir("dosis_vermut", vermuts_per_cada_raim(vermuts_per_raim) - 1)
 		return true
 	return false

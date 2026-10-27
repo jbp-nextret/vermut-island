@@ -2,6 +2,8 @@ extends Node
 
 signal cultiu_recollit(posicio)
 signal player_spawn_requested(posicio)
+## Un missatge curt a sobre de la barra d'accions ("No hi ha terra a prop"...)
+signal avis(text: String)
 
 var pending_spawn_position: Vector3 = Vector3.ZERO
 var has_pending_spawn := false

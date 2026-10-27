@@ -217,12 +217,22 @@ func sortir():
 	mode_canviat.emit(false)
 
 func seleccionar(nou_index: int):
-	index = clampi(nou_index, 0, opcions.size() - 1)
+	nou_index = clampi(nou_index, 0, opcions.size() - 1)
+	if not CatalegCultius.desbloquejat(nou_index):
+		avis.emit(CatalegCultius.text_bloqueig(nou_index))
+		return
+	index = nou_index
 	seleccio_canviada.emit(index)
 
 ## Passa al cultiu anterior (-1) o següent (+1), fent la volta
 func canviar_amb_tecla(direccio: int):
-	seleccionar(posmod(index + direccio, opcions.size()))
+	# Se salta els cultius que encara no s'han desbloquejat
+	var nou := index
+	for i in opcions.size():
+		nou = posmod(nou + direccio, opcions.size())
+		if CatalegCultius.desbloquejat(nou):
+			break
+	seleccionar(nou)
 	canviat_amb_tecla.emit(index, direccio)
 	# La vista prèvia fa un bot i el nom apareix un moment sobre el cursor
 	var o := opcio()
@@ -348,6 +358,9 @@ func _info_cella(c: Vector3i) -> Dictionary:
 	elif mon.cultiu_a_prop(info.posicio):
 		info.valida = false
 		info.motiu = "Ja hi ha un cultiu"
+	elif mon.has_method("recurs_a") and mon.recurs_a(info.posicio):
+		info.valida = false
+		info.motiu = "Hi ha %s" % ["un arbre", "una roca", "herba (talla-la amb l'espasa)"][mon.recurs_a(info.posicio).tipus]
 	elif llavors() <= 0:
 		info.valida = false
 		info.motiu = "No tens llavors"
@@ -362,7 +375,14 @@ func _intentar_plantar(_des_de_clic: bool = true):
 		avis.emit(cella.motiu)
 		return
 	if mon.plantar_cultiu(escena(), cella.posicio):
+		_encarar_jugador(cella.posicio)
 		seleccio_canviada.emit(index)
+
+## El personatge es gira cap on planta i fa el gest
+func _encarar_jugador(punt: Vector3):
+	var jugador := get_tree().get_first_node_in_group("player")
+	if jugador and jugador.has_method("encarar"):
+		jugador.encarar(punt)
 
 ## Totes les cel·les del rectangle entre `a` i `b` (seguint l'alçada del terreny)
 func _cel_les_area(a: Vector3i, b: Vector3i) -> Array:
@@ -403,6 +423,11 @@ func _plantar_area():
 				plantats += 1
 		elif motiu.is_empty():
 			motiu = info.motiu
+	if plantats > 0:
+		var centre := Vector3.ZERO
+		for info in seleccio_area:
+			centre += info.posicio
+		_encarar_jugador(centre / seleccio_area.size())
 	if plantats == 0 and not motiu.is_empty():
 		avis.emit(motiu)
 	seleccio_canviada.emit(index)

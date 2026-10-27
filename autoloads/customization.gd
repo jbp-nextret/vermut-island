@@ -38,6 +38,12 @@ func canviar_variant(part: String, variant: String, sprites: Dictionary = {}) ->
 		_aplicar_variant(part, variant, sprites[part])
 	_resincronitzar(sprites)
 
+## Aplica unes variants concretes (p. ex. les d'un NPC) sense canviar les del jugador
+func aplicar_variants(sprites: Dictionary, variants: Dictionary) -> void:
+	for part in sprites.keys():
+		if VARIANTS.has(part):
+			_aplicar_variant(part, variants.get(part, VARIANTS[part][0]), sprites[part])
+
 func aplicar_aparenca(sprites: Dictionary) -> void:
 	for part in sprites.keys():
 		_aplicar_variant(part, variants_actuals.get(part, VARIANTS[part][0]), sprites[part])

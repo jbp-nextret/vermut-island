@@ -36,7 +36,7 @@ func carregar():
 		hora_actual = float(dades.get("hora", hora_actual))
 
 func _process(delta):
-	if pausat or GameState.dins_casa:
+	if pausat or GameState.dins_casa or GameState.en_dialeg:
 		return
 	hora_actual += (24.0 / durada_dia) * delta
 	if hora_actual >= 24.0:

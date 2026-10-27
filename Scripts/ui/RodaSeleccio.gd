@@ -132,7 +132,7 @@ func _actualitzar_seleccio():
 		e.fons.add_theme_stylebox_override("panel", _estil(
 			Color(color, 0.4) if triat else Color(1, 1, 1, 0.14),
 			int(mida_icona / 2.0), 2 if triat else 0, Color(color, 0.95)))
-		var apagat := llavors <= 0
+		var apagat: bool = llavors <= 0 or not CatalegCultius.desbloquejat(i)
 		e.icona.modulate = (color if not apagat else Color(0.4, 0.4, 0.4)) * (Color(1.2, 1.2, 1.2) if triat else Color(0.9, 0.9, 0.9))
 
 	var o: Dictionary = opcions[index_seleccionat]
@@ -140,6 +140,8 @@ func _actualitzar_seleccio():
 	label_nom.add_theme_color_override("font_color", Color(o.color).lerp(Color.WHITE, 0.5))
 	label_tipus.text = "%s %s" % [o.insignia, o.tipus_nom]
 	var text_llavors := "🌱 Llavors: %d  (1 per cultiu)" % llavors if llavors > 0 else "🌱 No tens llavors: cull raïm per aconseguir-ne"
+	if not CatalegCultius.desbloquejat(index_seleccionat):
+		text_llavors = CatalegCultius.text_bloqueig(index_seleccionat)
 	label_info.text = "%s\n%s\n%s" % [o.descripcio, o.estadistiques, text_llavors]
 	panell_info.reset_size()
 	panell_info.position = Vector2(-panell_info.size.x / 2.0, radi_roda + mida_icona * 0.8 + 6)
