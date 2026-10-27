@@ -28,7 +28,7 @@ const PUNTS_PER_NIVELL := 3
 const VERSIO := 2
 
 const VIDA_BASE := 100
-const ESPAIS_BASE := 8
+const ESPAIS_BASE := 12
 
 var nivell := 1
 var xp := 0
@@ -116,6 +116,9 @@ func _aplicar_efectes():
 	SalutJugador.vida_actual = mini(SalutJugador.vida_actual, SalutJugador.vida_maxima)
 	SalutJugador.emit_signal("vida_canviat", SalutJugador.vida_actual, SalutJugador.vida_maxima)
 	Inventari.max_espais = ESPAIS_BASE + roundi(valor("motxilla")) + (Grup.espais_extra() if has_node("/root/Grup") else 0)
+	# En aprendre la bola de foc, apareix el grimori a la motxilla (és l'eina per llançar-la)
+	if te("bola_foc") and Inventari.tenir("eina_grimori_foc") <= 0:
+		Inventari.afegir("eina_grimori_foc", 1, true)
 
 # ─────────────── Desar / carregar
 

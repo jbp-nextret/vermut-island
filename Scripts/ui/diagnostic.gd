@@ -4,7 +4,8 @@ extends CanvasLayer
 ## vénen del rendiment (el joc no arriba als Hz del monitor) o d'una altra cosa.
 ##
 ## Només en proves (executant des de l'editor): F4 dona un kit per provar la captura
-## de criatures i l'elaboració (olives, vermut hipnòtic, raïm, fibra).
+## de criatures i l'elaboració (olives, vermut hipnòtic, raïm, fibra) i desbloqueja
+## la bola de foc i la motxilla al màxim.
 
 var label: Label
 var temps_fotogrames: Array[float] = []
@@ -28,9 +29,17 @@ func _input(event):
 		_kit_de_proves()
 
 func _kit_de_proves():
+	# Habilitats: la bola de foc i la motxilla al màxim
+	for id in ["bola_foc", "motxilla"]:
+		var h := ArbreHabilitats.habilitat(id)
+		if h:
+			Progressio.habilitats[id] = maxi(Progressio.rang(id), h.max)
+	Progressio._aplicar_efectes()
+	Progressio.habilitats_canviades.emit()
+	Progressio.guardar()
 	for objecte in [["olives_marinades", 10], ["vermut_hipnotic", 6], ["olives", 9], ["raim", 5], ["fibra", 5]]:
 		Inventari.afegir(objecte[0], objecte[1])
-	EventBus.avis.emit("🧪 Kit de proves: olives marinades, vermut hipnòtic, olives, raïm i fibra")
+	EventBus.avis.emit("🧪 Kit de proves: bola de foc, motxilla al màxim, olives, vermut hipnòtic, raïm i fibra")
 
 func _process(delta):
 	temps_fotogrames.append(delta * 1000.0)

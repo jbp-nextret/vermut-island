@@ -83,13 +83,13 @@ func _ready():
 		jugador.magia_no_disponible.connect(func(): _sacsejar_eina("foc"))
 
 func _sacsejar_eina(id: String):
-	var i := BarraRapida.caselles.find(id)
-	if i >= 0:
-		caselles[i].sacsejar()
+	for i in BarraRapida.CASELLES:
+		if BarraRapida.accio(BarraRapida.caselles[i]) == id:
+			caselles[i].sacsejar()
 
 ## Progrés (recàrrega) de cada eina de la barra
 func _progres(id: String) -> float:
-	match id:
+	match BarraRapida.accio(id):
 		"espasa":
 			return jugador.combat.progres_tall()
 		"foc":
@@ -134,7 +134,7 @@ func _process(_delta):
 		var id: String = BarraRapida.caselles[i]
 		c.seleccionada = i == triada
 		var p := _progres(id)
-		if p >= 1.0 and progres_abans.get(i, 1.0) < 1.0 and id != "espasa":
+		if p >= 1.0 and progres_abans.get(i, 1.0) < 1.0 and BarraRapida.accio(id) != "espasa":
 			c.bategar()   # s'acaba de recarregar
 		progres_abans[i] = p
 		c.progres = p

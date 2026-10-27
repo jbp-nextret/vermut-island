@@ -66,7 +66,7 @@ func _nom() -> String:
 func actualitzar():
 	var c := contingut()
 	icona.text = "" if c.is_empty() else BarraRapida.info(c).icona
-	quantitat.text = str(Inventari.tenir(c)) if c in BarraRapida.OBJECTES_US else ""
+	quantitat.text = str(Inventari.tenir(c)) if BarraRapida.mostra_quantitat(c) else ""
 	icona.modulate = Color.WHITE if c.is_empty() or BarraRapida.disponible(c) else Color(1, 1, 1, 0.35)
 	queue_redraw()
 

@@ -5,6 +5,8 @@ extends CanvasLayer
 ##   - Mantenir Tab: roda radial amb totes les eines; apuntes i deixes anar
 ##   - A la Motxilla s'hi arrosseguen eines i objectes per configurar-la
 ## Les tecles d'abans (Q, E, P, G, T, L) continuen funcionant com a dreceres.
+## Les eines són objectes de la motxilla (espasa, grimori de foc, llavors, regadora,
+## aixada) i ocupen un espai; només es poden posar a la barra si les tens.
 ##
 ## Quina eina està activa no es guarda aquí: es dedueix de l'estat (mode combat,
 ## plantador, regador...). Així sempre quadra, s'hi entri com s'hi entri.
@@ -14,18 +16,21 @@ signal canviada   # la configuració de les caselles
 const FITXER := "user://barra_rapida.save"
 const CASELLES := 9
 
-## Eines (no són objectes de la motxilla)
+## Objectes de la motxilla que són eines: què fan quan els tries a la barra.
+## (Les eines ocupen un espai de la motxilla, com qualsevol altre objecte.)
 const EINES := {
-	"espasa": {"nom": "Espasa espectral", "icona": "⚔️", "color": Color(0.55, 0.85, 1.0), "ajuda": "Clic: tall · Clic dret: estocada"},
-	"foc": {"nom": "Bola de foc", "icona": "🔥", "color": Color(1.0, 0.55, 0.15), "ajuda": "Clic: llançar una bola de foc"},
-	"plantar": {"nom": "Plantar", "icona": "🌱", "color": Color(0.55, 0.95, 0.5), "ajuda": ""},
-	"regar": {"nom": "Regar", "icona": "💧", "color": Color(0.45, 0.75, 1.0), "ajuda": ""},
-	"llaurar": {"nom": "Llaurar", "icona": "⛏", "color": Color(0.85, 0.65, 0.35), "ajuda": ""},
+	"eina_espasa": {"accio": "espasa", "color": Color(0.55, 0.85, 1.0)},
+	"eina_grimori_foc": {"accio": "foc", "color": Color(1.0, 0.55, 0.15)},
+	"llavor_raim": {"accio": "plantar", "color": Color(0.55, 0.95, 0.5)},
+	"eina_regadora": {"accio": "regar", "color": Color(0.45, 0.75, 1.0)},
+	"eina_aixada": {"accio": "llaurar", "color": Color(0.85, 0.65, 0.35)},
 }
-## Objectes de la motxilla que es poden fer servir des de la barra (es llancen)
+## Objectes que es llancen (es gasten)
 const OBJECTES_US := ["olives_marinades", "vermut_hipnotic"]
 
-const PER_DEFECTE := ["espasa", "foc", "plantar", "regar", "llaurar", "olives_marinades", "vermut_hipnotic", "", ""]
+const PER_DEFECTE := ["eina_espasa", "eina_grimori_foc", "llavor_raim", "eina_regadora", "eina_aixada", "olives_marinades", "vermut_hipnotic", "", ""]
+## Configuracions desades abans que les eines fossin objectes
+const NOMS_ANTICS := {"espasa": "eina_espasa", "foc": "eina_grimori_foc", "plantar": "llavor_raim", "regar": "eina_regadora", "llaurar": "eina_aixada"}
 
 var caselles: Array = PER_DEFECTE.duplicate()
 var ultima := 0           # per a la rodeta quan no hi ha cap eina activa
@@ -52,18 +57,25 @@ func es_pot_posar(id: String) -> bool:
 	return EINES.has(id) or id in OBJECTES_US
 
 func info(id: String) -> Dictionary:
-	if EINES.has(id):
-		return EINES[id]
 	var i := CatalegObjectes.info(id)
-	return {"nom": i.nom, "icona": i.icona, "color": Color(0.75, 0.6, 1.0) if id == "vermut_hipnotic" else Color(0.6, 0.8, 0.3), "ajuda": ""}
+	var color: Color = EINES[id].color if EINES.has(id) else (Color(0.75, 0.6, 1.0) if id == "vermut_hipnotic" else Color(0.6, 0.8, 0.3))
+	return {"nom": i.nom, "icona": i.icona, "color": color}
 
-## Es pot fer servir ara mateix? (la bola de foc s'ha de desbloquejar; dels objectes, n'has de tenir)
+## Què fa: "espasa", "foc", "plantar", "regar", "llaurar" o l'objecte que es llança
+func accio(id: String) -> String:
+	return EINES[id].accio if EINES.has(id) else id
+
+## Si se n'ha de mostrar la quantitat (les eines no; les llavors i el que es llança, sí)
+func mostra_quantitat(id: String) -> bool:
+	return id in OBJECTES_US or id == "llavor_raim"
+
+## Es pot fer servir ara mateix? L'has de tenir a la motxilla (i la bola de foc, saber-la llançar)
 func disponible(id: String) -> bool:
-	if id == "foc":
+	if not es_pot_posar(id) or Inventari.tenir(id) <= 0:
+		return false
+	if accio(id) == "foc":
 		return Progressio.te("bola_foc")
-	if id in OBJECTES_US:
-		return Inventari.tenir(id) > 0
-	return EINES.has(id)
+	return true
 
 # ─────────────── Configurar
 
@@ -97,7 +109,17 @@ func _mon() -> Node:
 func _jugador() -> Node:
 	return get_tree().get_first_node_in_group("player")
 
+## L'objecte de la barra que correspon a l'eina activa ("" si cap)
 func eina_activa() -> String:
+	var a := accio_activa()
+	if a.is_empty():
+		return ""
+	for id in EINES:
+		if EINES[id].accio == a:
+			return id
+	return a   # els objectes que es llancen ja són el seu id
+
+func accio_activa() -> String:
 	var mon := _mon()
 	if mon == null:
 		return ""
@@ -135,9 +157,12 @@ func activar(id: String):
 	var mon := _mon()
 	if mon == null or not GameState.pot_atacar():
 		return
+	if Inventari.tenir(id) <= 0 and not id in OBJECTES_US:
+		EventBus.avis.emit("No tens %s" % CatalegObjectes.info(id).nom.to_lower())
+		return
 	desactivar()
 	var j := _jugador()
-	match id:
+	match accio(id):
 		"espasa":
 			if j.estat != 1:
 				j.toggle_mode_combat()
@@ -221,10 +246,7 @@ func _process(_delta):
 
 func _obrir_roda():
 	roda_opcions = [""]
-	for id in EINES:
-		if disponible(id):
-			roda_opcions.append(id)
-	for id in OBJECTES_US:
+	for id in EINES.keys() + OBJECTES_US:
 		if disponible(id):
 			roda_opcions.append(id)
 	roda_triada = -1
@@ -272,7 +294,7 @@ func _dibuixar_roda():
 		var mida := 34 if triada else 28
 		var w := font.get_string_size(d.icona, HORIZONTAL_ALIGNMENT_LEFT, -1, mida).x
 		roda.draw_string(font, p + Vector2(-w / 2.0, mida * 0.35), d.icona, HORIZONTAL_ALIGNMENT_LEFT, -1, mida)
-		if id in OBJECTES_US:
+		if mostra_quantitat(id):
 			var q := str(Inventari.tenir(id))
 			roda.draw_string_outline(font, p + Vector2(14, 26), q, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color.BLACK)
 			roda.draw_string(font, p + Vector2(14, 26), q, HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
@@ -297,4 +319,6 @@ func _carregar():
 		return
 	var d = JSON.parse_string(f.get_as_text())
 	if d is Dictionary and d.get("caselles") is Array and d.caselles.size() == CASELLES:
-		caselles = d.caselles.map(func(x): return str(x) if es_pot_posar(str(x)) else "")
+		caselles = d.caselles.map(func(x):
+			var id: String = NOMS_ANTICS.get(str(x), str(x))
+			return id if es_pot_posar(id) else "")

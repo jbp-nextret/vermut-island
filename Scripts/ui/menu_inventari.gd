@@ -16,7 +16,6 @@ var pestanyes: TabContainer
 var text_missions: RichTextLabel
 var llista_criatures: VBoxContainer
 var caselles_barra: Array[CasellaBarra] = []
-var fonts_eines: Array[CasellaBarra] = []
 var seleccionat := ""
 
 func _ready():
@@ -79,16 +78,8 @@ func _ready():
 		c.es_pot_buidar = true
 		fila_barra.add_child(c)
 		caselles_barra.append(c)
-	var fila_eines := HBoxContainer.new()
-	fila_eines.add_theme_constant_override("separation", 3)
-	esquerra.add_child(fila_eines)
-	for id in BarraRapida.EINES.keys() + BarraRapida.OBJECTES_US:
-		var f := CasellaBarra.new(-1, id)
-		f.tooltip_text = BarraRapida.info(id).nom
-		fila_eines.add_child(f)
-		fonts_eines.append(f)
 	var ajuda := Label.new()
-	ajuda.text = "Arrossega les eines (o objectes de la motxilla) a les caselles · Clic dret: buidar"
+	ajuda.text = "Arrossega eines i objectes de la motxilla a les caselles · Clic dret: buidar"
 	ajuda.add_theme_font_size_override("font_size", 12)
 	ajuda.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9))
 	ajuda.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -234,7 +225,7 @@ func _mostrar_descripcio(id: String):
 # ─────────────── Estat de la partida
 
 func _actualitzar_barra():
-	for c in caselles_barra + fonts_eines:
+	for c in caselles_barra:
 		c.actualitzar()
 
 func _omplir_criatures():
