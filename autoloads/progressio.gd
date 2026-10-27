@@ -46,7 +46,9 @@ static func xp_per_nivell(n: int) -> int:
 
 func guanyar_xp(motiu: String, multiplicador: float = 1.0) -> void:
 	accio_feta.emit(motiu, 1)
-	guanyar_xp_directa(roundi(XP.get(motiu, 0) * multiplicador), motiu)
+	# El son hi compta: descansat se n'aprèn més, cansat menys
+	var son: float = Descans.mult_xp() if has_node("/root/Descans") else 1.0
+	guanyar_xp_directa(roundi(XP.get(motiu, 0) * multiplicador * son), motiu)
 
 ## Experiència d'una quantitat concreta (p. ex. la recompensa d'una missió)
 func guanyar_xp_directa(quantitat: int, motiu: String) -> void:

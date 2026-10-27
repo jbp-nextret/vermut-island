@@ -2,9 +2,11 @@ extends CanvasLayer
 class_name MenuDormir
 ## Dormir al llit: tries fins a quina hora i el temps avança de cop (amb una fosa a negre).
 ## No es pot dormir amb enemics a l'illa ni saltar-se una nit d'onada que encara no has
-## defensat. Si dorms fins al matí, et despertes amb tota la vida i el mana.
+## defensat. Com dorms (becaina, poc, bé o massa) ho decideix Descans, i cada opció
+## t'ho diu abans de triar-la.
 
 const OPCIONS := [
+	["😌 Una becaina", -2.0],   # negatiu: hores a partir d'ara
 	["🌅 Fins al matí", 8.0],
 	["☀️ Fins al migdia", 13.0],
 	["🌇 Fins a la tarda", 17.0],
@@ -59,7 +61,7 @@ func _ready():
 	centre.add_child(caixa)
 	var columna := VBoxContainer.new()
 	columna.add_theme_constant_override("separation", 8)
-	columna.custom_minimum_size = Vector2(440, 0)
+	columna.custom_minimum_size = Vector2(560, 0)
 	caixa.add_child(columna)
 	var titol := Label.new()
 	titol.text = "🛏️ Dormir"
@@ -69,16 +71,24 @@ func _ready():
 	ara.text = "Ara són les %s del %s" % [_hora(GestorTemps.hora_actual), GestorOnades.nom_del_dia(GestorTemps.dia_actual).to_lower()]
 	ara.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
 	columna.add_child(ara)
+	var son := Label.new()
+	var e := Descans.estat()
+	son.text = "Portes %d h despert%s" % [roundi(Descans.hores_despert()), ("  ·  %s %s" % [e.icona, e.nom]) if not e.is_empty() else ""]
+	son.add_theme_color_override("font_color", Color(1.0, 0.8, 0.55) if Descans.hores_despert() >= Descans.HORES_CANSAT else Color(0.8, 0.8, 0.85))
+	columna.add_child(son)
 	for o in OPCIONS:
 		var hora: float = o[1]
+		if hora < 0.0:
+			hora = fposmod(GestorTemps.hora_actual - hora, 24.0)
 		var b := Button.new()
 		var motiu := motiu_no_dormir(hora)
 		var endema := hora <= GestorTemps.hora_actual
-		b.text = "%s   %s%s" % [o[0], _hora(hora) if hora != 6.0 else "", "  (demà)" if endema and hora != 6.0 else ""]
+		var hores := hores_fins(hora)
+		b.text = "%s   %s%s   ·  %d h, %s" % [o[0], _hora(hora) if o[1] != 6.0 else "", "  (demà)" if endema and o[1] != 6.0 else "", roundi(hores), _qualitat(hores)]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.custom_minimum_size = Vector2(0, 40)
 		b.disabled = not motiu.is_empty()
-		b.tooltip_text = motiu if not motiu.is_empty() else "Dormiràs %d h" % roundi(hores_fins(hora))
+		b.tooltip_text = motiu if not motiu.is_empty() else _explicacio(hores)
 		b.pressed.connect(_dormir.bind(hora))
 		columna.add_child(b)
 	# El motiu (si n'hi ha) de les opcions que no es poden triar
@@ -92,6 +102,25 @@ func _ready():
 	tancar_b.text = "Ara no (Esc)"
 	tancar_b.pressed.connect(tancar)
 	columna.add_child(tancar_b)
+
+## Com dormiràs segons les hores (els mateixos llindars que Descans.dormir)
+static func _qualitat(hores: float) -> String:
+	if hores < 3.0:
+		return "becaina"
+	if hores < 6.0:
+		return "poc 🥱"
+	if hores < 10.0:
+		return "bé ✨"
+	return "massa 😪"
+
+static func _explicacio(hores: float) -> String:
+	if hores < 3.0:
+		return "Recuperes un 30 % de vida i mana i et treu una mica de cansament"
+	if hores < 6.0:
+		return "Recuperes un 60 %%, però quedaràs endormiscat: %s" % Descans.EFECTES.endormiscat.text
+	if hores < 10.0:
+		return "Ho recuperes tot i quedaràs descansat: %s" % Descans.EFECTES.descansat.text
+	return "Ho recuperes tot, però quedaràs ensopit: %s" % Descans.EFECTES.ensopit.text
 
 static func _hora(h: float) -> String:
 	return "%d:%02d" % [floori(h), floori(fposmod(h, 1.0) * 60.0)]
@@ -109,24 +138,20 @@ func _dormir(hora: float):
 	text_fos.set_anchors_preset(Control.PRESET_FULL_RECT)
 	text_fos.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text_fos.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	text_fos.add_theme_font_size_override("font_size", 36)
+	text_fos.add_theme_font_size_override("font_size", 28)
 	text_fos.modulate.a = 0.0
 	fos.add_child(text_fos)
 	var hores := hores_fins(hora)
 	var t := create_tween()
 	t.tween_property(fos, "color:a", 1.0, 0.6)
 	t.tween_callback(func():
-		var nit := GestorTemps.es_nit() or hora < GestorTemps.hora_actual
 		GestorTemps.avancar_fins(hora)
-		if nit or hores >= 6.0:
-			SalutJugador.restaurar_salut()
-			var j = get_tree().get_first_node_in_group("jugador")
-			if j and j.has_method("mana_max"):
-				j.mana = j.mana_max()
+		var resultat := Descans.dormir(hores)
 		GestorPartida.guardar_mundo()
-		text_fos.text = "💤  Has dormit %d h\n\n%s · %s" % [roundi(hores), GestorOnades.nom_del_dia(GestorTemps.dia_actual), _hora(GestorTemps.hora_actual)])
+		text_fos.text = "💤  Has dormit %d h  ·  %s %s\n\n%s" % [roundi(hores), GestorOnades.nom_del_dia(GestorTemps.dia_actual), _hora(GestorTemps.hora_actual), resultat])
+	text_fos.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.tween_property(text_fos, "modulate:a", 1.0, 0.3)
-	t.tween_interval(1.2)
+	t.tween_interval(2.2)
 	t.tween_property(text_fos, "modulate:a", 0.0, 0.3)
 	t.tween_property(fos, "color:a", 0.0, 0.6)
 	t.tween_callback(tancar)

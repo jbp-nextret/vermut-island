@@ -195,7 +195,7 @@ func _physics_process(delta):
 	if direction.length() > 0:
 		direction = direction.normalized()
 		direction = direction.rotated(Vector3.UP, angle_camera())
-	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat"))
+	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat")) * Descans.mult_velocitat()
 	if profunditat_aigua() > 0.4:
 		current_speed *= ALENTIMENT_AIGUA
 	velocity.x = direction.x * current_speed
@@ -536,10 +536,10 @@ func _actualitzar_aigua(delta: float):
 
 ## Mana i vida que es recuperen amb el temps
 func _recuperar(delta: float):
-	mana = minf(mana_max(), mana + REGEN_MANA_BASE * (1.0 + Progressio.valor("regen_mana")) * delta)
+	mana = minf(mana_max(), mana + REGEN_MANA_BASE * (1.0 + Progressio.valor("regen_mana")) * Descans.mult_mana() * delta)
 	temps_sense_mal += delta
 	var regen := roundi(Progressio.valor("regeneracio"))
-	if regen > 0 and temps_sense_mal >= ESPERA_REGENERACIO and SalutJugador.vida_actual < SalutJugador.vida_maxima:
+	if regen > 0 and Descans.pot_regenerar_vida() and temps_sense_mal >= ESPERA_REGENERACIO and SalutJugador.vida_actual < SalutJugador.vida_maxima:
 		temps_regeneracio += delta
 		if temps_regeneracio >= INTERVAL_REGENERACIO:
 			temps_regeneracio = 0.0

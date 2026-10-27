@@ -15,6 +15,7 @@ var rellotge: Label
 var barra_mana: ProgressBar
 var barra_xp: ProgressBar
 var label_nivell: Label
+var label_son: Label   # descansat, cansat... (Descans)
 var label_oxigen: Label
 var label_xp_guanyada: Label
 var cartell_nivell: Label
@@ -38,6 +39,9 @@ func _ready():
 	label_nivell = _label(13, Color(0.85, 0.75, 1.0))
 	label_nivell.position = Vector2(196, 29)
 	add_child(label_nivell)
+	label_son = _label(13, Color.WHITE)
+	label_son.position = Vector2(196, 45)
+	add_child(label_son)
 	label_xp_guanyada = _label(12, Color(0.85, 0.7, 1.0))
 	label_xp_guanyada.position = Vector2(240, 29)
 	label_xp_guanyada.modulate.a = 0.0
@@ -170,6 +174,14 @@ func _process(_delta):
 	barra_xp.max_value = Progressio.xp_per_nivell(Progressio.nivell)
 	barra_xp.value = Progressio.xp
 	label_nivell.text = "Nv %d" % Progressio.nivell + ("  🌟%d" % Progressio.punts if Progressio.punts > 0 else "")
+	var son := Descans.estat()
+	label_son.visible = not son.is_empty()
+	if label_son.visible:
+		var queden := Descans.hores_efecte()
+		label_son.text = "%s %s%s" % [son.icona, son.nom, ("  %d h" % ceili(queden)) if queden > 0.0 else ""]
+		label_son.modulate = Color(0.75, 1.0, 0.75) if son.nom == "Descansat" else Color(1.0, 0.7, 0.5)
+		label_son.tooltip_text = son.text
+		label_son.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# Amb poca vida, l'últim cor batega
 	var vida: int = SalutJugador.vida_actual
