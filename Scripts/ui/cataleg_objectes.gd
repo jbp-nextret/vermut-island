@@ -12,6 +12,8 @@ const OBJECTES := {
 	"eina_espasa": {"nom": "Espasa espectral", "icona": "⚔️", "descripcio": "Eina. Posa-la a la barra ràpida: clic per fer un tall, clic dret per a l'estocada. Talla l'herba i en treu fibra."},
 	"eina_destral": {"nom": "Destral màgica", "icona": "🪓", "descripcio": "Eina. Amb ella a la mà, clica un arbre per talar-lo i treure'n fusta (i a vegades olives)."},
 	"eina_pic": {"nom": "Pic màgic", "icona": "⛏️", "descripcio": "Eina. Amb ell a la mà, clica una roca per picar-la i treure'n pedra."},
+	"tanca_fusta": {"nom": "Tanca de fusta", "icona": "🪵", "descripcio": "Posa-la a la barra ràpida i clica a terra per construir. Si tanques una zona del tot, es converteix en un corral per a les criatures."},
+	"porta_tanca": {"nom": "Porta de tanca", "icona": "🚪", "descripcio": "Una tanca per on es pot passar. Tanca el corral igual que una tanca, i és on hi ha la cistella."},
 	"eina_grimori_foc": {"nom": "Grimori de foc", "icona": "🔥", "descripcio": "Eina. Amb ell a la mà, cada clic llança una bola de foc cap al ratolí (gasta mana)."},
 	"eina_regadora": {"nom": "Regadora màgica", "icona": "💧", "descripcio": "Eina. Clic sobre la terra per regar-la amb un encanteri. L'aigua es recupera sola o amb la pluja."},
 	"eina_aixada": {"nom": "Aixada màgica", "icona": "⛏", "descripcio": "Eina. Llaura l'herba per fer-la cultivable. Si hi ha una marca de terra remoguda, desenterra el que hi ha."},

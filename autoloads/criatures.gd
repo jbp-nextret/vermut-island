@@ -61,7 +61,9 @@ const ASSIGNACIONS := {"": "😴 Descansa", "seguint": "🐾 Et segueix", "corra
 	"talar": "🪓 Talar arbres", "picar": "⛏️ Picar roques", "herba": "🌾 Tallar herba"}
 ## Tasques a l'aire lliure: què treuen i cada quants minuts de joc (a nivell 1)
 const TASQUES := {"talar": {"objecte": "fusta", "minuts": 60}, "picar": {"objecte": "pedra", "minuts": 60}, "herba": {"objecte": "fibra", "minuts": 45}}
-const CAPACITAT_CORRAL := 4
+## Quantes criatures hi caben en total als corrals que has construït (amb tanques).
+## Es recorda encara que no siguis al món (p. ex. a dins de casa), per a la producció.
+var capacitat_corrals := 0
 const XP_PRODUCCIO := 5
 
 ## El que han produït les criatures i encara no has recollit (a la cistella del corral)
@@ -80,8 +82,11 @@ func assignar(uid: String, a: String) -> bool:
 	var d := dades(uid)
 	if d.is_empty() or not ASSIGNACIONS.has(a):
 		return false
-	if a == "corral" and assignacio(uid) != "corral" and amb_assignacio("corral").size() >= CAPACITAT_CORRAL:
-		EventBus.avis.emit("El corral és ple (%d criatures)" % CAPACITAT_CORRAL)
+	if a in ["corral", "talar", "picar", "herba"] and capacitat_corrals <= 0:
+		EventBus.avis.emit("Primer construeix un corral: tanca una zona amb tanques de fusta")
+		return false
+	if a == "corral" and assignacio(uid) != "corral" and amb_assignacio("corral").size() >= capacitat_corrals:
+		EventBus.avis.emit("Els corrals són plens (%d criatures). Fes-los més grans!" % capacitat_corrals)
 		return false
 	if a == "seguint":
 		d.assignacio = ""
@@ -124,9 +129,13 @@ func _produir():
 	if passat < 1.0:
 		return
 	ultim_minut = ara
+	var al_corral := amb_assignacio("corral")
 	for d in col_leccio:
 		var objecte := objecte_produccio(d.uid)
-		if objecte.is_empty():
+		if objecte.is_empty() or capacitat_corrals <= 0:
+			continue
+		# Si has fet els corrals més petits, les que no hi caben no produeixen
+		if assignacio(d.uid) == "corral" and al_corral.find(d.uid) >= capacitat_corrals:
 			continue
 		d.progres_feina = float(d.get("progres_feina", 0.0)) + passat
 		var interval := minuts_produccio(d.uid)
@@ -154,6 +163,25 @@ func objectes_magatzem() -> int:
 	for q in magatzem.values():
 		total += int(q)
 	return total
+
+## Reparteix les criatures entre els corrals (les de tasques surten del primer)
+func repartir_corrals(corrals: Array):
+	var al_corral := amb_assignacio("corral")
+	var i := 0
+	for n in corrals.size():
+		var c = corrals[n]
+		if not is_instance_valid(c):
+			continue
+		var volem := {}
+		for k in c.capacitat():
+			if i < al_corral.size():
+				volem[al_corral[i]] = "corral"
+				i += 1
+		if n == 0:
+			for a in ["talar", "picar", "herba"]:
+				for uid in amb_assignacio(a):
+					volem[uid] = a
+		c.posar_criatures(volem)
 
 # ─────────────── Nivells
 
@@ -351,7 +379,7 @@ func guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa, "vistes": vistes, "domesticades": domesticades,
-			"magatzem": magatzem, "ultim_minut": ultim_minut}))
+			"magatzem": magatzem, "ultim_minut": ultim_minut, "capacitat_corrals": capacitat_corrals}))
 
 func carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -364,6 +392,7 @@ func carregar():
 		vistes = d.get("vistes", {})
 		magatzem = d.get("magatzem", {})
 		ultim_minut = float(d.get("ultim_minut", -1.0))
+		capacitat_corrals = int(d.get("capacitat_corrals", 0))
 		domesticades = d.get("domesticades", {})
 		# Partides d'abans del bestiari: el que ja tens compta com a vist i domesticat
 		for c in col_leccio:

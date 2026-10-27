@@ -7,6 +7,9 @@ class_name MenuElaborar
 const RECEPTES := [
 	{"id": "olives_marinades", "quantitat": 3, "ingredients": {"olives": 3, "vermut": 1}},
 	{"id": "vermut_hipnotic", "quantitat": 1, "ingredients": {"vermut": 2, "fibra": 1}},
+	# Provisional, fins que hi hagi el sistema de fabricació
+	{"id": "tanca_fusta", "quantitat": 4, "ingredients": {"fusta": 2}},
+	{"id": "porta_tanca", "quantitat": 1, "ingredients": {"fusta": 3, "fibra": 1}},
 ]
 
 var llista: VBoxContainer

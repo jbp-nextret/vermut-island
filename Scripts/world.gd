@@ -14,6 +14,7 @@ var recolector: Recolector
 var llancador: Llancador
 var generador_criatures: GeneradorCriatures
 var punts_excavacio: PuntsExcavacio
+var tanques: Tanques
 var generador_illes: GeneradorIlles
 var regenerador: RegeneradorRecursos
 var regador: Regador
@@ -117,15 +118,20 @@ func _ready():
 	llaurador.name = "Llaurador"
 	llaurador.configurar(self, plantador, $Personatge)
 	add_child(llaurador)
+	# Tanques de fusta (en tancar una zona, es fa un corral)
+	tanques = Tanques.new()
+	tanques.name = "Tanques"
+	tanques.configurar(self, $GridMap, plantador, $Personatge)
+	add_child(tanques)
 	llancador = Llancador.new()
 	llancador.name = "Llancador"
 	llancador.configurar($Personatge)
 	add_child(llancador)
 	# Només un mode d'eina alhora: plantar, regar, llaurar o llançar
-	for eina in [plantador, regador, llaurador, llancador]:
+	for eina in [plantador, regador, llaurador, llancador, tanques]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
-	recolector.eines_actives = [plantador, regador, llaurador, llancador]
+	recolector.eines_actives = [plantador, regador, llaurador, llancador, tanques]
 	var barra := BarraAccions.new()
 	barra.jugador = $Personatge
 	barra.plantador = plantador
@@ -288,7 +294,9 @@ func nivell_aigua() -> float:
 ## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
 ## tornen a sortir, per no ficar-se al mig dels camps)
 func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
-	# El corral de les criatures també es manté lliure
+	# Les tanques i els corrals de les criatures també es mantenen lliures
+	if tanques and tanques.es_tanca(posicio):
+		return true
 	for corral in get_tree().get_nodes_in_group("corral"):
 		if corral.ocupa(posicio, radi):
 			return true
@@ -341,7 +349,7 @@ func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min:
 
 ## En entrar en un mode d'eina, surt dels altres
 func _nomes_una_eina(eina: Node) -> void:
-	for altra in [plantador, regador, llaurador, llancador]:
+	for altra in [plantador, regador, llaurador, llancador, tanques]:
 		if altra != eina and altra.actiu:
 			altra.sortir()
 

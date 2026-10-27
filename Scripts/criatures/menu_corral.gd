@@ -101,7 +101,7 @@ func _omplir():
 		llista.add_child(l)
 	for d in Criatures.col_leccio:
 		llista.add_child(FitxaCriatura.crear(d.uid))
-	capacitat.text = "Al corral: %d / %d" % [Criatures.amb_assignacio("corral").size(), Criatures.CAPACITAT_CORRAL]
+	capacitat.text = "Als corrals: %d / %d" % [Criatures.amb_assignacio("corral").size(), Criatures.capacitat_corrals]
 	var t := ""
 	for objecte in Criatures.magatzem:
 		var info := CatalegObjectes.info(objecte)

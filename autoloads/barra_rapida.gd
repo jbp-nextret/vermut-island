@@ -21,6 +21,8 @@ const EINES := {
 	"eina_espasa": {"accio": "espasa", "color": Color(0.55, 0.85, 1.0)},
 	"eina_destral": {"accio": "talar", "color": Color(0.85, 0.7, 0.45)},
 	"eina_pic": {"accio": "picar", "color": Color(0.7, 0.72, 0.8)},
+	"tanca_fusta": {"accio": "tanca", "color": Color(0.75, 0.55, 0.35)},
+	"porta_tanca": {"accio": "tanca", "color": Color(0.85, 0.65, 0.4)},
 	"eina_grimori_foc": {"accio": "foc", "color": Color(1.0, 0.55, 0.15)},
 	"llavor_raim": {"accio": "plantar", "color": Color(0.55, 0.95, 0.5)},
 	"eina_regadora": {"accio": "regar", "color": Color(0.45, 0.75, 1.0)},
@@ -70,7 +72,7 @@ func accio(id: String) -> String:
 
 ## Si se n'ha de mostrar la quantitat (les eines no; les llavors i el que es llança, sí)
 func mostra_quantitat(id: String) -> bool:
-	return id in OBJECTES_US or id == "llavor_raim"
+	return id in OBJECTES_US or id in ["llavor_raim", "tanca_fusta", "porta_tanca"]
 
 ## Es pot fer servir ara mateix? L'has de tenir a la motxilla (i la bola de foc, saber-la llançar)
 func disponible(id: String) -> bool:
@@ -114,6 +116,9 @@ func _jugador() -> Node:
 
 ## L'objecte de la barra que correspon a l'eina activa ("" si cap)
 func eina_activa() -> String:
+	var mon := _mon()
+	if mon and "tanques" in mon and mon.tanques and mon.tanques.actiu:
+		return mon.tanques.objecte
 	var a := accio_activa()
 	if a.is_empty():
 		return ""
@@ -132,6 +137,8 @@ func accio_activa() -> String:
 		return "regar"
 	if mon.llaurador.actiu:
 		return "llaurar"
+	if "tanques" in mon and mon.tanques and mon.tanques.actiu:
+		return "tanca"
 	if "llancador" in mon and mon.llancador and mon.llancador.actiu:
 		return mon.llancador.objecte()
 	if mode_foc:
@@ -178,6 +185,8 @@ func activar(id: String):
 			mode_foc = true
 		"talar", "picar":
 			mode_eina = accio(id)
+		"tanca":
+			mon.tanques.entrar_amb(id)
 		"plantar":
 			mon.plantador.entrar()
 		"regar":
@@ -196,7 +205,7 @@ func desactivar():
 		return
 	if mon.plantador.actiu:
 		mon.plantador.sortir()
-	for eina in [mon.regador, mon.llaurador, mon.llancador]:
+	for eina in [mon.regador, mon.llaurador, mon.llancador, mon.get("tanques")]:
 		if eina and eina.actiu:
 			eina.sortir()
 	var j := _jugador()

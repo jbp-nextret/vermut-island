@@ -79,6 +79,7 @@ func _ready():
 	llaurador.avis.connect(_mostrar_avis)
 	EventBus.avis.connect(_mostrar_avis)
 	llancador.avis.connect(_mostrar_avis)
+	get_tree().current_scene.tanques.avis.connect(_mostrar_avis)
 	if jugador.has_signal("magia_no_disponible"):
 		jugador.magia_no_disponible.connect(func(): _sacsejar_eina("foc"))
 
@@ -162,6 +163,9 @@ func _process(_delta):
 		label_info.text = "%s %s: %d · Clic: llançar · Q/E: canviar · Clic dret: sortir" % [info.icona, info.nom, llancador.quantitat()]
 	elif llaurador.actiu:
 		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir" if llaurador.pot_arrossegar() else "Clic: llaurar · Clic dret: sortir"
+	elif get_tree().current_scene.tanques.actiu:
+		var tq = get_tree().current_scene.tanques
+		label_info.text = "%s: %d · Clic (o arrossega): posar · Clic dret: treure · Tanca una zona per fer un corral" % [CatalegObjectes.info(tq.objecte).nom, Inventari.tenir(tq.objecte)]
 	elif BarraRapida.mode_eina == "talar":
 		label_info.text = "🪓 Clic sobre un arbre: talar · Clic dret: deixar-ho"
 	elif BarraRapida.mode_eina == "picar":

@@ -21,7 +21,6 @@
 [ext_resource type="PackedScene" uid="uid://drmsrtysc1xo3" path="res://Scenes/ui/RodaSeleccio.tscn" id="20_b5aes"]
 [ext_resource type="PackedScene" path="res://Scenes/barca/barca.tscn" id="99_barca"]
 [ext_resource type="Script" uid="uid://cc0vgpr3qlsdg" path="res://Scripts/barca/moll.gd" id="99_moll"]
-[ext_resource type="Script" path="res://Scripts/criatures/corral.gd" id="99_corral"]
 [ext_resource type="PackedScene" path="res://Scenes/npcs/npc.tscn" id="99_npc"]
 [ext_resource type="PackedScene" path="res://Scenes/recursos/roca.tscn" id="99_roca"]
 [ext_resource type="PackedScene" path="res://Scenes/npcs/zona_missio.tscn" id="99_zona"]
@@ -395,7 +394,3 @@ script = ExtResource("99_moll")
 [node name="Barca" parent="." unique_id=782731055 instance=ExtResource("99_barca")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -25.5, 0.41, -11.3)
 missio_requerida = "fusta_moll"
-
-[node name="Corral" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 1, -6)
-script = ExtResource("99_corral")
