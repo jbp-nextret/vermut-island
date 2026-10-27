@@ -3,8 +3,8 @@ extends Node
 signal dia_nou
 signal hora_saltada(hora: float)   # quan el temps avança de cop (p. ex. en tancar la vermuteria)
 
-# Durada d'un dia complet en segons reals
-@export var durada_dia: float = 120.0
+# Durada d'un dia complet en segons reals (30 minuts). Per saltar-ne trossos, el llit.
+@export var durada_dia: float = 1800.0
 # Franja en què es pot obrir la vermuteria; en tancar-la es salta a hora_nit
 @export var hora_obertura: float = 6.0
 @export var hora_nit: float = 20.0

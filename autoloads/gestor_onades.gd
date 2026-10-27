@@ -28,6 +28,7 @@ const ONADES := [
 const MES_ENEMICS_PER_SETMANA := 0.3   # +30 % d'enemics cada setmana
 const MES_VIDA_PER_SETMANA := 0.2      # +20 % de vida cada setmana
 const PART_DE_LA_NIT_SPAWNEJANT := 0.55  # els enemics arriben durant la primera meitat de la nit
+const MAX_SEGONS_SPAWNEJANT := 120.0     # i, com a molt, en 2 minuts reals
 const DINERS_PER_ENEMIC := 2
 const BONUS_PER_NIVELL := 8           # bonus per superar l'onada: 8, 16... 40 (divendres), × setmana
 
@@ -112,8 +113,10 @@ func _comencar(dia: int) -> void:
 	multiplicador_vida = 1.0 + MES_VIDA_PER_SETMANA * n
 
 	# Els enemics arriben repartits al llarg de la primera part de la nit
+	# (però com a molt en un parell de minuts: amb dies llargs, si no, s'eternitzaria)
 	var durada_nit: float = GestorTemps.durada_dia * (10.0 / 24.0)
-	interval = maxf(0.4, durada_nit * PART_DE_LA_NIT_SPAWNEJANT / total)
+	var finestra := minf(durada_nit * PART_DE_LA_NIT_SPAWNEJANT, MAX_SEGONS_SPAWNEJANT)
+	interval = maxf(0.4, finestra / total)
 	temps_seguent = 1.5
 	activa = true
 	info["total"] = total
