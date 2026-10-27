@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent):
 				jugador.camera_shake(0.05))
 
 func _pot_recollectar() -> bool:
-	if not GameState.pot_atacar():
+	if not GameState.pot_atacar() or BarraRapida.mode_foc:
 		return false
 	for e in eines_actives:
 		if e.actiu:

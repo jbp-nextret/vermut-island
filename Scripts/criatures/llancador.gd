@@ -98,6 +98,18 @@ func entrar():
 		_configurar_anell()
 	mode_canviat.emit(true)
 
+## Entra al mode amb un objecte concret (des de la barra ràpida)
+func entrar_amb(id: String):
+	var i := OBJECTES.find(id)
+	if i >= 0 and i != index:
+		index = i
+		_configurar_anell()
+	actiu = true
+	mode_canviat.emit(true)
+	if quantitat() == 0:
+		var info := CatalegObjectes.info(id)
+		avis.emit("No tens %s (es fan a la barrica)" % info.nom.to_lower())
+
 func sortir_si_actiu():
 	if actiu:
 		sortir()
