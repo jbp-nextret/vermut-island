@@ -229,7 +229,11 @@ func _unhandled_input(event: InputEvent):
 		mode_foc = false
 		get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("roda_eines") and not roda.visible:
+
+## La roda va a _input (abans que la interfície): si no, quan un botó té el focus,
+## el Tab el fa servir Godot per passar al botó següent i la roda no s'obre mai
+func _input(event: InputEvent):
+	if event.is_action_pressed("roda_eines") and not roda.visible and _pot_fer_servir():
 		_obrir_roda()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_released("roda_eines") and roda.visible:
