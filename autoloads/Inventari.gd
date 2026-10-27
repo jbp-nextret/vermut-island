@@ -98,6 +98,10 @@ func carregar() -> bool:
 		for clau in items_desats:
 			items[clau] = int(items_desats[clau])   # el JSON ho torna com a float
 	diners = int(dades.get("diners", 0))
+	# El "vermut preparat" d'abans ara és vermut negre
+	if items.has("dosis_vermut"):
+		items["vermut"] = items.get("vermut", 0) + items["dosis_vermut"]
+		items.erase("dosis_vermut")
 	if int(dades.get("versio", 1)) < 2:
 		# Ara el vermut es fa amb raïm: les partides d'abans en reben una mica per començar
 		items["raim"] = items.get("raim", 0) + RAIM_INICIAL

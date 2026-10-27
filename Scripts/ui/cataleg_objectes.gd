@@ -4,11 +4,13 @@ class_name CatalegObjectes
 
 const OBJECTES := {
 	"llavor_raim": {"nom": "Llavors", "icona": "🌱", "descripcio": "Llavors per plantar qualsevol cultiu de l'hort. En culls més quan fas collita."},
-	"raim": {"nom": "Raïm", "icona": "🍇", "descripcio": "Collit dels ceps. A la barrica, cada raïm dona 3 vermuts."},
+	"raim": {"nom": "Raïm", "icona": "🍇", "descripcio": "Collit dels ceps. A la barrica el pots posar a fermentar per fer vermut."},
 	"fusta": {"nom": "Fusta", "icona": "🪵", "descripcio": "La dels arbres que tales amb la destral màgica. Servirà per construir i fabricar."},
 	"fibra": {"nom": "Fibra", "icona": "🌾", "descripcio": "La treus de tallar l'herba amb l'espasa. Servirà per fer cordes i teixits."},
 	"pedra": {"nom": "Pedra", "icona": "🪨", "descripcio": "La pices de les roques amb el pic màgic. Servirà per construir."},
-	"dosis_vermut": {"nom": "Vermut preparat", "icona": "🍷", "descripcio": "Vermut ja fet a la barrica, a punt per servir."},
+	"vermut": {"nom": "Vermut negre", "icona": "🍷", "descripcio": "El vermut de la casa. Es fa fermentant raïm a la barrica (1 dia). Es serveix a la vermuteria i és ingredient d'altres receptes."},
+	"vermut_blanc": {"nom": "Vermut blanc", "icona": "🥂", "descripcio": "Més suau i aromàtic: raïm i herbes (fibra) fermentats dia i mig. Els clients en paguen més."},
+	"vermut_reserva": {"nom": "Vermut reserva", "icona": "🥃", "descripcio": "Envellit tres dies a la barrica amb un toc d'oliva. El més car de la carta."},
 	"eina_espasa": {"nom": "Espasa espectral", "icona": "⚔️", "descripcio": "Eina. Posa-la a la barra ràpida: clic per fer un tall, clic dret per a l'estocada. Talla l'herba i en treu fibra."},
 	"eina_destral": {"nom": "Destral màgica", "icona": "🪓", "descripcio": "Eina. Amb ella a la mà, clica un arbre per talar-lo i treure'n fusta (i a vegades olives)."},
 	"eina_pic": {"nom": "Pic màgic", "icona": "⛏️", "descripcio": "Eina. Amb ell a la mà, clica una roca per picar-la i treure'n pedra."},

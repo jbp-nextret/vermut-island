@@ -314,7 +314,12 @@ func _omplir_estat():
 		t += "Avui encara no has obert (pots fins a les 20:00)\n"
 	else:
 		t += "Tancada fins demà\n"
-	t += "🍷 Vermuts disponibles: %d\n\n" % Barrica.vermuts_disponibles()
+	var estoc := []
+	for producte in Celler.SERVIBLES:
+		var n := Celler.estoc(producte)
+		if n > 0:
+			estoc.append("%s %d" % [CatalegObjectes.info(producte).icona, n])
+	t += "A les barriques: %s\n\n" % ("  ".join(estoc) if not estoc.is_empty() else "res a punt per servir")
 
 	# Hort
 	t += "[color=#ffcc8c][b]L'hort[/b][/color]\n" + _text_hort()

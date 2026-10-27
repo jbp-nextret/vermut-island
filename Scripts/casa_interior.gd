@@ -395,9 +395,16 @@ func _on_boto_vermuteria():
 	if not gestor_servei.obert and _seients_utilitzables() == 0:
 		_mostrar_avis("Necessites almenys una cadira amb una barra al costat")
 		return
-	if not gestor_servei.obert and Barrica.vermuts_disponibles() == 0:
-		_mostrar_avis("No tens raïm: no podràs servir vermut. Cull-ne a l'hort!")
-	gestor_servei.alternar()
+	if gestor_servei.obert:
+		gestor_servei.tancar()
+		return
+	var hi_ha := 0
+	for producte in Celler.SERVIBLES:
+		hi_ha += Celler.estoc(producte)
+	if hi_ha == 0:
+		_mostrar_avis("No tens res a punt a les barriques: posa-hi vermut a fermentar!")
+		return
+	MenuCarta.obrir(self, func(carta: Dictionary): gestor_servei.obrir(carta))
 
 func _seients_utilitzables() -> int:
 	return get_tree().get_nodes_in_group("seats").filter(func(s): return s.es_utilitzable()).size()
@@ -867,6 +874,8 @@ func col_locar_moble(des_de_clic: bool):
 		var mateix_moble := vell.scene_file_path == escena.resource_path
 		if mateix_moble and int(round(vell.rotation_degrees.y - rotacio_preview)) % 360 == 0:
 			return   # ja hi és exactament igual, no cal fer res
+		if _barrica_ocupada(vell):
+			return
 		_treure_moble(vell)
 
 	var avis := _avis_col_locacio(pos)
@@ -918,6 +927,13 @@ func _afegir_grups(moble: Node, tipus: MobleBarra.Tipus):
 	else:
 		moble.add_to_group("mobles_base")
 		moble.add_to_group(_grup_principal(tipus))
+
+## Una barrica amb alguna cosa a dins no es pot treure (es perdria)
+func _barrica_ocupada(moble: Node3D) -> bool:
+	if moble.is_in_group("barriques") and not Celler.buida(Celler.clau(moble.global_position)):
+		_mostrar_avis("Buida la barrica abans de treure-la")
+		return true
+	return false
 
 ## Treu un moble del joc de seguida (dels grups ja) i l'esborra al final del frame.
 func _treure_moble(moble: Node3D):
@@ -1126,6 +1142,8 @@ func obtenir_moble_desde_collider(collider: Node) -> Node3D:
 
 func eliminar_moble(moble: Node3D):
 	if not is_instance_valid(moble):
+		return
+	if _barrica_ocupada(moble):
 		return
 	if moble == moble_hovered:
 		moble_hovered = null

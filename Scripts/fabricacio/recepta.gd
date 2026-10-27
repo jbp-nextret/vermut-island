@@ -14,5 +14,7 @@ class_name Recepta
 @export_enum("taula", "barrica") var lloc := "taula"
 @export_enum("Construcció", "Eines", "Criatures", "Arqueologia", "Begudes") var categoria := "Construcció"
 @export var planol := false
+## Hores de joc que triga a fermentar (només a la barrica)
+@export var hores := 0.0
 ## Ordre dins de la categoria
 @export var ordre := 0

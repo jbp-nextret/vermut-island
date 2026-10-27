@@ -10,7 +10,7 @@ signal planol_apres(recepta: Recepta)
 
 const FITXER := "user://fabricacio.save"
 const CARPETA := "res://Resources/receptes/"
-const ORDRE_CATEGORIES := ["Construcció", "Eines", "Criatures", "Arqueologia", "Begudes"]
+const ORDRE_CATEGORIES := ["Begudes", "Construcció", "Eines", "Criatures", "Arqueologia"]
 
 var receptes_totes := {}   # id -> Recepta
 var planols := {}          # id de la recepta -> dia que el vas trobar
@@ -34,10 +34,8 @@ func receptes(lloc: String) -> Array:
 func coneguda(r: Recepta) -> bool:
 	return not r.planol or planols.has(r.id)
 
-## Quants en tens d'un ingredient ("vermut" compta el preparat i el raïm per trepitjar)
+## Quants en tens d'un ingredient
 func tinc(ingredient: String) -> int:
-	if ingredient == "vermut":
-		return Barrica.vermuts_disponibles()
 	return Inventari.tenir(ingredient)
 
 ## Quantes vegades la pots fer amb el que portes
@@ -56,16 +54,15 @@ func fer(r: Recepta, vegades := 1) -> bool:
 	if Inventari.tenir(r.resultat) <= 0 and Inventari.espais_ocupats() >= Inventari.max_espais:
 		Inventari.motxilla_plena.emit(r.resultat)
 		return false
-	for ing in r.ingredients:
-		var cal: int = r.ingredients[ing] * vegades
-		if ing == "vermut":
-			Barrica.gastar_vermuts(cal)
-		else:
-			Inventari.treure(ing, cal)
+	gastar_ingredients(r, vegades)
 	Inventari.afegir(r.resultat, r.quantitat * vegades)
 	Progressio.guanyar_xp("fabricar", vegades)
 	fet.emit(r, vegades)
 	return true
+
+func gastar_ingredients(r: Recepta, vegades: int):
+	for ing in r.ingredients:
+		Inventari.treure(ing, r.ingredients[ing] * vegades)
 
 # ─────────────── Plànols
 

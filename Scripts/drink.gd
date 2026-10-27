@@ -3,12 +3,14 @@ class_name Drink
 
 @export var product := "vermut"
 @export var anim_name := "buidar"
-@export var mida := 0.5   # escala del got (el sprite fa 16 px amb pixel_size 0.05)
+@export var mida := 0.5
+@export var color := Color.WHITE   # cada beguda té el seu to   # escala del got (el sprite fa 16 px amb pixel_size 0.05)
 
 @onready var sprite: AnimatedSprite3D = $AnimatedSprite3D
 
 func _ready() -> void:
 	scale = Vector3.ONE * mida
+	sprite.modulate = color
 	sprite.animation = anim_name
 	sprite.frame = 0          # comença ple
 	sprite.pause()

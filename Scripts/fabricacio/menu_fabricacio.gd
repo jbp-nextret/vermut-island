@@ -4,6 +4,8 @@ class_name MenuFabricacio
 ## A l'esquerra, les receptes per categories; a la dreta, la triada: ingredients (en
 ## verd si en tens prou), quantes vegades i el botó per fabricar. Les receptes que
 ## necessiten un plànol que encara no has trobat surten amagades.
+## A la barrica, les receptes no surten de seguida: es posen a fermentar unes hores, i a
+## dalt hi ha què conté ara (amb botons per treure'n o guardar-hi, com un cofre).
 ## Atura el joc mentre és oberta. Esc per tancar.
 
 var lloc := "taula"
@@ -20,6 +22,7 @@ var det_text: RichTextLabel
 var det_vegades: Label
 var boto_fer: Button
 var botons := {}          # id recepta -> Button
+var estat_caixa: VBoxContainer   # només a la barrica: què hi ha a dins
 
 static func obrir(p_origen: Node3D, p_lloc: String) -> MenuFabricacio:
 	var m := MenuFabricacio.new()
@@ -50,7 +53,7 @@ func _ready():
 	var capcalera := HBoxContainer.new()
 	columna.add_child(capcalera)
 	var titol := Label.new()
-	titol.text = "✨ Taula de fabricació màgica" if lloc == "taula" else "🍷 Barrica: elaborar"
+	titol.text = "✨ Taula de fabricació màgica" if lloc == "taula" else "🍷 Barrica"
 	titol.add_theme_font_size_override("font_size", 26)
 	titol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	capcalera.add_child(titol)
@@ -65,6 +68,19 @@ func _ready():
 	tancar_boto.pressed.connect(tancar)
 	capcalera.add_child(tancar_boto)
 
+	if lloc == "barrica":
+		var marc := PanelContainer.new()
+		var e := StyleBoxFlat.new()
+		e.bg_color = Color(0.35, 0.2, 0.12, 0.45)
+		e.set_corner_radius_all(8)
+		e.set_content_margin_all(12)
+		marc.add_theme_stylebox_override("panel", e)
+		columna.add_child(marc)
+		estat_caixa = VBoxContainer.new()
+		estat_caixa.add_theme_constant_override("separation", 6)
+		marc.add_child(estat_caixa)
+		_mostrar_estat()
+
 	pestanyes = HBoxContainer.new()
 	pestanyes.add_theme_constant_override("separation", 6)
 	columna.add_child(pestanyes)
@@ -73,7 +89,7 @@ func _ready():
 	cos.add_theme_constant_override("separation", 16)
 	columna.add_child(cos)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(330, 460)
+	scroll.custom_minimum_size = Vector2(330, 460 if lloc == "taula" else 340)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	cos.add_child(scroll)
 	llista = VBoxContainer.new()
@@ -87,7 +103,7 @@ func _ready():
 	estil.set_corner_radius_all(8)
 	estil.set_content_margin_all(14)
 	detall.add_theme_stylebox_override("panel", estil)
-	detall.custom_minimum_size = Vector2(380, 460)
+	detall.custom_minimum_size = Vector2(380, 460 if lloc == "taula" else 380)
 	cos.add_child(detall)
 	var dv := VBoxContainer.new()
 	dv.add_theme_constant_override("separation", 8)
@@ -104,7 +120,7 @@ func _ready():
 	det_text = RichTextLabel.new()
 	det_text.bbcode_enabled = true
 	det_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	det_text.custom_minimum_size = Vector2(0, 230)
+	det_text.custom_minimum_size = Vector2(0, 230 if lloc == "taula" else 170)
 	det_text.add_theme_font_size_override("normal_font_size", 15)
 	det_text.add_theme_font_size_override("bold_font_size", 15)
 	dv.add_child(det_text)
@@ -210,23 +226,48 @@ func _mostrar():
 		var i := {"nom": "Vermut", "icona": "🍷"} if ing == "vermut" else CatalegObjectes.info(ing)
 		var color := "#9fe39f" if tinc >= cal else "#ff8a80"
 		t += "  %s %s  [color=%s]%d / %d[/color]\n" % [i.icona, i.nom, color, tinc, cal]
-	t += "\nEn tens: %d" % Inventari.tenir(r.resultat)
+	if lloc == "barrica":
+		t += "\n⏳ Fermenta %s · surten %d" % [_durada(r.hores), Celler.quantitat_resultat(r, vegades)]
+	else:
+		t += "\nEn tens: %d" % Inventari.tenir(r.resultat)
 	det_text.text = t
-	var possibles := Fabricacio.vegades_possibles(r)
+	var possibles := _maxim(r)
 	vegades = clampi(vegades, 1, maxi(1, possibles))
 	det_vegades.text = "×%d" % vegades
-	boto_fer.text = "✨ Fabricar %d" % (r.quantitat * vegades)
-	boto_fer.disabled = possibles < vegades or possibles == 0
+	if lloc == "barrica":
+		var motiu := Celler.pot_fermentar(origen.clau(), r, vegades)
+		boto_fer.text = "🍷 Posar a fermentar" if motiu.is_empty() else motiu
+		boto_fer.disabled = not motiu.is_empty()
+	else:
+		boto_fer.text = "✨ Fabricar %d" % (r.quantitat * vegades)
+		boto_fer.disabled = possibles < vegades or possibles == 0
 
 func _canviar_vegades(pas: int):
 	if triada == null:
 		return
-	var possibles := Fabricacio.vegades_possibles(triada)
+	var possibles := _maxim(triada)
 	vegades = maxi(1, possibles) if pas == 0 else clampi(vegades + pas, 1, maxi(1, possibles))
 	_mostrar()
 
+## Quantes vegades com a màxim (a la barrica, també el que hi cap)
+func _maxim(r: Recepta) -> int:
+	var n := Fabricacio.vegades_possibles(r)
+	return mini(n, Celler.vegades_maximes(r)) if lloc == "barrica" else n
+
+static func _durada(hores: float) -> String:
+	if hores >= 24.0:
+		var dies := snappedf(hores / 24.0, 0.1)
+		return "%s %s" % [str(dies).trim_suffix(".0"), "dia" if is_equal_approx(dies, 1.0) else "dies"]
+	return "%d h" % ceili(hores)
+
 func _fabricar():
-	if triada == null or not Fabricacio.fer(triada, vegades):
+	if triada == null:
+		return
+	if lloc == "barrica":
+		if not Celler.fermentar(origen.clau(), triada, vegades):
+			return
+		_mostrar_estat()
+	elif not Fabricacio.fer(triada, vegades):
 		return
 	# Un petit efecte: la icona fa un bot i la taula brilla
 	var t := det_icona.create_tween()
@@ -248,3 +289,66 @@ func _input(event: InputEvent):
 func tancar():
 	get_tree().paused = false
 	queue_free()
+
+# ─────────────── Barrica: què hi ha a dins
+
+func _mostrar_estat():
+	for f in estat_caixa.get_children():
+		f.queue_free()
+	var c: String = origen.clau()
+	var e := Celler.estat(c)
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", 18)
+	estat_caixa.add_child(l)
+	var fila := HBoxContainer.new()
+	fila.add_theme_constant_override("separation", 6)
+	if e.is_empty():
+		l.text = "La barrica és buida. Tria una recepta per posar-la a fermentar."
+	else:
+		var info := CatalegObjectes.info(e.producte)
+		if Celler.fermentant(c):
+			l.text = "%s %s ×%d fermentant... queden %s" % [info.icona, info.nom, int(e.quantitat), _durada(Celler.hores_que_queden(c))]
+			var barra := ProgressBar.new()
+			barra.custom_minimum_size = Vector2(0, 14)
+			barra.max_value = 1.0
+			barra.value = Celler.progres(c)
+			barra.show_percentage = false
+			estat_caixa.add_child(barra)
+			var nota := Label.new()
+			nota.text = "El temps només passa quan ets fora de casa."
+			nota.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
+			estat_caixa.add_child(nota)
+		else:
+			l.text = "%s %s ×%d a punt" % [info.icona, info.nom, int(e.quantitat)]
+			_boto(fila, "Treure 1", func(): Celler.treure(c, 1))
+			_boto(fila, "Treure-ho tot", func(): Celler.treure(c, Celler.a_punt(c)))
+	# Guardar-hi el que portes (si és buida, o del mateix)
+	if not Celler.fermentant(c):
+		for producte in _begudes_guardables():
+			if e.is_empty() or e.producte == producte:
+				var n := Inventari.tenir(producte)
+				_boto(fila, "Guardar %s ×%d" % [CatalegObjectes.info(producte).icona, n], func(): Celler.guardar(c, producte, n))
+	if fila.get_child_count() > 0:
+		estat_caixa.add_child(fila)
+	else:
+		fila.free()
+
+func _boto(fila: HBoxContainer, text: String, accio: Callable):
+	var b := Button.new()
+	b.text = text
+	b.pressed.connect(func():
+		accio.call()
+		origen.efecte_fabricar("")
+		_mostrar_estat()
+		_omplir()
+		if triada:
+			_triar(triada))
+	fila.add_child(b)
+
+## Les coses de barrica que portes a la motxilla
+func _begudes_guardables() -> Array:
+	var llista := []
+	for r in Fabricacio.receptes("barrica"):
+		if Inventari.tenir(r.resultat) > 0 and not r.resultat in llista:
+			llista.append(r.resultat)
+	return llista
