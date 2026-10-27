@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EspecieCriatura" format=3]
+
+[ext_resource type="Script" path="res://Scripts/criatures/especie_criatura.gd" id="1_esp"]
+
+[resource]
+script = ExtResource("1_esp")
+id = "gat_moll"
+nom = "Gat de moll"
+descripcio = "Ronda pels molls buscant peix. Amb ell al costat camines més lleuger."
+dieta = 1
+caracter = 0
+forca = 2
+vida = 35
+velocitat = 2.8
+dany = 6
+habilitat = 4
+valor_habilitat = 0.12
+troballes = PackedStringArray()
+frequencia = 0.9
+zona = "totes"
+color = Color(0.9, 0.55, 0.25, 1)
+mida = 0.85

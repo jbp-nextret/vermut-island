@@ -46,7 +46,7 @@ func _nou_trail_mat() -> ParticleProcessMaterial:
 	return mat
 
 func _physics_process(delta):
-	if is_instance_valid(objectiu) and objectiu.is_in_group("enemics"):
+	if is_instance_valid(objectiu) and (objectiu.is_in_group("enemics") or objectiu.is_in_group("criatures_salvatges")):
 		var cap_objectiu := (objectiu.global_position + Vector3.UP * 0.3 - global_position).normalized()
 		direccio = direccio.slerp(cap_objectiu, minf(1.0, gir * delta)).normalized()
 	global_position += direccio * velocitat * delta
@@ -58,7 +58,7 @@ func _on_body_entered(body):
 	if body.is_in_group("player"):
 		return   # abans buscava el grup "jugador", que no existeix, i podia explotar contra tu
 	if body.has_method("prendre_dany"):
-		if body.is_in_group("enemics"):
+		if body.is_in_group("enemics") or body.is_in_group("criatures_salvatges"):
 			body.prendre_dany(dany, global_position - direccio)   # l'empeny en la direcció de la bola
 		else:
 			body.prendre_dany(dany)

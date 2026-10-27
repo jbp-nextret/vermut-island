@@ -26,6 +26,7 @@ func guardar_mundo() -> void:
 	Missions.guardar()
 	Grup.guardar()
 	Mapa.guardar()
+	Criatures.guardar()
 	if guardando or not is_instance_valid(mundo_actual):
 		return
 	

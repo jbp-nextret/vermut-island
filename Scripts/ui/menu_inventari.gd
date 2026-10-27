@@ -14,6 +14,7 @@ var descripcio: RichTextLabel
 var estat: RichTextLabel
 var pestanyes: TabContainer
 var text_missions: RichTextLabel
+var llista_criatures: VBoxContainer
 var seleccionat := ""
 
 func _ready():
@@ -79,6 +80,16 @@ func _ready():
 	text_missions = _text_ric(Vector2(400, 430))
 	text_missions.name = "Missions"
 	pestanyes.add_child(text_missions)
+	# Criatures domesticades: quina et segueix, noms i habilitats
+	var scroll := ScrollContainer.new()
+	scroll.name = "Criatures"
+	scroll.custom_minimum_size = Vector2(400, 430)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pestanyes.add_child(scroll)
+	llista_criatures = VBoxContainer.new()
+	llista_criatures.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	llista_criatures.add_theme_constant_override("separation", 8)
+	scroll.add_child(llista_criatures)
 
 func _titol_seccio(text: String) -> Label:
 	var l := Label.new()
@@ -122,6 +133,7 @@ func obrir():
 	_omplir_objectes()
 	_omplir_estat()
 	_omplir_missions()
+	_omplir_criatures()
 
 func tancar():
 	visible = false
@@ -181,6 +193,67 @@ func _mostrar_descripcio(id: String):
 	descripcio.text = "[b]%s %s[/b]  ×%d\n%s" % [info.icona, info.nom, quantitat, info.descripcio]
 
 # ─────────────── Estat de la partida
+
+func _omplir_criatures():
+	for f in llista_criatures.get_children():
+		f.queue_free()
+	if Criatures.col_leccio.is_empty():
+		var l := RichTextLabel.new()
+		l.bbcode_enabled = true
+		l.fit_content = true
+		l.custom_minimum_size = Vector2(380, 0)
+		l.add_theme_font_size_override("normal_font_size", 15)
+		l.text = "[color=#aaaaaa]Encara no has domesticat cap criatura.\n\nLlança [b]olives marinades[/b] (L) a prop de les herbívores i, mentre mengen, acosta't i prem F. A les carnívores, un [b]vermut hipnòtic[/b]. Totes dues coses es fan a la barrica.[/color]"
+		llista_criatures.add_child(l)
+		return
+	for d in Criatures.col_leccio:
+		var e := Criatures.especie(d.especie)
+		if e == null:
+			continue
+		var fila := PanelContainer.new()
+		var estil := StyleBoxFlat.new()
+		estil.bg_color = Color(1.0, 0.85, 0.5, 0.12) if d.uid == Criatures.activa else Color(0, 0, 0, 0.25)
+		estil.set_corner_radius_all(6)
+		estil.set_content_margin_all(8)
+		fila.add_theme_stylebox_override("panel", estil)
+		llista_criatures.add_child(fila)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 10)
+		fila.add_child(h)
+		var imatge := TextureRect.new()
+		imatge.texture = e.textura()
+		imatge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		imatge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		imatge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		imatge.custom_minimum_size = Vector2(56, 56)
+		h.add_child(imatge)
+		var info := VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(info)
+		var nom := LineEdit.new()
+		nom.text = d.nom
+		nom.max_length = 18
+		nom.tooltip_text = "Escriu un nom i prem Enter"
+		nom.text_submitted.connect(func(t): Criatures.reanomenar(d.uid, t))
+		nom.focus_exited.connect(func(): Criatures.reanomenar(d.uid, nom.text))
+		info.add_child(nom)
+		var detalls := Label.new()
+		detalls.text = "%s · %s · Força %s\n%s" % [e.nom, e.text_dieta(), "★".repeat(e.forca), e.text_habilitat()]
+		detalls.add_theme_font_size_override("font_size", 13)
+		detalls.add_theme_color_override("font_color", Color(0.85, 0.87, 0.95))
+		info.add_child(detalls)
+		var boto := Button.new()
+		if d.uid == Criatures.activa:
+			boto.text = "Que descansi"
+			boto.pressed.connect(func():
+				Criatures.activar("")
+				_omplir_criatures())
+		else:
+			boto.text = "Que em segueixi"
+			boto.pressed.connect(func():
+				Criatures.activar(d.uid)
+				_omplir_criatures())
+		h.add_child(boto)
 
 func _omplir_missions():
 	var t := ""

@@ -646,7 +646,7 @@ func enemic_apuntat() -> Node3D:
 	var radi := get_viewport().get_visible_rect().size.y * RADI_APUNTAR
 	var millor: Node3D = null
 	var millor_distancia := radi
-	for enemic in get_tree().get_nodes_in_group("enemics"):
+	for enemic in get_tree().get_nodes_in_group("enemics") + get_tree().get_nodes_in_group("criatures_salvatges"):
 		var punt: Vector3 = enemic.sprite.global_position if "sprite" in enemic else enemic.global_position
 		if camera_activa.is_position_behind(punt):
 			continue

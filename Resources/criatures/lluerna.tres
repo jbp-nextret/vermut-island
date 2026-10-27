@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EspecieCriatura" format=3]
+
+[ext_resource type="Script" path="res://Scripts/criatures/especie_criatura.gd" id="1_esp"]
+
+[resource]
+script = ExtResource("1_esp")
+id = "lluerna"
+nom = "Lluerna"
+descripcio = "Brilla quan es fa fosc. Fuig de seguida, però no es resisteix a unes bones olives."
+dieta = 0
+caracter = 0
+forca = 2
+vida = 25
+velocitat = 2.6
+dany = 0
+habilitat = 3
+valor_habilitat = 2.0
+troballes = PackedStringArray()
+frequencia = 0.7
+zona = "illetes"
+color = Color(0.95, 0.85, 0.35, 1)
+mida = 0.7

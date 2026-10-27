@@ -18,6 +18,8 @@ func prendre_dany(quantitat: int):
 	if ara < invulnerable_fins:
 		return
 	invulnerable_fins = ara + INVULNERABILITAT
+	# La criatura que et segueix (el cranc roig) pot aturar part del cop
+	quantitat = maxi(1, roundi(quantitat * (1.0 - Criatures.bonus("defensa"))))
 	vida_actual -= quantitat
 	if vida_actual <= 0:
 		vida_actual = 0

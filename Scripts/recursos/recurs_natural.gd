@@ -8,6 +8,8 @@ signal esgotat(recurs: RecursNatural)
 
 enum Tipus { ARBRE, ROCA, HERBA }
 
+const PROBABILITAT_OLIVES := 0.6
+
 @export var tipus: Tipus = Tipus.ARBRE
 ## Cops que cal donar-li
 @export var cops := 3
@@ -132,6 +134,11 @@ func _esgotar():
 	var info := CatalegObjectes.info(objecte)
 	if Inventari.afegir(objecte, quantitat):
 		TextFlotant.mostrar(get_tree().current_scene, global_position + Vector3.UP * 1.2, "+%d %s" % [quantitat, info.icona], Color(1.0, 0.9, 0.6))
+	# Les oliveres: a vegades en cauen olives (per marinar-les a la barrica)
+	if tipus == Tipus.ARBRE and etapa >= 2 and randf() < PROBABILITAT_OLIVES:
+		var olives := randi_range(1, 3)
+		if Inventari.afegir("olives", olives):
+			TextFlotant.mostrar(get_tree().current_scene, global_position + Vector3.UP * 1.6, "+%d 🫒" % olives, Color(0.75, 0.9, 0.5))
 	Progressio.guanyar_xp(motiu_xp)
 	esgotat.emit(self)
 	# L'arbre cau, la roca s'esmicola, l'herba desapareix

@@ -10,6 +10,7 @@ var jugador: Node
 var plantador: Plantador
 var regador: Regador
 var llaurador: Llaurador
+var llancador: Llancador
 
 var fila: HBoxContainer
 var label_info: Label
@@ -42,6 +43,7 @@ func _ready():
 	_boto("plantar", "🌱", "plantar", Color(0.55, 0.95, 0.5), "Plantar (mantén P: triar cultiu)", func(): plantador.alternar())
 	_boto("regar", "💧", "regar", Color(0.45, 0.75, 1.0), "Regar", _alternar.bind(regador))
 	_boto("llaurar", "⛏", "llaurar", Color(0.85, 0.65, 0.35), "Llaurar", _alternar.bind(llaurador))
+	_boto("llancar", "🫒", "llancar", Color(0.75, 0.6, 1.0), "Llançar olives / vermut hipnòtic", func(): llancador.alternar())
 	var separador2 := Control.new()
 	separador2.custom_minimum_size = Vector2(14, 0)
 	separador2.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -73,6 +75,7 @@ func _ready():
 	Inventari.motxilla_plena.connect(func(_item): _mostrar_avis("La motxilla és plena (amplia-la a Mundà → Motxilla gran)"))
 	llaurador.avis.connect(_mostrar_avis)
 	EventBus.avis.connect(_mostrar_avis)
+	llancador.avis.connect(_mostrar_avis)
 	if jugador.has_signal("magia_no_disponible"):
 		jugador.magia_no_disponible.connect(func(): botons.foc.sacsejar())
 
@@ -114,6 +117,7 @@ func _process(_delta):
 	_actualitzar("plantar", plantador.actiu, 1.0)
 	_actualitzar("regar", regador.actiu, regador.progres())
 	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
+	_actualitzar("llancar", llancador.actiu, llancador.progres())
 	_actualitzar("motxilla", true, 1.0)
 	_actualitzar("habilitats", true, 1.0)
 	_actualitzar("mapa", true, 1.0)
@@ -129,6 +133,9 @@ func _process(_delta):
 		label_info.text = "" if plantador.roda_oberta else "Clic: plantar · Arrossega: àrea · Q/E: canviar · Clic dret: sortir"
 	elif regador.actiu:
 		label_info.text = "Clic: regar · Clic dret: sortir"
+	elif llancador.actiu:
+		var info := CatalegObjectes.info(llancador.objecte())
+		label_info.text = "%s %s: %d · Clic: llançar · Q/E: canviar · Clic dret: sortir" % [info.icona, info.nom, llancador.quantitat()]
 	elif llaurador.actiu:
 		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir" if llaurador.pot_arrossegar() else "Clic: llaurar · Clic dret: sortir"
 	elif en_combat and not plantador.actiu:

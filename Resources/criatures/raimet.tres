@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EspecieCriatura" format=3]
+
+[ext_resource type="Script" path="res://Scripts/criatures/especie_criatura.gd" id="1_esp"]
+
+[resource]
+script = ExtResource("1_esp")
+id = "raimet"
+nom = "Raïmet"
+descripcio = "Fa olor de most. Si li agrades, esquitxa suc als cultius que tenen set."
+dieta = 0
+caracter = 1
+forca = 2
+vida = 30
+velocitat = 1.8
+dany = 0
+habilitat = 1
+valor_habilitat = 1.0
+troballes = PackedStringArray()
+frequencia = 1.0
+zona = "illetes"
+color = Color(0.55, 0.3, 0.7, 1)
+mida = 0.85

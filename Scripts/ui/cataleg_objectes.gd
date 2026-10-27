@@ -9,6 +9,9 @@ const OBJECTES := {
 	"fibra": {"nom": "Fibra", "icona": "🌾", "descripcio": "La treus de tallar l'herba amb l'espasa. Servirà per fer cordes i teixits."},
 	"pedra": {"nom": "Pedra", "icona": "🪨", "descripcio": "La pices de les roques amb el pic màgic. Servirà per construir."},
 	"dosis_vermut": {"nom": "Vermut preparat", "icona": "🍷", "descripcio": "Vermut ja fet a la barrica, a punt per servir."},
+	"olives": {"nom": "Olives", "icona": "🫒", "descripcio": "De les oliveres de l'illa (a vegades en cauen quan tales un arbre). A la barrica les pots marinar."},
+	"olives_marinades": {"nom": "Olives marinades", "icona": "🥗", "descripcio": "Llança-les (L) a prop d'una criatura herbívora: s'hi acostarà a menjar i la podràs domesticar."},
+	"vermut_hipnotic": {"nom": "Vermut hipnòtic", "icona": "🧪", "descripcio": "Llança'l (L) a una criatura: la deixa atordida uns segons i la podràs domesticar. Les més fortes, debilita-les abans."},
 }
 
 static func info(id: String) -> Dictionary:

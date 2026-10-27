@@ -26,12 +26,15 @@ func punt_interaccio() -> Vector3:
 	return global_position
 
 func pot_interactuar(jugador: InteraccioJugador) -> bool:
-	# Sempre es pot tornar un got; omplir-ne només mentre la vermuteria és oberta
-	return jugador.porta_objecte() or GameState.mode == GameState.Mode.SERVEI
+	# Sempre es pot tornar un got; omplir-ne només mentre la vermuteria és oberta.
+	# Fora del servei, la barrica serveix per elaborar (olives marinades, vermut hipnòtic)
+	return jugador.porta_objecte() or GameState.mode in [GameState.Mode.SERVEI, GameState.Mode.EXPLORAR]
 
 func text_interaccio(jugador: InteraccioJugador) -> String:
 	if jugador.porta_objecte():
 		return "Tornar el got"
+	if GameState.mode != GameState.Mode.SERVEI:
+		return "Elaborar"
 	var queden := vermuts_disponibles(vermuts_per_cada_raim(vermuts_per_raim))
 	return "Omplir un %s (%d)" % [producte, queden] if queden > 0 else "Sense raïm per fer vermut"
 
@@ -39,6 +42,9 @@ func interactuar(jugador: InteraccioJugador) -> void:
 	if jugador.porta_objecte():
 		jugador.deixar_objecte().queue_free()
 		Inventari.afegir("dosis_vermut", 1)   # el vermut torna a la barrica
+		return
+	if GameState.mode != GameState.Mode.SERVEI:
+		MenuElaborar.obrir(self)
 		return
 	if not _gastar_una_dosi():
 		TextFlotant.mostrar(get_parent().get_parent(), global_position + Vector3.UP, "Cal raïm! 🍇", Color(1, 0.5, 0.5))
@@ -51,6 +57,17 @@ func interactuar(jugador: InteraccioJugador) -> void:
 	var t := moble.create_tween()
 	t.tween_property(moble, "scale", Vector3(1.08, 0.92, 1.08), 0.06)
 	t.tween_property(moble, "scale", Vector3.ONE, 0.12)
+
+## Gasta `n` vermuts (del que ja hi ha fet i, si cal, trepitjant raïm). Per a les receptes.
+static func gastar_vermuts(n: int) -> bool:
+	var per_raim := vermuts_per_cada_raim()
+	if vermuts_disponibles(per_raim) < n:
+		return false
+	for i in n:
+		if not Inventari.treure("dosis_vermut"):
+			Inventari.treure("raim")
+			Inventari.afegir("dosis_vermut", per_raim - 1)
+	return true
 
 ## Treu un vermut: primer del que ja hi ha fet, si no, trepitja un raïm (que en dona uns quants)
 func _gastar_una_dosi() -> bool:

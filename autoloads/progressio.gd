@@ -19,6 +19,7 @@ const XP := {
 	"plantar": 2, "regar": 1, "collir": 5, "llaurar": 1,
 	"talar": 3, "picar": 3, "herba": 1,
 	"servir": 4, "obrir_vermuteria": 10,
+	"domesticar": 20,
 }
 
 ## Un punt per a cada arbre (màgia d'atac, màgia útil i mundà), però es poden gastar on es vulgui
@@ -68,7 +69,11 @@ func rang(id: String) -> int:
 
 func valor(id: String) -> float:
 	var h := ArbreHabilitats.habilitat(id)
-	return h.per_rang * rang(id) if h else 0.0
+	var total: float = h.per_rang * rang(id) if h else 0.0
+	# La criatura que et segueix també hi pot sumar (p. ex. el gat de moll, velocitat)
+	if has_node("/root/Criatures"):
+		total += get_node("/root/Criatures").bonus(id)
+	return total
 
 ## Si l'habilitat es pot fer servir (com a mínim un rang)
 func te(id: String) -> bool:

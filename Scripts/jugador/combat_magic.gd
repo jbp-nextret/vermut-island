@@ -223,7 +223,7 @@ func _colpejar(enemic: Node3D, dany: int):
 
 func _enemics_propers(radi: float) -> Array:
 	var resultat := []
-	for enemic in get_tree().get_nodes_in_group("enemics"):
+	for enemic in get_tree().get_nodes_in_group("enemics") + get_tree().get_nodes_in_group("criatures_salvatges"):
 		if not is_instance_valid(enemic):
 			continue
 		var cap: Vector3 = enemic.global_position - jugador.global_position

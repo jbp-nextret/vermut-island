@@ -11,6 +11,8 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
 var recolector: Recolector
+var llancador: Llancador
+var generador_criatures: GeneradorCriatures
 var generador_illes: GeneradorIlles
 var regenerador: RegeneradorRecursos
 var regador: Regador
@@ -66,6 +68,14 @@ func _ready():
 		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
 	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
 	add_child(regenerador)
+	# Criatures salvatges: a les illetes i alguna de mansa a la illa principal
+	generador_criatures = GeneradorCriatures.new()
+	generador_criatures.name = "GeneradorCriatures"
+	generador_criatures.configurar(self, $GridMap)
+	for i in generador_illes.illes.size():
+		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "illetes")
+	generador_criatures.afegir_zona("Illa principal", _celles_herba_principals(), GeneradorCriatures.A_LA_PRINCIPAL, "principal")
+	add_child(generador_criatures)
 
 	recolector = Recolector.new()
 	recolector.name = "Recolector"
@@ -98,16 +108,21 @@ func _ready():
 	llaurador.name = "Llaurador"
 	llaurador.configurar(self, plantador, $Personatge)
 	add_child(llaurador)
-	# Només un mode d'eina alhora: plantar, regar o llaurar
-	for eina in [plantador, regador, llaurador]:
+	llancador = Llancador.new()
+	llancador.name = "Llancador"
+	llancador.configurar($Personatge)
+	add_child(llancador)
+	# Només un mode d'eina alhora: plantar, regar, llaurar o llançar
+	for eina in [plantador, regador, llaurador, llancador]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
-	recolector.eines_actives = [plantador, regador, llaurador]
+	recolector.eines_actives = [plantador, regador, llaurador, llancador]
 	var barra := BarraAccions.new()
 	barra.jugador = $Personatge
 	barra.plantador = plantador
 	barra.regador = regador
 	barra.llaurador = llaurador
+	barra.llancador = llancador
 	add_child(barra)
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
@@ -313,7 +328,7 @@ func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min:
 
 ## En entrar en un mode d'eina, surt dels altres
 func _nomes_una_eina(eina: Node) -> void:
-	for altra in [plantador, regador, llaurador]:
+	for altra in [plantador, regador, llaurador, llancador]:
 		if altra != eina and altra.actiu:
 			altra.sortir()
 

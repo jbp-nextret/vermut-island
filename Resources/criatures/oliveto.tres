@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EspecieCriatura" format=3]
+
+[ext_resource type="Script" path="res://Scripts/criatures/especie_criatura.gd" id="1_esp"]
+
+[resource]
+script = ExtResource("1_esp")
+id = "oliveto"
+nom = "Olivetó"
+descripcio = "Una boleta verda que viu entre les oliveres. Esporuguida, però llaminera de mena."
+dieta = 0
+caracter = 0
+forca = 1
+vida = 20
+velocitat = 2.4
+dany = 0
+habilitat = 2
+valor_habilitat = 70.0
+troballes = PackedStringArray("olives", "fibra", "llavor_raim")
+frequencia = 1.4
+zona = "totes"
+color = Color(0.48, 0.6, 0.22, 1)
+mida = 0.8
