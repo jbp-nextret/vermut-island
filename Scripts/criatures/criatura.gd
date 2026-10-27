@@ -589,4 +589,7 @@ func _process(delta):
 		sprite.modulate = Color(1, 0.4, 0.4) if flash > 0.0 else Color.WHITE
 	# El nom surt quan el jugador és a prop
 	var jugador := _jugador()
+	# La primera vegada que te la mires de prop, entra al bestiari
+	if not domesticada and jugador and not Criatures.vista(especie.id) and _pla(jugador.global_position - global_position).length() < 9.0:
+		Criatures.veure(especie.id)
 	etiqueta.visible = estat != Estat.DOMESTICANT and jugador != null and _pla(jugador.global_position - global_position).length() < 4.0 and not icona.visible

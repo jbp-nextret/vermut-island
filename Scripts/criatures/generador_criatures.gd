@@ -23,6 +23,15 @@ func afegir_zona(nom: String, celles: Array, maxim: int, tipus_zona: String):
 		return
 	zones.append({"nom": nom, "celles": celles, "maxim": maxim, "zona": tipus_zona, "criatures": []})
 
+## El centre de les cel·les d'una zona (per posar-hi les icones al mapa)
+func centre_zona(z: Dictionary) -> Vector2:
+	if not z.has("centre"):
+		var suma := Vector2.ZERO
+		for c in z.celles:
+			suma += Vector2(c.x + 0.5, c.z + 0.5)
+		z.centre = suma / maxf(1.0, z.celles.size())
+	return z.centre
+
 func _ready():
 	rng.randomize()
 	# Al principi: totes plenes (encara que el jugador sigui a prop, que és l'inici)

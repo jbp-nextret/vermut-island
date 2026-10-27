@@ -9,6 +9,8 @@ extends Node
 signal col_leccio_canviada
 signal activa_canviada
 signal criatura_capturada(dades: Dictionary)
+## Primera vegada que veus una espècie (per al bestiari)
+signal especie_vista(especie: EspecieCriatura)
 
 const FITXER := "user://criatures.save"
 const CARPETA := "res://Resources/criatures/"
@@ -17,6 +19,9 @@ var especies := {}       # id -> EspecieCriatura
 ## [{uid, especie, nom, dia}]
 var col_leccio: Array = []
 var activa := ""         # uid de la que et segueix
+## Bestiari: espècies que has vist alguna vegada i quantes n'has domesticat en total
+var vistes := {}         # id -> dia que la vas veure per primer cop
+var domesticades := {}   # id -> quantes (encara que ja no les tinguis)
 var companya: Node3D = null
 var _escena_actual: Node = null
 
@@ -53,6 +58,8 @@ func capturar(e: EspecieCriatura) -> Dictionary:
 		"dia": GestorTemps.dia_actual,
 	}
 	col_leccio.append(d)
+	veure(e.id)
+	domesticades[e.id] = int(domesticades.get(e.id, 0)) + 1
 	Progressio.guanyar_xp("domesticar", 1.0 + (e.forca - 1) * 0.5)
 	criatura_capturada.emit(d)
 	col_leccio_canviada.emit()
@@ -100,6 +107,22 @@ func bonus(clau: String) -> float:
 			return e.valor_habilitat if e.habilitat == EspecieCriatura.Ajuda.DEFENSA else 0.0
 	return 0.0
 
+# ─────────────── Bestiari
+
+func vista(especie_id: String) -> bool:
+	return vistes.has(especie_id)
+
+func domesticada(especie_id: String) -> bool:
+	return int(domesticades.get(especie_id, 0)) > 0
+
+func veure(especie_id: String):
+	if vistes.has(especie_id) or not especies.has(especie_id):
+		return
+	vistes[especie_id] = GestorTemps.dia_actual
+	especie_vista.emit(especies[especie_id])
+	EventBus.avis.emit("📖 Nova criatura al bestiari: %s" % especies[especie_id].nom)
+	guardar()
+
 # ─────────────── La companya al món
 
 ## Quan es carrega el món (o canvia d'escena) torna a aparèixer al teu costat
@@ -138,7 +161,7 @@ func _treure_companya():
 func guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa}))
+		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa, "vistes": vistes, "domesticades": domesticades}))
 
 func carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -148,5 +171,12 @@ func carregar():
 	if d is Dictionary:
 		col_leccio = (d.get("col_leccio", []) as Array).filter(func(x): return x is Dictionary and especies.has(x.get("especie", "")))
 		activa = str(d.get("activa", ""))
+		vistes = d.get("vistes", {})
+		domesticades = d.get("domesticades", {})
+		# Partides d'abans del bestiari: el que ja tens compta com a vist i domesticat
+		for c in col_leccio:
+			vistes[c.especie] = vistes.get(c.especie, c.get("dia", 1))
+			if not domesticades.has(c.especie):
+				domesticades[c.especie] = col_leccio.filter(func(x): return x.especie == c.especie).size()
 		if dades(activa).is_empty():
 			activa = ""

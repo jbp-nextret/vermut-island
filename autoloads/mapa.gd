@@ -122,7 +122,7 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func obrir():
-	if visible or not MenuPausa.en_partida() or GameState.en_dialeg or MenuInventari.visible or MenuHabilitats.visible:
+	if visible or not MenuPausa.en_partida() or GameState.en_dialeg or MenuInventari.visible or MenuHabilitats.visible or (has_node("/root/Bestiari") and get_node("/root/Bestiari").visible):
 		return
 	_actualitzar_dades()
 	visible = true
@@ -255,6 +255,17 @@ func _marcadors(mon: Node) -> Array:
 	for npc in get_tree().get_nodes_in_group("npcs"):
 		llista.append({"tipus": "npc", "pos": _pla(npc.global_position), "text": npc.nom, "id": npc.id,
 			"marca": Missions.marcador_npc(npc.id)})
+	# Les criatures de cada illa: la seva icona si ja l'has vista, "?" si no
+	var generador = mon.get("generador_criatures")
+	if generador:
+		for z in generador.zones:
+			var ids := []
+			for c in z.criatures:
+				if is_instance_valid(c) and c.is_in_group("criatures_salvatges") and not c.especie.id in ids:
+					ids.append(c.especie.id)
+			if not ids.is_empty():
+				ids.sort_custom(func(a, b): return Criatures.especie(a).forca < Criatures.especie(b).forca)
+				llista.append({"tipus": "criatures", "pos": generador.centre_zona(z), "especies": ids})
 	return llista
 
 ## Els objectius de les missions actives que són en algun lloc concret
@@ -355,7 +366,7 @@ func _construir_ui():
 	llista_missions.add_theme_constant_override("separation", 6)
 	scroll.add_child(llista_missions)
 	var llegenda := Label.new()
-	llegenda.text = "◆ objectiu   ● tu   ⌂ casa\n! missió nova   ? per lliurar\nRoda: zoom · Arrossega: moure"
+	llegenda.text = "◆ objectiu   ● tu   ⌂ casa\n! missió nova   ? per lliurar\n(?) criatura per descobrir\nRoda: zoom · Arrossega: moure"
 	llegenda.add_theme_font_size_override("font_size", 14)
 	llegenda.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9))
 	lateral.add_child(llegenda)

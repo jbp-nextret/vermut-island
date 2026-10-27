@@ -63,6 +63,34 @@ func text_habilitat() -> String:
 func text_dieta() -> String:
 	return "Herbívora 🫒" if dieta == Dieta.HERBIVORA else "Carnívora 🍷"
 
+func text_caracter() -> String:
+	return ["Poruga", "Tranquil·la", "Agressiva"][caracter]
+
+func text_zona() -> String:
+	return {"illetes": "Les illetes", "principal": "La illa principal", "totes": "Arreu"}.get(zona, zona)
+
+## Com es pot capturar (consell del bestiari)
+func text_captura() -> String:
+	var t := "Llança-li olives marinades i, mentre menja, acosta't." if dieta == Dieta.HERBIVORA else "Atordeix-la amb vermut hipnòtic."
+	if forca >= 4:
+		t += " És molt forta: debilita-la abans (menys de la meitat de vida)."
+	return t
+
+## La silueta (per a les que encara no has vist)
+func silueta() -> Texture2D:
+	var clau := id + "_silueta"
+	if not _textures.has(clau):
+		var img := textura().get_image()
+		if img.is_compressed():
+			img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+		for x in img.get_width():
+			for y in img.get_height():
+				if img.get_pixel(x, y).a > 0.1:
+					img.set_pixel(x, y, Color(0.12, 0.11, 0.16))
+		_textures[clau] = ImageTexture.create_from_image(img)
+	return _textures[clau]
+
 # ─────────────── Sprite provisional
 
 static var _textures := {}

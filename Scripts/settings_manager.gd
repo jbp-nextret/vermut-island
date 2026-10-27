@@ -36,6 +36,7 @@ const ACCIONS_REMAPEJABLES := [
 	["inclinar_camera_avall", "Càmera més de costat"], ["inclinar_camera_amunt", "Càmera més des de dalt"],
 	["decorar", "Construir (a casa)"], ["inventari", "Motxilla"], ["habilitats", "Habilitats"],
 	["mapa", "Mapa"], ["llancar", "Llançar (olives / vermut)"],
+	["bestiari", "Bestiari"],
 ]
 
 const BUSOS := {"volum_general": "Master", "volum_musica": "Music", "volum_efectes": "SFX"}
