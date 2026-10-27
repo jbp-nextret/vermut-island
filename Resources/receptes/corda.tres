@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Recepta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/fabricacio/recepta.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = "corda"
+resultat = "corda"
+quantitat = 1
+ingredients = Dictionary[String, int]({"fibra": 3})
+lloc = "taula"
+categoria = "Eines"
+planol = false
+ordre = 1

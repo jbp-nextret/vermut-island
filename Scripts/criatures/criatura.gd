@@ -236,10 +236,11 @@ func atraure(e: Node3D) -> bool:
 	return true
 
 ## El vermut hipnòtic. Retorna false si l'aguanta (força 4+ sense debilitar)
-func hipnotitzar() -> bool:
+## `fort`: el vermut hipnòtic fort, que funciona fins i tot amb les més fortes
+func hipnotitzar(fort := false) -> bool:
 	if domesticada or estat == Estat.DOMESTICANT:
 		return false
-	if especie.forca >= 4 and not debilitada():
+	if especie.forca >= 4 and not debilitada() and not fort:
 		_mostrar_icona("💢")
 		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.4, "Massa forta! Debilita-la", Color(1, 0.55, 0.45))
 		if especie.caracter != EspecieCriatura.Caracter.POREGOSA:
@@ -732,6 +733,13 @@ func _al_corral(delta: float) -> Array:
 		lloc_treball._sacsejar()
 		lloc_treball._estelles()
 	return [Vector3.ZERO, 1.0]
+
+## Se'n menja una galeta (des de la barra ràpida)
+func menjar_galeta(icona: String, xp: int):
+	_saltet()
+	_mostrar_icona("😋")
+	get_tree().create_timer(1.0).timeout.connect(_mostrar_icona.bind(""))
+	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.2, "%s +%d XP" % [icona, xp], Color(1.0, 0.85, 0.4))
 
 ## Ha produït alguna cosa: la mostra fent un bot
 func mostrar_produccio(objecte: String):

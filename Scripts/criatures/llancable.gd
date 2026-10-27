@@ -8,6 +8,15 @@ class_name Llancable
 const DURADA_VOL := 0.65
 const ALCADA_ARC := 2.2
 const RADI_HIPNOSI := 2.3
+const RADI_HIPNOSI_FORT := 3.2
+
+static func radi(tipus_objecte: String) -> float:
+	match tipus_objecte:
+		"vermut_hipnotic":
+			return RADI_HIPNOSI
+		"vermut_hipnotic_fort":
+			return RADI_HIPNOSI_FORT
+	return 0.6
 
 var tipus := "olives_marinades"
 var origen := Vector3.ZERO
@@ -50,7 +59,7 @@ func _impacte():
 		_ona(Color(0.8, 0.45, 1.0))
 		var cap := 0
 		for c in get_tree().get_nodes_in_group("criatures_salvatges"):
-			if Criatura._pla(c.global_position - desti).length() <= RADI_HIPNOSI and c.hipnotitzar():
+			if Criatura._pla(c.global_position - desti).length() <= radi(tipus) and c.hipnotitzar(tipus == "vermut_hipnotic_fort"):
 				cap += 1
 		if cap == 0:
 			TextFlotant.mostrar(mon, desti + Vector3.UP * 0.8, "💫", Color(0.85, 0.6, 1.0))
@@ -88,7 +97,7 @@ func _esquitx(color: Color, quantes: int):
 func _ona(color: Color):
 	var anell := AnellAbast.new()
 	get_parent().add_child(anell)
-	anell.configurar(RADI_HIPNOSI, color)
+	anell.configurar(radi(tipus), color)
 	anell.global_position = desti + Vector3.UP * 0.05
 	anell.scale = Vector3.ONE * 0.2
 	var tw := anell.create_tween()

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Recepta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/fabricacio/recepta.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = "olives_marinades"
+resultat = "olives_marinades"
+quantitat = 3
+ingredients = Dictionary[String, int]({"olives": 3, "vermut": 1})
+lloc = "barrica"
+categoria = "Begudes"
+planol = false
+ordre = 1

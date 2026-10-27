@@ -23,13 +23,16 @@ const EINES := {
 	"eina_pic": {"accio": "picar", "color": Color(0.7, 0.72, 0.8)},
 	"tanca_fusta": {"accio": "tanca", "color": Color(0.75, 0.55, 0.35)},
 	"porta_tanca": {"accio": "tanca", "color": Color(0.85, 0.65, 0.4)},
+	"tanca_pedra": {"accio": "tanca", "color": Color(0.7, 0.7, 0.7)},
+	"galeta_criatura": {"accio": "galeta", "color": Color(0.95, 0.75, 0.45)},
+	"galeta_daurada": {"accio": "galeta", "color": Color(1.0, 0.85, 0.3)},
 	"eina_grimori_foc": {"accio": "foc", "color": Color(1.0, 0.55, 0.15)},
 	"llavor_raim": {"accio": "plantar", "color": Color(0.55, 0.95, 0.5)},
 	"eina_regadora": {"accio": "regar", "color": Color(0.45, 0.75, 1.0)},
 	"eina_aixada": {"accio": "llaurar", "color": Color(0.85, 0.65, 0.35)},
 }
 ## Objectes que es llancen (es gasten)
-const OBJECTES_US := ["olives_marinades", "vermut_hipnotic"]
+const OBJECTES_US := ["olives_marinades", "vermut_hipnotic", "vermut_hipnotic_fort"]
 
 const PER_DEFECTE := ["eina_espasa", "eina_destral", "eina_pic", "eina_aixada", "eina_regadora", "llavor_raim", "olives_marinades", "vermut_hipnotic", "eina_grimori_foc"]
 ## Configuracions desades abans que les eines fossin objectes
@@ -72,7 +75,7 @@ func accio(id: String) -> String:
 
 ## Si se n'ha de mostrar la quantitat (les eines no; les llavors i el que es llança, sí)
 func mostra_quantitat(id: String) -> bool:
-	return id in OBJECTES_US or id in ["llavor_raim", "tanca_fusta", "porta_tanca"]
+	return id in OBJECTES_US or id in ["llavor_raim", "tanca_fusta", "porta_tanca", "tanca_pedra", "galeta_criatura", "galeta_daurada"]
 
 ## Es pot fer servir ara mateix? L'has de tenir a la motxilla (i la bola de foc, saber-la llançar)
 func disponible(id: String) -> bool:
@@ -187,6 +190,8 @@ func activar(id: String):
 			mode_eina = accio(id)
 		"tanca":
 			mon.tanques.entrar_amb(id)
+		"galeta":
+			_donar_galeta(id)
 		"plantar":
 			mon.plantador.entrar()
 		"regar":
@@ -196,6 +201,18 @@ func activar(id: String):
 		_:
 			if id in OBJECTES_US:
 				mon.llancador.entrar_amb(id)
+
+## Dona una galeta a la criatura que et segueix (no és un mode: es fa i ja està)
+func _donar_galeta(id: String):
+	var c = Criatures.companya
+	if not is_instance_valid(c):
+		EventBus.avis.emit("No tens cap criatura que et segueixi")
+		return
+	if not Inventari.treure(id):
+		return
+	var xp := 120 if id == "galeta_daurada" else 30
+	Criatures.guanyar_xp(c.uid, xp)
+	c.menjar_galeta(CatalegObjectes.info(id).icona, xp)
 
 func desactivar():
 	mode_foc = false

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Recepta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/fabricacio/recepta.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = "galeta_criatura"
+resultat = "galeta_criatura"
+quantitat = 2
+ingredients = Dictionary[String, int]({"llavor_raim": 3, "olives": 1})
+lloc = "taula"
+categoria = "Criatures"
+planol = false
+ordre = 1

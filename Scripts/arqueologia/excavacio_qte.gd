@@ -26,6 +26,7 @@ var capes := []          # [fila][col] -> capes que queden (0 = destapada)
 var troballa := {}       # Vector2i -> true (les caselles on hi ha la troballa)
 var estabilitat := ESTABILITAT
 var estabilitat_max := ESTABILITAT
+var cost_pinzell := COST_PINZELL
 var acabat_ja := false
 
 var graella: Control
@@ -49,6 +50,10 @@ func _ready():
 	info = {"nom": "Monedes", "icona": "🪙"} if boti.id == "diners" else CatalegObjectes.info(boti.id)
 	# Les llegendàries tenen més capes, però també una mica més de marge
 	estabilitat_max = ESTABILITAT + boti.raresa * 25.0
+	# El pinzell d'arqueòleg: la paret aguanta més i el pinzell la fa trontollar menys
+	if Inventari.tenir("pinzell_arqueoleg") > 0:
+		estabilitat_max += 30.0
+		cost_pinzell = 1.2
 	estabilitat = estabilitat_max
 	_generar()
 	_construir_ui()
@@ -157,7 +162,7 @@ func pinzell(c: Vector2i):
 	if capes[c.y][c.x] <= 0:
 		return
 	_treure(c, 1)
-	_gastar(COST_PINZELL, 0.15)
+	_gastar(cost_pinzell, 0.15)
 	_comprovar()
 
 func aixada(c: Vector2i):

@@ -19,7 +19,7 @@ const XP := {
 	"plantar": 2, "regar": 1, "collir": 5, "llaurar": 1,
 	"talar": 3, "picar": 3, "herba": 1,
 	"servir": 4, "obrir_vermuteria": 10,
-	"domesticar": 20, "excavar": 6,
+	"domesticar": 20, "excavar": 6, "fabricar": 2,
 }
 
 ## Un punt per a cada arbre (màgia d'atac, màgia útil i mundà), però es poden gastar on es vulgui

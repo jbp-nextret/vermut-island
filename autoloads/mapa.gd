@@ -255,6 +255,14 @@ func _marcadors(mon: Node) -> Array:
 	for npc in get_tree().get_nodes_in_group("npcs"):
 		llista.append({"tipus": "npc", "pos": _pla(npc.global_position), "text": npc.nom, "id": npc.id,
 			"marca": Missions.marcador_npc(npc.id)})
+	# Amb la brúixola de tresors: on hi ha punts d'excavació (i de quina raresa)
+	var punts = mon.get("punts_excavacio")
+	if punts and Inventari.tenir("bruixola_tresors") > 0:
+		for cella in punts.punts:
+			llista.append({"tipus": "tresor", "pos": Vector2(cella.x + 0.5, cella.z + 0.5), "raresa": punts.punts[cella].boti.raresa})
+	# Taula de fabricació i corrals
+	for t in get_tree().get_nodes_in_group("taula_fabricacio"):
+		llista.append({"tipus": "taula", "pos": _pla(t.global_position), "text": "Taula"})
 	# Les criatures de cada illa: la seva icona si ja l'has vista, "?" si no
 	var generador = mon.get("generador_criatures")
 	if generador:

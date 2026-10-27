@@ -88,6 +88,16 @@ func _draw():
 						_text(font, p + Vector2(0, -9), mk.text, 13, Color(1, 1, 1, 0.9))
 					if mk.marca in ["!", "?"]:
 						_text(font, p + Vector2(10, 2), mk.marca, 20, Color(1.0, 0.85, 0.2))
+	# Punts d'excavació (amb la brúixola) i la taula de fabricació
+	for mk in mapa.marcadors:
+		var p := a_pantalla(mk.pos)
+		if mk.tipus == "tresor":
+			var color: Color = PartFossil.COLORS_RARESA[clampi(mk.raresa, 0, 2)]
+			var r: float = 4.0 + mk.raresa * 1.5
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r * 0.6, 0), p + Vector2(0, r), p + Vector2(-r * 0.6, 0)]), color)
+		elif mk.tipus == "taula" and mapa.explorat_a(mk.pos):
+			draw_circle(p, 5.0, Color(0.6, 0.4, 0.9))
+			draw_arc(p, 7.0, 0, TAU, 16, Color(0.85, 0.7, 1.0), 1.5)
 	# Criatures de cada illa (també a la boira: el "?" convida a anar-hi)
 	for mk in mapa.marcadors:
 		if mk.tipus == "criatures":

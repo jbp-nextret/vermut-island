@@ -23,6 +23,8 @@ const TRESORS := [
 	{"id": "ampolla_antiga", "raresa": 1, "min": 1, "max": 1, "pes": 2.0},
 	{"id": "amfora_romana", "raresa": 1, "min": 1, "max": 1, "pes": 1.5},
 	{"id": "moneda_or", "raresa": 1, "min": 1, "max": 2, "pes": 1.5},
+	{"id": "planol", "raresa": 1, "min": 1, "max": 1, "pes": 2.0},
+	{"id": "planol", "raresa": 2, "min": 1, "max": 1, "pes": 1.5},
 	{"id": "reliquia_antiga", "raresa": 2, "min": 1, "max": 1, "pes": 1.0},
 ]
 
@@ -125,6 +127,17 @@ func _index_pes(pesos: Array, r: RandomNumberGenerator) -> int:
 ## Posa la troballa a l'inventari (o els diners a la cartera) i avisa
 func donar(b: Dictionary, posicio: Vector3 = Vector3.INF):
 	var text := ""
+	if b.id == "planol":
+		# Un plànol: aprens una recepta nova (si ja els tens tots, val una moneda d'or)
+		var r: Recepta = Fabricacio.aprendre_planol_nou()
+		if r == null:
+			b = {"tipus": "tresor", "id": "moneda_or", "quantitat": 1, "raresa": b.raresa}
+		else:
+			if posicio.is_finite():
+				TextFlotant.mostrar(get_tree().current_scene, posicio + Vector3.UP * 1.0, "📜 %s" % CatalegObjectes.info(r.resultat).nom, PartFossil.COLORS_RARESA[clampi(b.raresa, 0, 2)])
+			Progressio.guanyar_xp("excavar", 1.0 + b.raresa)
+			troballa.emit(b)
+			return
 	if b.id == "diners":
 		Inventari.afegir_diners(b.quantitat)
 		text = "+%d 🪙" % b.quantitat

@@ -8,8 +8,8 @@ signal avis(text: String)
 
 const ABAST := 9.0
 const RECARREGA := 0.6
-const OBJECTES := ["olives_marinades", "vermut_hipnotic"]
-const COLORS := {"olives_marinades": Color(0.6, 0.8, 0.3), "vermut_hipnotic": Color(0.8, 0.45, 1.0)}
+const OBJECTES := ["olives_marinades", "vermut_hipnotic", "vermut_hipnotic_fort"]
+const COLORS := {"olives_marinades": Color(0.6, 0.8, 0.3), "vermut_hipnotic": Color(0.8, 0.45, 1.0), "vermut_hipnotic_fort": Color(1.0, 0.4, 0.75)}
 const PUNTS_ARC := 14
 
 var jugador: Node3D
@@ -93,8 +93,11 @@ func entrar():
 		return
 	actiu = true
 	# Si no en tens de l'escollit però sí de l'altre, canvia sol
-	if quantitat() == 0 and Inventari.tenir(OBJECTES[1 - index]) > 0:
-		index = 1 - index
+	if quantitat() == 0:
+		for i in OBJECTES.size():
+			if Inventari.tenir(OBJECTES[i]) > 0:
+				index = i
+				break
 		_configurar_anell()
 	mode_canviat.emit(true)
 
@@ -128,7 +131,7 @@ func seleccionar(nou: int):
 	avis.emit("%s %s (%d)" % [info.icona, info.nom, quantitat()])
 
 func _configurar_anell():
-	var radi := Llancable.RADI_HIPNOSI if objecte() == "vermut_hipnotic" else 0.6
+	var radi := Llancable.radi(objecte())
 	anell.configurar(radi, COLORS[objecte()])
 
 func llancar():

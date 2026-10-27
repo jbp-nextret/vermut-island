@@ -37,8 +37,11 @@ func _kit_de_proves():
 	Progressio._aplicar_efectes()
 	Progressio.habilitats_canviades.emit()
 	Progressio.guardar()
-	for objecte in [["olives_marinades", 10], ["vermut_hipnotic", 6], ["olives", 9], ["raim", 5], ["fibra", 5], ["tanca_fusta", 30], ["porta_tanca", 2]]:
+	for objecte in [["olives_marinades", 10], ["vermut_hipnotic", 6], ["olives", 9], ["raim", 5], ["fibra", 5], ["tanca_fusta", 30], ["porta_tanca", 2], ["fusta", 15], ["pedra", 10], ["moneda_or", 2], ["fragments_fossil", 4]]:
 		Inventari.afegir(objecte[0], objecte[1], true)   # encara que la motxilla sigui plena
+	# I tots els plànols de la taula de fabricació
+	while Fabricacio.aprendre_planol_nou() != null:
+		pass
 	EventBus.avis.emit("🧪 Kit de proves: bola de foc, motxilla al màxim, olives, vermut hipnòtic, raïm i fibra")
 
 func _process(delta):

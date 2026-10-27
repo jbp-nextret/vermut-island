@@ -44,7 +44,7 @@ func interactuar(jugador: InteraccioJugador) -> void:
 		Inventari.afegir("dosis_vermut", 1)   # el vermut torna a la barrica
 		return
 	if GameState.mode != GameState.Mode.SERVEI:
-		MenuElaborar.obrir(self)
+		MenuFabricacio.obrir(self, "barrica")
 		return
 	if not _gastar_una_dosi():
 		TextFlotant.mostrar(get_parent().get_parent(), global_position + Vector3.UP, "Cal raïm! 🍇", Color(1, 0.5, 0.5))

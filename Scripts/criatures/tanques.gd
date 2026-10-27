@@ -17,6 +17,14 @@ const ABAST := 8.0
 const ALCADA := 0.9
 const MAX_CORRAL := 160        # cel·les; més gran ja no compta com a tancat
 const VEINS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+## Objecte de la motxilla <-> tipus de tanca
+const TIPUS := {"tanca_fusta": "tanca", "porta_tanca": "porta", "tanca_pedra": "pedra"}
+
+static func objecte_de(tipus: String) -> String:
+	for o in TIPUS:
+		if TIPUS[o] == tipus:
+			return o
+	return "tanca_fusta"
 
 var mon: Node3D
 var gridmap: GridMap
@@ -126,6 +134,9 @@ func _motiu_no(c: Vector2i) -> String:
 	var casa := mon.get_node_or_null("Casa") as Node3D
 	if casa and Vector2(casa.global_position.x - pos.x, casa.global_position.z - pos.z).length() < 3.5:
 		return "Massa a prop de casa"
+	for taula in get_tree().get_nodes_in_group("taula_fabricacio"):
+		if taula.ocupa(pos, -0.5):
+			return "Hi ha la taula de fabricació"
 	if Vector2(jugador.global_position.x - pos.x, jugador.global_position.z - pos.z).length() < 0.6:
 		return "Hi ets a sobre"
 	return ""
@@ -142,7 +153,7 @@ func _posar_aqui(avisar := true):
 		if avisar:
 			avis.emit("No et queden %s" % CatalegObjectes.info(objecte).nom.to_lower())
 		return
-	posar(cella_cursor, y_cursor, "porta" if objecte == "porta_tanca" else "tanca")
+	posar(cella_cursor, y_cursor, TIPUS.get(objecte, "tanca"))
 	if jugador.has_method("encarar"):
 		jugador.encarar(superficie_cursor, true, 0.6)
 
@@ -151,7 +162,7 @@ func _treure_aqui():
 		return
 	var t: Dictionary = tanques[cella_cursor]
 	treure(cella_cursor)
-	Inventari.afegir("porta_tanca" if t.tipus == "porta" else "tanca_fusta", 1, true)
+	Inventari.afegir(objecte_de(t.tipus), 1, true)
 
 # ─────────────── Posar i treure
 
@@ -201,7 +212,7 @@ func _connexions(c: Vector2i) -> Array:
 func _refer_fantasma():
 	for f in fantasma.get_children():
 		f.queue_free()
-	var model := _model("porta" if objecte == "porta_tanca" else "tanca", [Vector2i(1, 0), Vector2i(-1, 0)], true)
+	var model := _model(TIPUS.get(objecte, "tanca"), [Vector2i(1, 0), Vector2i(-1, 0)], true)
 	for f in model.get_children():
 		model.remove_child(f)
 		fantasma.add_child(f)
@@ -209,6 +220,8 @@ func _refer_fantasma():
 
 static var _mat_fusta: StandardMaterial3D
 static var _mat_fosca: StandardMaterial3D
+static var _mat_pedra: StandardMaterial3D
+static var _mat_pedra_fosca: StandardMaterial3D
 
 func _model(tipus: String, connexions: Array, transparent: bool) -> Node3D:
 	if _mat_fusta == null:
@@ -218,16 +231,24 @@ func _model(tipus: String, connexions: Array, transparent: bool) -> Node3D:
 		_mat_fosca = StandardMaterial3D.new()
 		_mat_fosca.albedo_color = Color(0.42, 0.28, 0.16)
 		_mat_fosca.roughness = 1.0
+	if _mat_pedra == null:
+		_mat_pedra = StandardMaterial3D.new()
+		_mat_pedra.albedo_color = Color(0.62, 0.62, 0.6)
+		_mat_pedra.roughness = 1.0
+		_mat_pedra_fosca = StandardMaterial3D.new()
+		_mat_pedra_fosca.albedo_color = Color(0.48, 0.48, 0.47)
+		_mat_pedra_fosca.roughness = 1.0
 	var arrel: Node3D = StaticBody3D.new() if not transparent else Node3D.new()
-	var mat_pal: Material = _mat_fosca
-	var mat_trav: Material = _mat_fusta
+	var mat_pal: Material = _mat_pedra_fosca if tipus == "pedra" else _mat_fosca
+	var mat_trav: Material = _mat_pedra if tipus == "pedra" else _mat_fusta
 	if transparent:
 		var m := StandardMaterial3D.new()
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat_pal = m
 		mat_trav = m
-	_caixa(arrel, Vector3(0.16, ALCADA + 0.1, 0.16), Vector3(0, (ALCADA + 0.1) / 2.0, 0), mat_pal, not transparent and tipus == "tanca")
+	var gruix := 0.26 if tipus == "pedra" else 0.16
+	_caixa(arrel, Vector3(gruix, ALCADA + 0.1, gruix), Vector3(0, (ALCADA + 0.1) / 2.0, 0), mat_pal, not transparent and tipus != "porta")
 	for v in connexions:
 		var dir := Vector3(v.x, 0, v.y)
 		var mida := Vector3(0.5, 0.08, 0.06) if v.x != 0 else Vector3(0.06, 0.08, 0.5)
@@ -236,6 +257,10 @@ func _model(tipus: String, connexions: Array, transparent: bool) -> Node3D:
 			_caixa(arrel, mida, dir * 0.25 + Vector3.UP * 0.25, mat_trav, false)
 			_caixa(arrel, mida, dir * 0.25 + Vector3.UP * 0.7, mat_trav, false)
 			_caixa(arrel, Vector3(0.05, 0.5, 0.05) if v.x != 0 else Vector3(0.05, 0.5, 0.05), dir * 0.25 + Vector3.UP * 0.47, mat_trav, false)
+		elif tipus == "pedra":
+			# Un mur baix de pedra
+			var mur := Vector3(0.5, 0.7, 0.2) if v.x != 0 else Vector3(0.2, 0.7, 0.5)
+			_caixa(arrel, mur, dir * 0.25 + Vector3.UP * 0.35, mat_trav, not transparent)
 		else:
 			_caixa(arrel, mida, dir * 0.25 + Vector3.UP * 0.35, mat_trav, not transparent)
 			_caixa(arrel, mida, dir * 0.25 + Vector3.UP * 0.75, mat_trav, not transparent)
