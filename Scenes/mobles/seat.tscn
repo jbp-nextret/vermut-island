@@ -2,7 +2,12 @@
 
 [ext_resource type="PackedScene" uid="uid://e118pq03ylxp" path="res://Models/Seat.glb" id="1_pnsdj"]
 [ext_resource type="Script" uid="uid://q3rjketomudd" path="res://Scripts/moble_barra.gd" id="2_lpd76"]
+[ext_resource type="Script" uid="uid://bowxj7sm7grwj" path="res://Scripts/seat.gd" id="3_xm830"]
 
 [node name="Seat" unique_id=1569698955 instance=ExtResource("1_pnsdj")]
 script = ExtResource("2_lpd76")
-model_path = "res://Models/Seat.glb"
+tipus = 0
+
+[node name="Marker3D" type="Marker3D" parent="." index="0" unique_id=1890110901]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.090789795, 0)
+script = ExtResource("3_xm830")

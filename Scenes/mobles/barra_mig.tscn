@@ -5,4 +5,4 @@
 
 [node name="barra_mig" unique_id=474385846 instance=ExtResource("1_6kary")]
 script = ExtResource("2_iww4q")
-model_path = "res://Models/barra_mig.glb"
+tipus = 1

@@ -1,22 +1,117 @@
 extends Node3D
 
 @export var cultiu_escena: PackedScene
-@onready var zona_hort = $ZonaHort
 @onready var cursor = $CursorPlantacio
 @onready var particules_plantar = $ParticulesPlantar
 @onready var particules_collir = $ParticulesCollir
 @onready var spawn_casa = $SpawnCasa
 
-var mode_plantacio = false
 var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_004","cube-top_005","cube-top_006","cube-top_007","cube-top_008","cube-top_009","cube_half-top_001", "cube_half-top_002", "cube_half-top_003", "cube_half-top_004","cube_half-top_005","cube_half-top_006","cube_half-top_007","cube_half-top_008","cube_half-top_009","cube-top_019","cube-top_020","cube-top_021","cube-top_023","cube-top_025","cube_008","cube_009","cube_010","cube_half-top_019","cube_half-top_020","cube_half-top_021","cube_half-top_024","cube_half-top_025"]
-var arrastrant = false
-var posicio_drag_inici = Vector3.ZERO
-var posicio_drag_actual = Vector3.ZERO
-var zone_seleccionada = []  # Llista de posicions a plantar
+@onready var roda_seleccio = $RodaSeleccio
+# El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
+var plantador: Plantador
+var recolector: Recolector
+var generador_illes: GeneradorIlles
+var regenerador: RegeneradorRecursos
+var regador: Regador
+var llaurador: Llaurador
+
+# Terra llaurada: l'única on es pot plantar. Hi ha la que ha llaurat el jugador i l'hort
+# original (vegeu _marcar_hort_original)
+var llaurades := {}   # Vector3i -> true
+const NOMS_HERBA := ["cube-top", "cube_half-top"]
+## Peça de terra i gir (graus) segons quins veïns són herba (W=oest, E=est, N=nord, S=sud).
+## Les tires i els extrems que no tenen peça pròpia fan servir la _019 i la _020 girades.
+const VARIANTS_TERRA := {
+	"": ["005", 0],
+	"W": ["002", 0], "E": ["008", 0], "N": ["006", 0], "S": ["004", 0],
+	"WS": ["001", 0], "WN": ["003", 0], "ES": ["007", 0], "EN": ["009", 0],
+	"NS": ["020", 0], "WE": ["020", 90],                     # tires
+	"WNS": ["019", 0], "ENS": ["021", 0],                    # extrems oberts a l'est / a l'oest
+	"WES": ["019", 90], "WEN": ["019", -90],                 # extrems oberts al nord / al sud
+	"WENS": ["023", 0],                                      # cel·la aïllada
+}
+const PECES_AUTOTILE := ["001", "002", "003", "004", "005", "006", "007", "008", "009", "019", "020", "021", "023"]
 
 func _ready():
 	cursor.visible = false
 	GestorPartida.registrar_mundo(self)
+	# La casa i els arbres es tornen semitransparents quan tapen el personatge
+	get_node("Casa").add_to_group("ocultables")
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			node.add_to_group("ocultables")
+	# Illetes al voltant de l'illa principal (sempre les mateixes per a la mateixa llavor)
+	generador_illes = GeneradorIlles.new()
+	generador_illes.name = "GeneradorIlles"
+	add_child(generador_illes)
+	generador_illes.generar($GridMap)
+
+	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			_afegir_recurs(node, RecursNatural.Tipus.ARBRE, 3, "fusta", 2, 4, 3, "talar")
+		elif node is Sprite3D and node.name.begins_with("Grass"):
+			_afegir_recurs(node, RecursNatural.Tipus.HERBA, 1, "fibra", 1, 2, 1, "herba")
+	# Recursos que surten sols cada dia (a les illetes i, menys, a l'illa principal)
+	regenerador = RegeneradorRecursos.new()
+	regenerador.name = "RegeneradorRecursos"
+	var model_arbre := get_node_or_null("Tree1") as Node3D
+	var model_herba := get_node_or_null("Grass1") as Node3D
+	for model in [model_arbre, model_herba]:
+		if model:
+			model.set_meta("alcada_sobre_terra", model.global_position.y - _terra_sota(model.global_position).y)
+	regenerador.configurar(self, $GridMap, model_arbre, model_herba)
+	for i in generador_illes.illes.size():
+		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
+	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
+	add_child(regenerador)
+
+	recolector = Recolector.new()
+	recolector.name = "Recolector"
+	recolector.mon = self
+	recolector.jugador = $Personatge
+	add_child(recolector)
+
+	var ocultadors := TransparenciaOcultadors.new()
+	ocultadors.jugador = $Personatge
+	add_child(ocultadors)
+
+	# HUD: vida i rellotge a dalt, diners a sota dels cors, barra d'accions a baix al centre
+	get_node("CanvasLayer").visible = false   # el rellotge antic (ara el porta HudJoc)
+	add_child(HudJoc.new())
+	var hud_diners := HudDiners.new()
+	hud_diners.marge_superior = 50   # a sota dels cors, el mana i l'experiència
+	add_child(hud_diners)
+	add_child(HudOnades.new())
+	add_child(HudMissions.new())
+
+	plantador = Plantador.new()
+	plantador.name = "Plantador"
+	plantador.configurar(self, $GridMap, roda_seleccio, cursor, blocs_plantables)
+	add_child(plantador)
+	regador = Regador.new()
+	regador.name = "Regador"
+	regador.configurar(self, plantador, $Personatge)
+	add_child(regador)
+	llaurador = Llaurador.new()
+	llaurador.name = "Llaurador"
+	llaurador.configurar(self, plantador, $Personatge)
+	add_child(llaurador)
+	# Només un mode d'eina alhora: plantar, regar o llaurar
+	for eina in [plantador, regador, llaurador]:
+		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
+
+	recolector.eines_actives = [plantador, regador, llaurador]
+	var barra := BarraAccions.new()
+	barra.jugador = $Personatge
+	barra.plantador = plantador
+	barra.regador = regador
+	barra.llaurador = llaurador
+	add_child(barra)
+	var hud_plantar := HudPlantar.new()
+	hud_plantar.plantador = plantador
+	add_child(hud_plantar)
 	
 	if EventBus.has_signal("player_spawn_requested"):
 		EventBus.player_spawn_requested.connect(_on_player_spawn_requested)
@@ -70,7 +165,9 @@ func _ready():
 		print("Signal cultiu_recollit no existeix a EventBus")
 	
 	# CARREGA EL WORLD
+	_marcar_hort_original()
 	carregar_mundo()
+	_retirar_recursos_en_conflicte()
 	
 func _on_cultiu_recollit(posicio: Vector3):
 	print("Event rebut a posicio: ", posicio)
@@ -96,209 +193,33 @@ func aplicar_spawn_player(posicio: Vector3):
 		spawn_pos.y = max(posicio.y, 1.0)
 		player.global_position = spawn_pos
 		player.global_rotation = Vector3.ZERO
-		print("Personatge reposicionat a: ", spawn_pos)
+		var camera = player.get_node_or_null("CameraPivot/Camera3D")
+		if camera and camera.has_method("centrar_de_cop"):
+			camera.centrar_de_cop()
 	else:
 		print("No s'ha trobat el Personatge o no està preparat")
 
-func _input(event):
-	if Input.is_action_just_pressed("plantar"):
-		mode_plantacio = true
-		cursor.visible = true
-		print("Mode plantació activat — clica i arrastra per seleccionar")
-	
-	# Cancel·la el mode plantació amb Escape
-	if Input.is_action_just_pressed("ui_cancel"):
-		mode_plantacio = false
-		cursor.visible = false
-		arrastrant = false
-		zone_seleccionada.clear()
-		print("Mode plantació cancel·lat")
-	
-	# Confirma la selecció amb accio_secundaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_secundaria"):
-		if arrastrant:
-			arrastrant = false
-			plantar_zona_seleccionada()
-			zone_seleccionada.clear()
-			print("Plantació confirmada")
-			GestorPartida.guardar_mundo()  # Guarda després d'una plantació
-	
-	# Drag amb accio_primaria
-	if mode_plantacio and Input.is_action_just_pressed("accio_primaria"):
-		arrastrant = true
-		posicio_drag_inici = cursor.global_position
-		zone_seleccionada.clear()
-		print("Drag iniciat")
-	
-	if mode_plantacio and Input.is_action_just_released("accio_primaria"):
-		if arrastrant:
-			print("Drag finalitzat — Clica accio_secundaria per confirmar o Escape per cancel·lar")
+## Planta un cultiu a `posicio` (ja validada pel Plantador). Gasta una llavor.
+func plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
+	var plantat := _plantar_cultiu(escena, posicio)
+	if plantat:
+		Progressio.guanyar_xp("plantar")
+	return plantat
 
-func _physics_process(delta: float) -> void:
-	var camera = get_viewport().get_camera_3d()
-	#print("Càmera actual: ", camera.name, " path: ", camera.get_path())
-
-func _process(delta):
-	if not mode_plantacio: return
-	var espai = get_world_3d().direct_space_state
-	var camera = get_viewport().get_camera_3d()
-	var pos_ratolí = get_viewport().get_mouse_position()
-	var origen = camera.project_ray_origin(pos_ratolí)
-	var direccio = camera.project_ray_normal(pos_ratolí)
-	
-	var query = PhysicsRayQueryParameters3D.create(origen, origen + direccio * 100.0)
-	var resultat = espai.intersect_ray(query)
-	
-	if resultat:
-		var posicio = resultat.position
-		var gridmap = get_node("GridMap")
-		
-		# Busca el bloc directament a sota (mateixa X, Z)
-		var pos_x = int(round(posicio.x))
-		var pos_z = int(round(posicio.z))
-		
-		var bloc_trobat = false
-		var item_name_mes_propa = ""
-		var cell_coords_mes_propa = Vector3i.ZERO
-		
-		# Busca de dalt a baix a la columna X, Z
-		for y in range(int(posicio.y), int(posicio.y) - 5, -1):
-			var cell_coords = Vector3i(pos_x, y, pos_z)
-			var cell_item = gridmap.get_cell_item(cell_coords)
-			if cell_item >= 0:
-				var item_name = gridmap.mesh_library.get_item_name(cell_item)
-				if item_name in blocs_plantables:
-					bloc_trobat = true
-					item_name_mes_propa = item_name
-					cell_coords_mes_propa = cell_coords
-					break
-		
-		if bloc_trobat:
-			var posicio_cursor = gridmap.map_to_local(cell_coords_mes_propa)
-			
-			if item_name_mes_propa.contains("half"):
-				posicio_cursor.y = float(cell_coords_mes_propa.y) + 0.5
-			else:
-				posicio_cursor.y = float(cell_coords_mes_propa.y) + 1.0
-			
-			cursor.global_position = posicio_cursor
-			cursor.visible = true
-			posicio_drag_actual = posicio_cursor
-			
-			# Si està arrastrant, calcula la zona rectangular
-			if arrastrant:
-				actualitzar_zona_seleccionada(gridmap, cell_coords_mes_propa, item_name_mes_propa)
-		else:
-			cursor.visible = false
-		
-		var mat = cursor.get_surface_override_material(0)
-		if mat == null: return
-		
-		# Canvia color segons si la posició és vàlida
-		var posicio_valida = bloc_trobat and not cultiu_a_prop(cursor.global_position) and dins_zona_hort(cursor.global_position)
-		
-		if arrastrant:
-			# Mentre arrossega, mostra feedback
-			if posicio_valida:
-				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.7)
-			else:
-				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.7)
-		else:
-			# Quan no arrossega, mostra color normal
-			if posicio_valida:
-				mat.albedo_color = Color(0.2, 1.0, 0.2, 0.5)
-			else:
-				mat.albedo_color = Color(1.0, 0.2, 0.2, 0.5)
-	else:
-		cursor.visible = false
-
-
-func actualitzar_zona_seleccionada(gridmap: GridMap, cell_coords: Vector3i, item_name: String):
-	# Calcula el rectangle entre la posició inicial i l'actual
-	var min_x = mini(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
-	var max_x = maxi(gridmap.local_to_map(posicio_drag_inici).x, cell_coords.x)
-	var min_z = mini(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
-	var max_z = maxi(gridmap.local_to_map(posicio_drag_inici).z, cell_coords.z)
-	var y = cell_coords.y
-	
-	zone_seleccionada.clear()
-	
-	# Omple el rectangle
-	for x in range(min_x, max_x + 1):
-		for z in range(min_z, max_z + 1):
-			var cell_coords_rect = Vector3i(x, y, z)
-			var cell_item = gridmap.get_cell_item(cell_coords_rect)
-			if cell_item >= 0:
-				var item = gridmap.mesh_library.get_item_name(cell_item)
-				if item in blocs_plantables:
-					var posicio_final = gridmap.map_to_local(cell_coords_rect)
-					if item.contains("half"):
-						posicio_final.y = float(cell_coords_rect.y) + 1
-					else:
-						posicio_final.y = float(cell_coords_rect.y) + 1.5
-					
-					# Mostra els punts de feedback visual
-					visualitzar_posicio_plantacio(posicio_final)
-					zone_seleccionada.append({"posicio": posicio_final, "cell_coords": cell_coords_rect, "item_name": item})
-
-
-func visualitzar_posicio_plantacio(posicio: Vector3):
-	# Crea visuals de feedback (petits cursors verds)
-	var debug_sphere = MeshInstance3D.new()
-	debug_sphere.mesh = SphereMesh.new()
-	debug_sphere.mesh.radius = 0.1
-	debug_sphere.mesh.height = 0.2
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.8)
-	debug_sphere.set_surface_override_material(0, mat)
-	add_child(debug_sphere)
-	debug_sphere.global_position = posicio
-	
-	# Elimina el sphere després d'un moment
-	await get_tree().create_timer(0.1).timeout
-	debug_sphere.queue_free()
-
-
-func plantar_zona_seleccionada():
-	if zone_seleccionada.is_empty():
-		print("Cap zona seleccionada")
-		return
-	
-	print("Plantant ", zone_seleccionada.size(), " cultius...")
-	
-	for data in zone_seleccionada:
-		plantar_en_posicio(data["posicio"], get_node("GridMap"), data["cell_coords"], data["item_name"])
-	
-	GestorPartida.guardar_mundo()
-	
-	# Desactiva el mode si no queden llavors
-	if Inventari.tenir("llavor_raim") <= 0:
-		mode_plantacio = false
-		cursor.visible = false
-
-
-func plantar_en_posicio(posicio_cultiu: Vector3, gridmap: GridMap, cell_coords: Vector3i, item_name: String):
-	# Comprova si tens llavors
-	if Inventari.tenir("llavor_raim") <= 0:
-		return
-	
-	if not dins_zona_hort(posicio_cultiu):
-		return
-	
-	if cultiu_a_prop(posicio_cultiu):
-		return
-	
-	var cultiu = cultiu_escena.instantiate()
+func _plantar_cultiu(escena: PackedScene, posicio: Vector3) -> bool:
+	if not Inventari.treure("llavor_raim"):
+		return false
+	var cultiu = escena.instantiate()
 	cultiu.add_to_group("cultius")
 	add_child(cultiu)
-	cultiu.global_position = posicio_cultiu
-	if _has_property(cultiu, "es_torre"):
-		cultiu.es_torre = true
-	llançar_particules(particules_plantar, posicio_cultiu)
-	Inventari.items["llavor_raim"] -= 1
-	
-	print("Cultiu plantat a: ", posicio_cultiu)
-	
+	cultiu.global_position = posicio
+	# Petit bot en aparèixer
+	cultiu.scale = Vector3.ONE * 0.4
+	cultiu.create_tween().tween_property(cultiu, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	llançar_particules(particules_plantar, posicio)
+	GestorPartida.call_deferred("guardar_mundo")
+	return true
+
 func llançar_particules(particules: GPUParticles3D, posicio: Vector3):
 	particules.global_position = posicio
 	particules.restart()
@@ -310,8 +231,155 @@ func cultiu_a_prop(posicio: Vector3) -> bool:
 			return true
 	return false
 	
-func dins_zona_hort(posicio: Vector3) -> bool:
-	return zona_hort.conte_punt(posicio)
+## La superfície del terreny just a sota d'un punt (mirant les cel·les del GridMap, que en
+## el _ready encara no tenen col·lisions)
+func _terra_sota(punt: Vector3) -> Vector3:
+	var gridmap: GridMap = $GridMap
+	var c: Vector3i = gridmap.local_to_map(gridmap.to_local(punt))
+	for y in range(c.y, c.y - 12, -1):
+		if gridmap.get_cell_item(Vector3i(c.x, y, c.z)) != GridMap.INVALID_CELL_ITEM:
+			return Vector3(punt.x, gridmap.to_global(Vector3(0, y + 1, 0)).y, punt.z)
+	return punt
+
+## Les cel·les d'herba de l'illa principal (on poden sortir recursos nous)
+func _celles_herba_principals() -> Array:
+	var gridmap: GridMap = $GridMap
+	var illetes := {}
+	for illa in generador_illes.illes:
+		for c in illa.herba:
+			illetes[c] = true
+	var llista := []
+	for c in gridmap.get_used_cells():
+		if illetes.has(c) or gridmap.get_cell_item(c + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(c)) == "cube-top":
+			llista.append(c)
+	return llista
+
+## Alçada de la superfície del mar
+func nivell_aigua() -> float:
+	var mar := get_node_or_null("Sea") as Node3D
+	return mar.global_position.y if mar else -INF
+
+## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
+## tornen a sortir, per no ficar-se al mig dels camps)
+func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
+	for c in get_tree().get_nodes_in_group("cultius"):
+		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
+			return true
+	# Terra on es pot plantar (la llaurada; la sorra de la platja no compta)
+	var gridmap: GridMap = $GridMap
+	var centre: Vector3i = gridmap.local_to_map(gridmap.to_local(posicio))
+	var abast := ceili(radi)
+	for dx in range(-abast, abast + 1):
+		for dz in range(-abast, abast + 1):
+			for dy in range(-3, 3):
+				var cella := centre + Vector3i(dx, dy, dz)
+				var item := gridmap.get_cell_item(cella)
+				if item == GridMap.INVALID_CELL_ITEM or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+					continue   # buida, o no és la de dalt de tot
+				var p := gridmap.to_global(gridmap.map_to_local(cella))
+				# La mateixa regla que per plantar (així la sorra de la platja no compta)
+				if not es_plantable(cella, gridmap.mesh_library.get_item_name(item), p):
+					continue
+				if Vector2(p.x - posicio.x, p.z - posicio.z).length() < radi:
+					return true
+	return false
+
+## L'arbre, roca o herba que ocupa el terra en aquest punt (o null)
+func recurs_a(posicio: Vector3) -> RecursNatural:
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.ocupa(posicio):
+			return r
+	return null
+
+## En carregar: els recursos que han quedat dins de zones conreades es retiren
+func _retirar_recursos_en_conflicte():
+	for r in get_tree().get_nodes_in_group("recursos"):
+		if r.disponible() and r.conreu_a_prop():
+			r.retirar()
+
+func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min: int, q_max: int, dies: int, xp: String):
+	var r := RecursNatural.new()
+	r.name = "Recurs"
+	r.tipus = tipus
+	r.cops = cops
+	r.objecte = objecte
+	r.quantitat_min = q_min
+	r.quantitat_max = q_max
+	r.dies_per_tornar = dies
+	r.motiu_xp = xp
+	node.add_child(r)
+
+## En entrar en un mode d'eina, surt dels altres
+func _nomes_una_eina(eina: Node) -> void:
+	for altra in [plantador, regador, llaurador]:
+		if altra != eina and altra.actiu:
+			altra.sortir()
+
+## Es pot plantar a la cel·la? Només a la terra llaurada (també l'hort original)
+func es_plantable(cella: Vector3i, _nom: String = "", _posicio: Vector3 = Vector3.ZERO) -> bool:
+	return llaurades.has(cella)
+
+## Sota aquesta alçada, les peces de terra són la sorra de la platja (no l'hort)
+const ALCADA_MINIMA_HORT := 0
+
+## L'hort que ja ve fet a l'escena: les peces de terra de la superfície per sobre del nivell
+## del mar compten com a llaurades des del principi (la platja usa les mateixes peces, però
+## queda més avall).
+func _marcar_hort_original():
+	var gridmap: GridMap = $GridMap
+	for cella in gridmap.get_used_cells():
+		if cella.y < ALCADA_MINIMA_HORT or gridmap.get_cell_item(cella + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+			continue
+		if gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella)) in blocs_plantables:
+			llaurades[cella] = true
+
+func es_herba(nom: String) -> bool:
+	return nom in NOMS_HERBA
+
+## Converteix l'herba de la cel·la en terra i arregla les vores de les veïnes
+func llaurar_cella(cella: Vector3i) -> void:
+	var gridmap: GridMap = $GridMap
+	var nom := gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella))
+	llaurades[cella] = true
+	if es_herba(nom):
+		gridmap.set_cell_item(cella, gridmap.mesh_library.find_item_by_name(_prefix_terra(nom) + "005"))
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			_autotile(cella + Vector3i(dx, 0, dz))
+
+func _prefix_terra(nom: String) -> String:
+	return "cube_half-top_" if nom.begins_with("cube_half") else "cube-top_"
+
+## Tria la peça de terra (centre, vora o cantonada) segons quins veïns són herba
+func _autotile(cella: Vector3i) -> void:
+	var gridmap: GridMap = $GridMap
+	var item := gridmap.get_cell_item(cella)
+	if item == GridMap.INVALID_CELL_ITEM:
+		return
+	var nom := gridmap.mesh_library.get_item_name(item)
+	var prefix := _prefix_terra(nom)
+	# Només les peces de terra d'autotiling (la resta d'especials de l'hort no es toquen)
+	if not nom.begins_with(prefix) or not nom.trim_prefix(prefix) in PECES_AUTOTILE:
+		return
+	var clau := ""
+	for costat in [["W", Vector3i(-1, 0, 0)], ["E", Vector3i(1, 0, 0)], ["N", Vector3i(0, 0, -1)], ["S", Vector3i(0, 0, 1)]]:
+		if not _es_terra(cella + costat[1]):
+			clau += costat[0]
+	var variant: Array = VARIANTS_TERRA.get(clau, ["005", 0])
+	var nou := gridmap.mesh_library.find_item_by_name(prefix + variant[0])
+	if nou != GridMap.INVALID_CELL_ITEM:
+		var gir := gridmap.get_orthogonal_index_from_basis(Basis(Vector3.UP, deg_to_rad(variant[1])))
+		gridmap.set_cell_item(cella, nou, gir)
+
+func _es_terra(cella: Vector3i) -> bool:
+	var gridmap: GridMap = $GridMap
+	var item := gridmap.get_cell_item(cella)
+	if item == GridMap.INVALID_CELL_ITEM:
+		return false
+	return llaurades.has(cella) or gridmap.mesh_library.get_item_name(item) in blocs_plantables
+
 	
 func guardar_mundo():
 	var cultius_data = []
@@ -320,11 +388,13 @@ func guardar_mundo():
 	# Guarda tots els cultius
 	for cultiu in get_tree().get_nodes_in_group("cultius"):
 		cultius_data.append({
+			"escena": cultiu.scene_file_path,
 			"posicio": {"x": cultiu.global_position.x, "y": cultiu.global_position.y, "z": cultiu.global_position.z},
 			"estat": cultiu.estat_actual,
 			"dies_passats": cultiu.dies_passats,
 			"es_torre": cultiu.es_torre if _has_property(cultiu, "es_torre") else false,
-			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0
+			"vida_actual": cultiu.vida_actual if _has_property(cultiu, "vida_actual") else 0,
+			"regat": cultiu.regat
 		})
 	
 	# Guarda totes les plantes (si n'hi ha al mundo)
@@ -336,6 +406,9 @@ func guardar_mundo():
 			})
 	
 	var mundo_data = {
+		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
+		"recursos": RecursNatural.estats(self),
+		"recursos_dinamics": regenerador.estat(),
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -373,9 +446,19 @@ func carregar_mundo():
 		return
 	
 	# Carrega cultius
+	# Terra que el jugador havia llaurat
+	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
+	if mundo_data.has("recursos_dinamics"):
+		regenerador.restaurar(mundo_data.recursos_dinamics)
+	for c in mundo_data.get("llaurades", []):
+		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])
 	for data in cultius_data:
-		var cultiu = cultiu_escena.instantiate()
+		var escena: PackedScene = CatalegCultius.TOTS[0]
+		var ruta = data.get("escena", "")
+		if ruta is String and not ruta.is_empty() and ResourceLoader.exists(ruta):
+			escena = load(ruta)
+		var cultiu = escena.instantiate()
 		add_child(cultiu)
 		
 		var posicio = Vector3(data.get("posicio")["x"], data.get("posicio")["y"], data.get("posicio")["z"])
@@ -383,13 +466,15 @@ func carregar_mundo():
 		var estat_guardat = data.get("estat", 0)
 		cultiu.estat_actual = int(clamp(estat_guardat, 0, cultiu.Estat.MADUR))
 		cultiu.dies_passats = data.get("dies_passats", 0)
-		if _has_property(cultiu, "es_torre"):
-			cultiu.es_torre = data.get("es_torre", true)
 		if _has_property(cultiu, "vida_actual"):
 			cultiu.vida_actual = data.get("vida_actual", cultiu.vida_maxima)
 		
-		print("Carregant cultiu: posicio=", posicio, " estat=", cultiu.estat_actual, " dies=", cultiu.dies_passats, " textures=", cultiu.textures.size())
 		
 		cultiu.actualitzar_sprite()
+		if data.get("regat", false):
+			cultiu.regar()
 	
 	print("Cultius carregats!")
+
+# ─────────────── Abast del cultiu seleccionat (sota el cursor de plantar)
+

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cvoohq06vuiyc"]
 
-[ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://sprites/personatge.png" id="1_rjlat"]
+[ext_resource type="Texture2D" uid="uid://coicstlct3hpa" path="res://Sprites/personatge.png" id="1_rjlat"]
 [ext_resource type="Script" uid="uid://chjetx1xb2r1j" path="res://Scripts/personatge.gd" id="2_d5xvm"]
 [ext_resource type="Script" uid="uid://bkrxjht22i53t" path="res://Scripts/camera_3d.gd" id="3_7swu5"]
 [ext_resource type="PackedScene" uid="uid://hy803sjilf54" path="res://Scenes/Cultiu.tscn" id="4_d5xvm"]

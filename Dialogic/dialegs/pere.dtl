@@ -1,0 +1,49 @@
+if Grup.es_membre("pere"):
+	pere: Digues, {Converses.nom_jugador}.
+	- Seguim junts
+		pere: Endavant! Jo carrego el que calgui.
+	- Pots tornar a casa
+		do Grup.separar("pere")
+		pere: Fins aviat!
+elif Missions.pot_lliurar("benvinguda"):
+	pere: Què, ja coneixes la Marta? I has vist el mirador? Quina vista, eh?
+	do Missions.lliurar("benvinguda")
+	pere: Té, unes llavors per començar. Benvingut a l'illa!
+elif Missions.activa("benvinguda"):
+	pere: Recorda: saluda la Marta i ves fins al mirador de la platja. És on brilla la llum.
+elif not Missions.iniciada("benvinguda"):
+	pere: Ei, tu deus ser el nou veí! Sóc en Pere, el pescador.
+	pere: Per què no vas a saludar la Marta, la pagesa? I després passa pel mirador de la platja, que hi ha una vista preciosa.
+	- D'acord!
+		do Missions.acceptar("benvinguda")
+		pere: Perfecte. Quan acabis, torna a veure'm.
+	- Potser més tard
+		pere: Com vulguis, aquí estaré.
+elif Missions.pot_lliurar("plaga"):
+	pere: Ho has aconseguit! Els ratpenats ja no ens molestaran tant.
+	do Missions.lliurar("plaga")
+	pere: Si mai necessites algú que et carregui coses, compta amb mi.
+elif Missions.activa("plaga"):
+	pere: Com va la cacera? Recorda: derrota 5 ratpenats i cull 3 cultius.
+elif Missions.disponible("plaga"):
+	pere: Cada nit vénen ratpenats i es mengen les collites...
+	pere: Si en derrotes 5 i culls 3 cultius, et pagaré bé.
+	- Compta amb mi
+		do Missions.acceptar("plaga")
+		pere: Gràcies! Vigila de nit.
+	- Ara no
+		pere: D'acord, però no triguis gaire.
+elif Missions.completada("plaga"):
+	pere: Vols que t'acompanyi? Et puc portar coses a la motxilla.
+	- Sí, vine
+		if Grup.ple():
+			pere: Ja vas massa acompanyat!
+		else:
+			do Grup.unir("pere")
+			pere: Som-hi!
+	- Ara no
+		pere: Quan vulguis.
+elif Missions.completada("benvinguda"):
+	pere: Tinc una feina per a tu, però abans fes-te una mica més fort. Torna quan siguis de nivell 2.
+else:
+	pere: Bon dia, {Converses.nom_jugador}! Avui el mar està tranquil.

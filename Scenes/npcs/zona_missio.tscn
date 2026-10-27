@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/missions/zona_missio.gd" id="1_zona"]
+
+[sub_resource type="CylinderShape3D" id="Forma_zona"]
+height = 3.0
+radius = 1.6
+
+[node name="ZonaMissio" type="Area3D"]
+script = ExtResource("1_zona")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Forma_zona")

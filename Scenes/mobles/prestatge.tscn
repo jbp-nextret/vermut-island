@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/moble_barra.gd" id="1_moble"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_fusta"]
+albedo_color = Color(0.5, 0.32, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_ampolla_verda"]
+albedo_color = Color(0.15, 0.45, 0.2, 1)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_ampolla_vermella"]
+albedo_color = Color(0.6, 0.1, 0.12, 1)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_ampolla_ambar"]
+albedo_color = Color(0.8, 0.5, 0.15, 1)
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="Mesh_taulell"]
+material = SubResource("Mat_fusta")
+size = Vector3(0.9, 0.05, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_suport"]
+material = SubResource("Mat_fusta")
+size = Vector3(0.04, 0.16, 0.2)
+
+[sub_resource type="CylinderMesh" id="Mesh_ampolla_verda"]
+material = SubResource("Mat_ampolla_verda")
+top_radius = 0.02
+bottom_radius = 0.045
+height = 0.26
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="Mesh_ampolla_vermella"]
+material = SubResource("Mat_ampolla_vermella")
+top_radius = 0.02
+bottom_radius = 0.045
+height = 0.22
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="Mesh_ampolla_ambar"]
+material = SubResource("Mat_ampolla_ambar")
+top_radius = 0.02
+bottom_radius = 0.04
+height = 0.24
+radial_segments = 8
+
+[sub_resource type="BoxShape3D" id="Shape_prestatge"]
+size = Vector3(0.9, 0.35, 0.25)
+
+[node name="Prestatge" type="Node3D"]
+script = ExtResource("1_moble")
+tipus = 4
+punts_decoracio = 2
+alcada_paret = 1.1
+
+[node name="Taulell" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.125)
+mesh = SubResource("Mesh_taulell")
+
+[node name="SuportE" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, -0.1, 0.1)
+mesh = SubResource("Mesh_suport")
+
+[node name="SuportD" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, -0.1, 0.1)
+mesh = SubResource("Mesh_suport")
+
+[node name="Ampolla1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0.155, 0.12)
+mesh = SubResource("Mesh_ampolla_verda")
+
+[node name="Ampolla2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.135, 0.12)
+mesh = SubResource("Mesh_ampolla_vermella")
+
+[node name="Ampolla3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.145, 0.12)
+mesh = SubResource("Mesh_ampolla_ambar")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.125)
+shape = SubResource("Shape_prestatge")

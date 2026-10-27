@@ -2,10 +2,23 @@ extends Node
 
 signal cultiu_recollit(posicio)
 signal player_spawn_requested(posicio)
+## Un missatge curt a sobre de la barra d'accions ("No hi ha terra a prop"...)
+signal avis(text: String)
 
 var pending_spawn_position: Vector3 = Vector3.ZERO
 var has_pending_spawn := false
 
+signal mode_plantar_canviat(actiu: bool)
+var mode_plantar_actiu: bool = false
+
+func activar_mode_plantar():
+	mode_plantar_actiu = true
+	mode_plantar_canviat.emit(true)
+
+func desactivar_mode_plantar():
+	mode_plantar_actiu = false
+	mode_plantar_canviat.emit(false)
+	
 func request_player_spawn(posicio: Vector3):
 	pending_spawn_position = posicio
 	has_pending_spawn = true

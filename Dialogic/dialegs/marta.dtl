@@ -1,0 +1,39 @@
+if Grup.es_membre("marta"):
+	marta: Què necessites, {Converses.nom_jugador}?
+	- Continua ajudant-me
+		marta: Som-hi! Si veig cultius amb set, ja els rego jo.
+	- Pots tornar a casa
+		do Grup.separar("marta")
+		marta: D'acord. Ja saps on trobar-me!
+elif Missions.pot_lliurar("fusta_moll"):
+	marta: Has portat la fusta i la fibra! Amb això arreglaré el moll en un tres i no res.
+	do Missions.lliurar("fusta_moll")
+	marta: Ja està! El moll arreglat i la barca amarrada al final. Ja pots anar a les illetes quan vulguis.
+	marta: Moltes gràcies. I si mai vols que t'acompanyi, només m'ho has de dir: sé molt de regar.
+elif Missions.activa("fusta_moll"):
+	marta: Encara em falta material per al moll: 8 de fusta i 4 de fibra.
+	marta: La fusta la trauràs dels arbres, i la fibra tallant herba amb l'espasa.
+elif Missions.completada("fusta_moll"):
+	marta: Hola de nou! Vols que t'acompanyi? Et puc regar els cultius.
+	- Sí, vine amb mi
+		if Grup.ple():
+			marta: Ja vas massa acompanyat! Torna quan tinguis lloc.
+		else:
+			do Grup.unir("marta")
+			marta: Som-hi!
+	- Ara no
+		marta: Quan vulguis.
+elif Missions.disponible("fusta_moll"):
+	marta: Ah, ets tu! En Pere ja m'ha dit que vindries.
+	marta: Vull arreglar el moll per poder anar a les illetes del voltant, però em falta material.
+	marta: Em portaries 8 de fusta i 4 de fibra?
+	- I tant!
+		do Missions.acceptar("fusta_moll")
+		marta: Moltes gràcies!
+	- Ara no puc
+		marta: Cap problema, ja m'ho diràs.
+elif Missions.activa("benvinguda"):
+	marta: Hola! Ets el nou veí, oi? Jo sóc la Marta, la pagesa de l'illa.
+	marta: Quan hagis vist l'illa, torna i parlem.
+else:
+	marta: Bon dia, {Converses.nom_jugador}! Com van els cultius?

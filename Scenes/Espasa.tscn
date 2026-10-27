@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://j50uir28wrbj"]
 
-[ext_resource type="Texture2D" uid="uid://dl448e3w1kd14" path="res://sprites/sword.png" id="1_n1byc"]
+[ext_resource type="Texture2D" uid="uid://dl448e3w1kd14" path="res://Sprites/sword.png" id="1_n1byc"]
 [ext_resource type="Script" uid="uid://c1k5lb4fil30o" path="res://Scripts/utils/hitbox.gd" id="2_dwor7"]
-[ext_resource type="Texture2D" uid="uid://dev682131n81v" path="res://sprites/Misc/slash.PNG" id="2_kblc8"]
-[ext_resource type="Texture2D" uid="uid://c175ijq72rsys" path="res://sprites/Misc/stab.PNG" id="3_f68qi"]
+[ext_resource type="Texture2D" uid="uid://dev682131n81v" path="res://Sprites/Misc/slash.PNG" id="2_kblc8"]
+[ext_resource type="Texture2D" uid="uid://c175ijq72rsys" path="res://Sprites/Misc/stab.PNG" id="3_f68qi"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pspb0"]
 radius = 0.1
