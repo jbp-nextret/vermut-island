@@ -25,3 +25,7 @@ nom_atac = "Mossegada"
 recarrega_atac = 1.2
 abast_atac = 6.0
 color_projectil = Color(1,1,1,1)
+nivell_trofic = 4
+boti = PackedStringArray("fragments_fossil", "fusta")
+produccio = "fusta"
+minuts_produccio = 200

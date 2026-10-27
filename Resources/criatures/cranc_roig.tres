@@ -25,3 +25,7 @@ nom_atac = "Pinçada"
 recarrega_atac = 1.4
 abast_atac = 6.0
 color_projectil = Color(1,1,1,1)
+nivell_trofic = 3
+boti = PackedStringArray("pedra", "moneda_or")
+produccio = "pedra"
+minuts_produccio = 180

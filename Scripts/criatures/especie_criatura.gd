@@ -59,6 +59,16 @@ const NOMS_HABILITAT := {
 @export var abast_atac := 6.0
 @export var color_projectil := Color(0.5, 0.85, 0.3)
 
+@export_group("Natura i corral")
+## Lloc a la cadena alimentària (1 = presa petita ... 4 = superdepredador). Les carnívores
+## cacen les criatures de nivell més baix que comparteixen el seu territori.
+@export_range(1, 5) var nivell_trofic := 1
+## Botí que deixa si la derrotes en pausa tàctica
+@export var boti: PackedStringArray = []
+## Què produeix al corral i cada quants minuts de joc (a nivell 1)
+@export var produccio := ""
+@export var minuts_produccio := 120
+
 @export_group("Aspecte")
 ## El sprite (mirant a la dreta). Buit: se'n dibuixa un de provisional amb `color`.
 @export var sprite: Texture2D

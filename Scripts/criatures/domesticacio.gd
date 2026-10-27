@@ -58,6 +58,8 @@ func _ready():
 	var facilitat := 1.0
 	if criatura.debilitada():
 		facilitat += 0.3
+	if criatura.has_meta("rendida"):
+		facilitat += 0.3   # s'ha rendit en pausa tàctica
 	if criatura.estat == Criatura.Estat.MENJANT or criatura.esquer != null:
 		facilitat += 0.15
 	meitat_zona = (34.0 - especie.forca * 3.0) * facilitat

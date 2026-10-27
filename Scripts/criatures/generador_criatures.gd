@@ -69,6 +69,8 @@ func _apareixer(z: Dictionary, lluny_del_jugador: bool):
 		if casa and Criatura._pla(casa.global_position - pos).length() < 6.0:
 			continue
 		var c := Criatura.crear(e)
+		# Les de les illetes són més grans (i les fortes, una mica més)
+		c.nivell = rng.randi_range(1, 3) if z.zona == "principal" else rng.randi_range(2, 5) + (e.forca - 1) / 2
 		mon.add_child(c)
 		c.global_position = pos
 		c.casa = pos

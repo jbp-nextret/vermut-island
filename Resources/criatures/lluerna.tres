@@ -25,3 +25,7 @@ nom_atac = "Espurnes de llum"
 recarrega_atac = 1.1
 abast_atac = 6.5
 color_projectil = Color(1, 0.9, 0.4, 1)
+nivell_trofic = 1
+boti = PackedStringArray("fibra")
+produccio = "fibra"
+minuts_produccio = 120

@@ -9,6 +9,10 @@ extends Node
 signal col_leccio_canviada
 signal activa_canviada
 signal criatura_capturada(dades: Dictionary)
+signal nivell_pujat(uid: String, nivell: int)
+signal assignacions_canviades
+## Una criatura del corral (o d'una tasca) ha produït alguna cosa
+signal produccio(uid: String, objecte: String)
 ## Primera vegada que veus una espècie (per al bestiari)
 signal especie_vista(especie: EspecieCriatura)
 
@@ -50,13 +54,175 @@ func especie_activa() -> EspecieCriatura:
 func quantes(especie_id: String) -> int:
 	return col_leccio.filter(func(d): return d.especie == especie_id).size()
 
-func capturar(e: EspecieCriatura) -> Dictionary:
+# ─────────────── Corral i tasques
+
+## Què fa cada criatura domesticada ("seguint" és la que va amb tu)
+const ASSIGNACIONS := {"": "😴 Descansa", "seguint": "🐾 Et segueix", "corral": "🏡 Al corral",
+	"talar": "🪓 Talar arbres", "picar": "⛏️ Picar roques", "herba": "🌾 Tallar herba"}
+## Tasques a l'aire lliure: què treuen i cada quants minuts de joc (a nivell 1)
+const TASQUES := {"talar": {"objecte": "fusta", "minuts": 60}, "picar": {"objecte": "pedra", "minuts": 60}, "herba": {"objecte": "fibra", "minuts": 45}}
+const CAPACITAT_CORRAL := 4
+const XP_PRODUCCIO := 5
+
+## El que han produït les criatures i encara no has recollit (a la cistella del corral)
+var magatzem := {}
+var ultim_minut := -1.0
+
+func assignacio(uid: String) -> String:
+	if uid == activa:
+		return "seguint"
+	return str(dades(uid).get("assignacio", ""))
+
+func amb_assignacio(a: String) -> Array:
+	return col_leccio.filter(func(d): return assignacio(d.uid) == a).map(func(d): return d.uid)
+
+func assignar(uid: String, a: String) -> bool:
+	var d := dades(uid)
+	if d.is_empty() or not ASSIGNACIONS.has(a):
+		return false
+	if a == "corral" and assignacio(uid) != "corral" and amb_assignacio("corral").size() >= CAPACITAT_CORRAL:
+		EventBus.avis.emit("El corral és ple (%d criatures)" % CAPACITAT_CORRAL)
+		return false
+	if a == "seguint":
+		d.assignacio = ""
+		activar(uid)
+	else:
+		if uid == activa:
+			activar("")
+		d.assignacio = a
+	d.progres_feina = 0.0
+	assignacions_canviades.emit()
+	col_leccio_canviada.emit()
+	guardar()
+	return true
+
+## Cada quants minuts produeix (més ràpid com més nivell)
+func minuts_produccio(uid: String) -> float:
+	var d := dades(uid)
+	var e := especie(d.get("especie", ""))
+	var a := assignacio(uid)
+	var base: float = e.minuts_produccio if a == "corral" and e else TASQUES.get(a, {}).get("minuts", 60)
+	return base / mult_habilitat(nivell(uid))
+
+func objecte_produccio(uid: String) -> String:
+	var a := assignacio(uid)
+	if a == "corral":
+		var e := especie(dades(uid).especie)
+		return e.produccio if e else ""
+	return TASQUES.get(a, {}).get("objecte", "")
+
+func _minut_ara() -> float:
+	return (GestorTemps.dia_actual * 24.0 + GestorTemps.hora_actual) * 60.0
+
+## El temps de joc passa (també quan no hi ets): les criatures produeixen
+func _produir():
+	var ara := _minut_ara()
+	if ultim_minut < 0.0:
+		ultim_minut = ara
+		return
+	var passat := minf(ara - ultim_minut, 3.0 * 24.0 * 60.0)
+	if passat < 1.0:
+		return
+	ultim_minut = ara
+	for d in col_leccio:
+		var objecte := objecte_produccio(d.uid)
+		if objecte.is_empty():
+			continue
+		d.progres_feina = float(d.get("progres_feina", 0.0)) + passat
+		var interval := minuts_produccio(d.uid)
+		while d.progres_feina >= interval:
+			d.progres_feina -= interval
+			magatzem[objecte] = int(magatzem.get(objecte, 0)) + 1
+			guanyar_xp(d.uid, XP_PRODUCCIO)
+			produccio.emit(d.uid, objecte)
+
+## Passa el que hi ha a la cistella a la motxilla. Retorna quants objectes.
+func recollir() -> int:
+	var total := 0
+	for objecte in magatzem.keys():
+		var q := int(magatzem[objecte])
+		if q <= 0:
+			continue
+		if Inventari.afegir(objecte, q):
+			total += q
+			magatzem.erase(objecte)
+	guardar()
+	return total
+
+func objectes_magatzem() -> int:
+	var total := 0
+	for q in magatzem.values():
+		total += int(q)
+	return total
+
+# ─────────────── Nivells
+
+const NIVELL_MAXIM := 20
+
+## Experiència per passar del nivell `n` al següent
+static func xp_per_nivell(n: int) -> int:
+	return 20 + 15 * (n - 1)
+
+func nivell(uid: String) -> int:
+	return int(dades(uid).get("nivell", 1))
+
+func xp(uid: String) -> int:
+	return int(dades(uid).get("xp", 0))
+
+## Multiplicadors per nivell (vida, mal, velocitat d'atac, habilitat)
+static func mult_vida(n: int) -> float:
+	return 1.0 + 0.1 * (n - 1)
+
+static func mult_dany(n: int) -> float:
+	return 1.0 + 0.08 * (n - 1)
+
+static func mult_recarrega(n: int) -> float:
+	return maxf(0.6, 1.0 - 0.02 * (n - 1))
+
+static func mult_habilitat(n: int) -> float:
+	return 1.0 + 0.05 * (n - 1)
+
+## Guanya experiència (en combatre, regar, trobar coses, treballar al corral...)
+func guanyar_xp(uid: String, quantitat: int):
+	var d := dades(uid)
+	if d.is_empty() or quantitat <= 0:
+		return
+	var n := int(d.get("nivell", 1))
+	if n >= NIVELL_MAXIM:
+		return
+	var total := int(d.get("xp", 0)) + quantitat
+	while n < NIVELL_MAXIM and total >= xp_per_nivell(n):
+		total -= xp_per_nivell(n)
+		n += 1
+		nivell_pujat.emit(uid, n)
+		EventBus.avis.emit("⭐ %s puja a nivell %d!" % [d.nom, n])
+	d.nivell = n
+	d.xp = total
+	if uid == activa:
+		Progressio._aplicar_efectes()
+		if is_instance_valid(companya):
+			companya.aplicar_nivell()
+	_desar_aviat()
+
+var _desat_pendent := false
+func _desar_aviat():
+	if not _desat_pendent:
+		_desat_pendent = true
+		call_deferred("_desar_ara")
+
+func _desar_ara():
+	_desat_pendent = false
+	guardar()
+
+func capturar(e: EspecieCriatura, nivell_inicial := 1) -> Dictionary:
 	var d := {
 		"uid": "%s_%d_%d" % [e.id, int(Time.get_unix_time_from_system()) % 100000000, randi() % 10000],
 		"especie": e.id,
 		"nom": e.nom if quantes(e.id) == 0 else "%s %d" % [e.nom, quantes(e.id) + 1],
 		"dia": GestorTemps.dia_actual,
 		"comportament": "neutral",
+		"nivell": clampi(nivell_inicial, 1, NIVELL_MAXIM),
+		"xp": 0,
 	}
 	col_leccio.append(d)
 	veure(e.id)
@@ -81,7 +247,7 @@ func activar(uid: String):
 
 ## Com es comporta quan et segueix: "pacific" (no ataca mai), "neutral" (defensa: ataca
 ## els enemics que se t'acosten) o "agressiu" (ataca tots els enemics del voltant)
-const COMPORTAMENTS := {"pacific": "🕊 Pacífic", "neutral": "🛡 Neutral", "agressiu": "⚔️ Agressiu"}
+const COMPORTAMENTS := {"pacific": "🕊️ Pacífic", "neutral": "🛡️ Neutral", "agressiu": "⚔️ Agressiu"}
 
 func comportament(uid: String) -> String:
 	return str(dades(uid).get("comportament", "neutral"))
@@ -118,9 +284,9 @@ func bonus(clau: String) -> float:
 		return 0.0
 	match clau:
 		"velocitat":
-			return e.valor_habilitat if e.habilitat == EspecieCriatura.Ajuda.VELOCITAT else 0.0
+			return e.valor_habilitat * mult_habilitat(nivell(activa)) if e.habilitat == EspecieCriatura.Ajuda.VELOCITAT else 0.0
 		"defensa":
-			return e.valor_habilitat if e.habilitat == EspecieCriatura.Ajuda.DEFENSA else 0.0
+			return minf(0.5, e.valor_habilitat * mult_habilitat(nivell(activa))) if e.habilitat == EspecieCriatura.Ajuda.DEFENSA else 0.0
 	return 0.0
 
 # ─────────────── Bestiari
@@ -142,7 +308,13 @@ func veure(especie_id: String):
 # ─────────────── La companya al món
 
 ## Quan es carrega el món (o canvia d'escena) torna a aparèixer al teu costat
-func _process(_delta):
+var _temps_produccio := 0.0
+
+func _process(delta):
+	_temps_produccio += delta
+	if _temps_produccio > 1.0:
+		_temps_produccio = 0.0
+		_produir()
 	var escena := get_tree().current_scene
 	if escena == _escena_actual:
 		return
@@ -163,6 +335,7 @@ func _apareixer_companya():
 	var c: Criatura = Criatura.crear(e)
 	c.domesticada = true
 	c.uid = d.uid
+	c.nivell = nivell(d.uid)
 	mon.add_child(c)
 	companya = c
 	c.apareixer_al_costat_del_jugador()
@@ -177,7 +350,8 @@ func _treure_companya():
 func guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa, "vistes": vistes, "domesticades": domesticades}))
+		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa, "vistes": vistes, "domesticades": domesticades,
+			"magatzem": magatzem, "ultim_minut": ultim_minut}))
 
 func carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -188,6 +362,8 @@ func carregar():
 		col_leccio = (d.get("col_leccio", []) as Array).filter(func(x): return x is Dictionary and especies.has(x.get("especie", "")))
 		activa = str(d.get("activa", ""))
 		vistes = d.get("vistes", {})
+		magatzem = d.get("magatzem", {})
+		ultim_minut = float(d.get("ultim_minut", -1.0))
 		domesticades = d.get("domesticades", {})
 		# Partides d'abans del bestiari: el que ja tens compta com a vist i domesticat
 		for c in col_leccio:

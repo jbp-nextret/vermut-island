@@ -288,6 +288,10 @@ func nivell_aigua() -> float:
 ## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
 ## tornen a sortir, per no ficar-se al mig dels camps)
 func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
+	# El corral de les criatures també es manté lliure
+	for corral in get_tree().get_nodes_in_group("corral"):
+		if corral.ocupa(posicio, radi):
+			return true
 	for c in get_tree().get_nodes_in_group("cultius"):
 		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
 			return true

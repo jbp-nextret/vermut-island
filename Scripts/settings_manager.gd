@@ -37,6 +37,7 @@ const ACCIONS_REMAPEJABLES := [
 	["decorar", "Construir (a casa)"], ["inventari", "Motxilla"], ["habilitats", "Habilitats"],
 	["mapa", "Mapa"], ["llancar", "Llançar (olives / vermut)"],
 	["bestiari", "Bestiari"], ["roda_eines", "Roda d'eines (mantenir)"],
+	["pausa_tactica", "Pausa tàctica"],
 ]
 
 const BUSOS := {"volum_general": "Master", "volum_musica": "Music", "volum_efectes": "SFX"}

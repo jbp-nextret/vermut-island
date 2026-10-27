@@ -241,62 +241,15 @@ func _omplir_criatures():
 		llista_criatures.add_child(l)
 		return
 	for d in Criatures.col_leccio:
-		var e := Criatures.especie(d.especie)
-		if e == null:
-			continue
-		var fila := PanelContainer.new()
-		var estil := StyleBoxFlat.new()
-		estil.bg_color = Color(1.0, 0.85, 0.5, 0.12) if d.uid == Criatures.activa else Color(0, 0, 0, 0.25)
-		estil.set_corner_radius_all(6)
-		estil.set_content_margin_all(8)
-		fila.add_theme_stylebox_override("panel", estil)
-		llista_criatures.add_child(fila)
-		var h := HBoxContainer.new()
-		h.add_theme_constant_override("separation", 10)
-		fila.add_child(h)
-		var imatge := TextureRect.new()
-		imatge.texture = e.textura()
-		imatge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		imatge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		imatge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		imatge.custom_minimum_size = Vector2(56, 56)
-		h.add_child(imatge)
-		var info := VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		h.add_child(info)
-		var nom := LineEdit.new()
-		nom.text = d.nom
-		nom.max_length = 18
-		nom.tooltip_text = "Escriu un nom i prem Enter"
-		nom.text_submitted.connect(func(t): Criatures.reanomenar(d.uid, t))
-		nom.focus_exited.connect(func(): Criatures.reanomenar(d.uid, nom.text))
-		info.add_child(nom)
-		var detalls := Label.new()
-		detalls.text = "%s · %s · Força %s\n%s\nAtac: %s" % [e.nom, e.text_dieta(), "★".repeat(e.forca), e.text_habilitat(), e.text_atac()]
-		detalls.add_theme_font_size_override("font_size", 13)
-		detalls.add_theme_color_override("font_color", Color(0.85, 0.87, 0.95))
-		info.add_child(detalls)
-		# Com es comporta: pacífic, neutral o agressiu
-		var comportament := OptionButton.new()
-		var claus := Criatures.COMPORTAMENTS.keys()
-		for k in claus:
-			comportament.add_item(Criatures.COMPORTAMENTS[k])
-		comportament.selected = claus.find(Criatures.comportament(d.uid))
-		comportament.tooltip_text = "Pacífic: no ataca mai · Neutral: et defensa dels que se t'acosten · Agressiu: ataca tots els enemics del voltant"
-		comportament.item_selected.connect(func(i): Criatures.canviar_comportament(d.uid, claus[i]))
-		info.add_child(comportament)
-		var boto := Button.new()
-		if d.uid == Criatures.activa:
-			boto.text = "Que descansi"
-			boto.pressed.connect(func():
-				Criatures.activar("")
-				_omplir_criatures())
-		else:
-			boto.text = "Que em segueixi"
-			boto.pressed.connect(func():
-				Criatures.activar(d.uid)
-				_omplir_criatures())
-		h.add_child(boto)
+		if Criatures.especie(d.especie) != null:
+			llista_criatures.add_child(FitxaCriatura.crear(d.uid))
+	# Si canvies què fa una criatura, la llista es torna a fer
+	if not Criatures.col_leccio_canviada.is_connected(_refer_criatures):
+		Criatures.col_leccio_canviada.connect(_refer_criatures)
+
+func _refer_criatures():
+	if visible:
+		_omplir_criatures()
 
 func _omplir_missions():
 	var t := ""

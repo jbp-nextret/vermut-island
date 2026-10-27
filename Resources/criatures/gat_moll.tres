@@ -25,3 +25,7 @@ nom_atac = "Esgarrapada"
 recarrega_atac = 0.9
 abast_atac = 6.0
 color_projectil = Color(1,1,1,1)
+nivell_trofic = 2
+boti = PackedStringArray("llavor_raim", "olives")
+produccio = "llavor_raim"
+minuts_produccio = 150

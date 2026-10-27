@@ -339,6 +339,13 @@ func _mostrar(id: String):
 		t += "[b]Caràcter:[/b] %s\n" % e.text_caracter()
 		t += "[b]Força:[/b] %s%s\n" % ["★".repeat(e.forca), "☆".repeat(5 - e.forca)]
 		t += "[b]Atac:[/b] %s\n" % e.text_atac()
+		# Cadena alimentària (només amb les espècies que ja has vist)
+		var caca: Array = Criatures.especies.values().filter(func(x): return e.dieta == EspecieCriatura.Dieta.CARNIVORA and x.nivell_trofic < e.nivell_trofic and Criatures.vista(x.id)).map(func(x): return x.nom)
+		var la_cacen: Array = Criatures.especies.values().filter(func(x): return x.dieta == EspecieCriatura.Dieta.CARNIVORA and x.nivell_trofic > e.nivell_trofic and Criatures.vista(x.id)).map(func(x): return x.nom)
+		if not caca.is_empty():
+			t += "[b]Caça:[/b] %s\n" % ", ".join(caca)
+		if not la_cacen.is_empty():
+			t += "[b]La cacen:[/b] %s\n" % ", ".join(la_cacen)
 		t += "\n[b]Com domesticar-la:[/b] %s\n" % e.text_captura()
 		if domesticada:
 			t += "\n[b]Quan et segueix:[/b] %s\n" % e.text_habilitat()
