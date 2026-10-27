@@ -1,7 +1,6 @@
 extends CanvasLayer
 ## Barra ràpida (autoload): 9 caselles configurables amb eines i objectes, com Minecraft.
 ##   - 1–9 o clic a la casella: tria l'eina (tornar-la a triar = mans buides)
-##   - Rodeta del ratolí: casella següent / anterior (el zoom passa a Ctrl+rodeta)
 ##   - Mantenir Tab: roda radial amb totes les eines; apuntes i deixes anar
 ##   - A la Motxilla s'hi arrosseguen eines i objectes per configurar-la
 ## Les tecles d'abans (Q, E, P, G, T, L) continuen funcionant com a dreceres.
@@ -20,6 +19,8 @@ const CASELLES := 9
 ## (Les eines ocupen un espai de la motxilla, com qualsevol altre objecte.)
 const EINES := {
 	"eina_espasa": {"accio": "espasa", "color": Color(0.55, 0.85, 1.0)},
+	"eina_destral": {"accio": "talar", "color": Color(0.85, 0.7, 0.45)},
+	"eina_pic": {"accio": "picar", "color": Color(0.7, 0.72, 0.8)},
 	"eina_grimori_foc": {"accio": "foc", "color": Color(1.0, 0.55, 0.15)},
 	"llavor_raim": {"accio": "plantar", "color": Color(0.55, 0.95, 0.5)},
 	"eina_regadora": {"accio": "regar", "color": Color(0.45, 0.75, 1.0)},
@@ -28,13 +29,15 @@ const EINES := {
 ## Objectes que es llancen (es gasten)
 const OBJECTES_US := ["olives_marinades", "vermut_hipnotic"]
 
-const PER_DEFECTE := ["eina_espasa", "eina_grimori_foc", "llavor_raim", "eina_regadora", "eina_aixada", "olives_marinades", "vermut_hipnotic", "", ""]
+const PER_DEFECTE := ["eina_espasa", "eina_destral", "eina_pic", "eina_aixada", "eina_regadora", "llavor_raim", "olives_marinades", "vermut_hipnotic", "eina_grimori_foc"]
 ## Configuracions desades abans que les eines fossin objectes
 const NOMS_ANTICS := {"espasa": "eina_espasa", "foc": "eina_grimori_foc", "plantar": "llavor_raim", "regar": "eina_regadora", "llaurar": "eina_aixada"}
 
 var caselles: Array = PER_DEFECTE.duplicate()
 var ultima := 0           # per a la rodeta quan no hi ha cap eina activa
 var mode_foc := false
+## "talar" o "picar" quan tens la destral o el pic a la mà ("" si no)
+var mode_eina := ""
 
 var roda: Control
 var roda_opcions: Array = []   # ids ("" = mans buides)
@@ -133,6 +136,8 @@ func accio_activa() -> String:
 		return mon.llancador.objecte()
 	if mode_foc:
 		return "foc"
+	if not mode_eina.is_empty():
+		return mode_eina
 	var j := _jugador()
 	if j and j.estat == 1:   # Estat.COMBAT
 		return "espasa"
@@ -171,6 +176,8 @@ func activar(id: String):
 				j.magia_bloquejada.emit()
 				return
 			mode_foc = true
+		"talar", "picar":
+			mode_eina = accio(id)
 		"plantar":
 			mon.plantador.entrar()
 		"regar":
@@ -183,6 +190,7 @@ func activar(id: String):
 
 func desactivar():
 	mode_foc = false
+	mode_eina = ""
 	var mon := _mon()
 	if mon == null:
 		return
@@ -210,23 +218,14 @@ func _unhandled_input(event: InputEvent):
 			seleccionar(i)
 			get_viewport().set_input_as_handled()
 			return
-	# Rodeta: casella següent / anterior (amb Ctrl, la càmera fa zoom)
-	if event is InputEventMouseButton and event.pressed and not event.ctrl_pressed \
-			and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-		var actual := seleccionada()
-		if actual < 0:
-			actual = ultima
-		var pas := 1 if event.button_index == MOUSE_BUTTON_WHEEL_DOWN else -1
-		seleccionar(posmod(actual + pas, CASELLES))
-		get_viewport().set_input_as_handled()
-		return
 	# Mode bola de foc: el clic la llança cap al ratolí
 	if mode_foc and event.is_action_pressed("accio_primaria"):
 		_jugador().disparar_bola_foc()
 		get_viewport().set_input_as_handled()
 		return
-	if mode_foc and (event.is_action_pressed("accio_secundaria") or event.is_action_pressed("ui_cancel")):
+	if (mode_foc or not mode_eina.is_empty()) and (event.is_action_pressed("accio_secundaria") or event.is_action_pressed("ui_cancel")):
 		mode_foc = false
+		mode_eina = ""
 		get_viewport().set_input_as_handled()
 		return
 
@@ -241,8 +240,9 @@ func _input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func _process(_delta):
-	if mode_foc and not GameState.pot_atacar():
+	if (mode_foc or not mode_eina.is_empty()) and not GameState.pot_atacar():
 		mode_foc = false
+		mode_eina = ""
 	if roda.visible:
 		_actualitzar_roda()
 
@@ -326,3 +326,8 @@ func _carregar():
 		caselles = d.caselles.map(func(x):
 			var id: String = NOMS_ANTICS.get(str(x), str(x))
 			return id if es_pot_posar(id) else "")
+		# La destral i el pic, que abans no hi eren: als forats que hi hagi
+		for eina in ["eina_destral", "eina_pic"]:
+			var buit := caselles.find("")
+			if not eina in caselles and buit >= 0:
+				caselles[buit] = eina

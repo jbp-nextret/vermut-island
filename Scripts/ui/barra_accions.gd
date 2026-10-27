@@ -162,12 +162,16 @@ func _process(_delta):
 		label_info.text = "%s %s: %d · Clic: llançar · Q/E: canviar · Clic dret: sortir" % [info.icona, info.nom, llancador.quantitat()]
 	elif llaurador.actiu:
 		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir" if llaurador.pot_arrossegar() else "Clic: llaurar · Clic dret: sortir"
+	elif BarraRapida.mode_eina == "talar":
+		label_info.text = "🪓 Clic sobre un arbre: talar · Clic dret: deixar-ho"
+	elif BarraRapida.mode_eina == "picar":
+		label_info.text = "⛏️ Clic sobre una roca: picar · Clic dret: deixar-ho"
 	elif BarraRapida.mode_foc:
 		label_info.text = "Clic: bola de foc · Clic dret: deixar-ho"
 	elif en_combat and not plantador.actiu:
 		label_info.text = "Clic: tall · Clic dret: estocada" + (" · E: bola de foc" if Progressio.te("bola_foc") else "")
 	else:
-		label_info.text = "1–9 o rodeta: eines · Tab: roda d'eines · Ctrl+rodeta: zoom"
+		label_info.text = "1–9: eines · Tab (mantenir): roda d'eines"
 
 func _actualitzar(clau: String, activa: bool, progres: float):
 	var b: IconaAccio = botons[clau]

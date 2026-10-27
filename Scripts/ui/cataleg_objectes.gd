@@ -10,6 +10,8 @@ const OBJECTES := {
 	"pedra": {"nom": "Pedra", "icona": "🪨", "descripcio": "La pices de les roques amb el pic màgic. Servirà per construir."},
 	"dosis_vermut": {"nom": "Vermut preparat", "icona": "🍷", "descripcio": "Vermut ja fet a la barrica, a punt per servir."},
 	"eina_espasa": {"nom": "Espasa espectral", "icona": "⚔️", "descripcio": "Eina. Posa-la a la barra ràpida: clic per fer un tall, clic dret per a l'estocada. Talla l'herba i en treu fibra."},
+	"eina_destral": {"nom": "Destral màgica", "icona": "🪓", "descripcio": "Eina. Amb ella a la mà, clica un arbre per talar-lo i treure'n fusta (i a vegades olives)."},
+	"eina_pic": {"nom": "Pic màgic", "icona": "⛏️", "descripcio": "Eina. Amb ell a la mà, clica una roca per picar-la i treure'n pedra."},
 	"eina_grimori_foc": {"nom": "Grimori de foc", "icona": "🔥", "descripcio": "Eina. Amb ell a la mà, cada clic llança una bola de foc cap al ratolí (gasta mana)."},
 	"eina_regadora": {"nom": "Regadora màgica", "icona": "💧", "descripcio": "Eina. Clic sobre la terra per regar-la amb un encanteri. L'aigua es recupera sola o amb la pluja."},
 	"eina_aixada": {"nom": "Aixada màgica", "icona": "⛏", "descripcio": "Eina. Llaura l'herba per fer-la cultivable. Si hi ha una marca de terra remoguda, desenterra el que hi ha."},

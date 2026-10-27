@@ -10,7 +10,7 @@ signal motxilla_plena(item: String)
 var max_espais := 12
 
 ## Les eines que té sempre el jugador (si no les té, se li donen en carregar)
-const EINES_INICIALS := ["eina_espasa", "eina_regadora", "eina_aixada"]
+const EINES_INICIALS := ["eina_espasa", "eina_destral", "eina_pic", "eina_regadora", "eina_aixada"]
 
 const FITXER := "user://inventari.save"
 const VERSIO := 2

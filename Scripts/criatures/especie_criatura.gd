@@ -13,11 +13,13 @@ class_name EspecieCriatura
 
 enum Dieta { HERBIVORA, CARNIVORA }
 enum Caracter { POREGOSA, TRANQUILLA, AGRESSIVA }
+## Com ataca: mossegant (cos a cos) o disparant projectils
+enum Atac { MOSSEGADA, PROJECTIL }
 ## Què fa quan et segueix
 enum Ajuda { ATACAR, REGAR, BUSCAR, LLUM, VELOCITAT, DEFENSA }
 
 const NOMS_HABILITAT := {
-	Ajuda.ATACAR: "Lluita al teu costat",
+	Ajuda.ATACAR: "Ferotge: ataca més fort i més de pressa",
 	Ajuda.REGAR: "Rega els cultius amb set",
 	Ajuda.BUSCAR: "De tant en tant troba coses",
 	Ajuda.LLUM: "Fa llum de nit",
@@ -47,6 +49,16 @@ const NOMS_HABILITAT := {
 ## On surt: a la illa principal, a les illetes o a tot arreu
 @export_enum("illetes", "principal", "totes") var zona := "illetes"
 
+@export_group("Atac")
+@export var atac: Atac = Atac.MOSSEGADA
+## Com es diu l'atac (surt al bestiari): "Mossegada", "Llavors disparades"...
+@export var nom_atac := "Mossegada"
+## Segons entre atacs
+@export var recarrega_atac := 1.2
+## PROJECTIL: fins on dispara i de quin color són
+@export var abast_atac := 6.0
+@export var color_projectil := Color(0.5, 0.85, 0.3)
+
 @export_group("Aspecte")
 ## El sprite (mirant a la dreta). Buit: se'n dibuixa un de provisional amb `color`.
 @export var sprite: Texture2D
@@ -59,6 +71,16 @@ func text_habilitat() -> String:
 		Ajuda.VELOCITAT, Ajuda.DEFENSA:
 			t += " (%d %%)" % roundi(valor_habilitat * 100.0)
 	return t
+
+## Mal i recàrrega efectius (la ferotgia del llop hi suma)
+func dany_atac() -> int:
+	return roundi(dany * (1.5 if habilitat == Ajuda.ATACAR else 1.0))
+
+func recarrega() -> float:
+	return recarrega_atac * (0.7 if habilitat == Ajuda.ATACAR else 1.0)
+
+func text_atac() -> String:
+	return "%s (%d de mal%s)" % [nom_atac, dany_atac(), ", a distància" if atac == Atac.PROJECTIL else ""]
 
 func text_dieta() -> String:
 	return "Herbívora 🫒" if dieta == Dieta.HERBIVORA else "Carnívora 🍷"

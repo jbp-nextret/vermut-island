@@ -56,6 +56,7 @@ func capturar(e: EspecieCriatura) -> Dictionary:
 		"especie": e.id,
 		"nom": e.nom if quantes(e.id) == 0 else "%s %d" % [e.nom, quantes(e.id) + 1],
 		"dia": GestorTemps.dia_actual,
+		"comportament": "neutral",
 	}
 	col_leccio.append(d)
 	veure(e.id)
@@ -76,6 +77,21 @@ func activar(uid: String):
 	_apareixer_companya()
 	Progressio._aplicar_efectes()
 	activa_canviada.emit()
+	guardar()
+
+## Com es comporta quan et segueix: "pacific" (no ataca mai), "neutral" (defensa: ataca
+## els enemics que se t'acosten) o "agressiu" (ataca tots els enemics del voltant)
+const COMPORTAMENTS := {"pacific": "🕊 Pacífic", "neutral": "🛡 Neutral", "agressiu": "⚔️ Agressiu"}
+
+func comportament(uid: String) -> String:
+	return str(dades(uid).get("comportament", "neutral"))
+
+func canviar_comportament(uid: String, valor: String):
+	var d := dades(uid)
+	if d.is_empty() or not COMPORTAMENTS.has(valor):
+		return
+	d.comportament = valor
+	col_leccio_canviada.emit()
 	guardar()
 
 func reanomenar(uid: String, nom: String):

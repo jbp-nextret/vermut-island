@@ -1,7 +1,8 @@
 extends Node3D
 class_name Recolector
-## Talar arbres i picar roques amb el ratolí: en passar-hi per sobre surt "🪓 Talar" o
-## "⛏ Picar", i en clicar apareix la destral o el pic màgic i hi dona un cop.
+## Talar arbres i picar roques amb el ratolí: cal tenir a la mà (barra ràpida) la destral
+## o el pic. En passar-hi per sobre surt "🪓 Talar" o "⛏ Picar" (o quina eina cal), i en
+## clicar apareix l'eina màgica i hi dona un cop.
 ## (L'herba es talla amb l'espasa: ho fa CombatMagic.)
 
 const ABAST := 2.8
@@ -32,16 +33,28 @@ func _process(delta):
 	etiqueta.visible = recurs_sota_ratoli != null
 	if recurs_sota_ratoli:
 		var a_labast := _a_labast(recurs_sota_ratoli)
-		etiqueta.text = recurs_sota_ratoli.nom_accio() if a_labast else "Massa lluny"
-		etiqueta.modulate = Color(1, 1, 1) if a_labast else Color(1, 0.6, 0.55)
+		var eina_ok := _te_eina(recurs_sota_ratoli)
+		etiqueta.text = _eina_que_cal(recurs_sota_ratoli) if not eina_ok else (recurs_sota_ratoli.nom_accio() if a_labast else "Massa lluny")
+		etiqueta.modulate = Color(1, 1, 1) if a_labast and eina_ok else Color(1, 0.6, 0.55)
 		var caixa := recurs_sota_ratoli.caixa()
 		# A l'alçada del cap del personatge, no a dalt de tot de l'arbre (que pot ser molt alt)
 		var alcada := minf(caixa.end.y + 0.3, caixa.position.y + 2.2)
 		etiqueta.global_position = Vector3(caixa.get_center().x, alcada, caixa.get_center().z)
 
+## L'eina que cal a la mà per a aquest recurs
+func _te_eina(recurs: RecursNatural) -> bool:
+	return BarraRapida.accio_activa() == ("talar" if recurs.tipus == RecursNatural.Tipus.ARBRE else "picar")
+
+func _eina_que_cal(recurs: RecursNatural) -> String:
+	return "Cal la destral 🪓" if recurs.tipus == RecursNatural.Tipus.ARBRE else "Cal el pic ⛏️"
+
 func _unhandled_input(event: InputEvent):
 	if recurs_sota_ratoli == null or not event.is_action_pressed("accio_primaria"):
 		return
+	if not _te_eina(recurs_sota_ratoli):
+		if BarraRapida.accio_activa().is_empty():
+			EventBus.avis.emit("%s (tria-la a la barra ràpida)" % _eina_que_cal(recurs_sota_ratoli))
+		return   # el clic segueix (p. ex. per atacar amb l'espasa)
 	get_viewport().set_input_as_handled()   # no ataquem quan cliquem un arbre o una roca
 	if not _a_labast(recurs_sota_ratoli) or temps_des_del_cop < RECARREGA:
 		return

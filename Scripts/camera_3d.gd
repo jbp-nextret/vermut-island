@@ -1,6 +1,6 @@
 extends Camera3D
 ## Càmera del jugador:
-##  - zoom amb Ctrl+rodeta
+##  - zoom amb la rodeta
 ##  - gir al voltant del jugador: Z / C a passos de 45°, o arrossegant amb el botó central
 ##    en horitzontal (en deixar-lo, s'ajusta al pas més proper). R torna a la vista inicial.
 ##  - inclinació (perspectiva): X / V, o arrossegant amb el botó central en vertical.
@@ -117,10 +117,9 @@ func _input(event):
 	if not current:
 		return   # construint a casa hi ha una altra càmera activa
 	if event is InputEventMouseButton:
-		# Zoom amb Ctrl+rodeta (la rodeta sola canvia de casella a la barra ràpida)
-		if event.pressed and (event.ctrl_pressed or not GameState.pot_atacar()) and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			target_size = clamp(target_size - ZOOM_SPEED, MIN_ZOOM, MAX_ZOOM)
-		elif event.pressed and (event.ctrl_pressed or not GameState.pot_atacar()) and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			target_size = clamp(target_size + ZOOM_SPEED, MIN_ZOOM, MAX_ZOOM)
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			girant_amb_ratoli = event.pressed

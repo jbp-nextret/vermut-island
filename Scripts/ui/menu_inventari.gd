@@ -272,10 +272,19 @@ func _omplir_criatures():
 		nom.focus_exited.connect(func(): Criatures.reanomenar(d.uid, nom.text))
 		info.add_child(nom)
 		var detalls := Label.new()
-		detalls.text = "%s · %s · Força %s\n%s" % [e.nom, e.text_dieta(), "★".repeat(e.forca), e.text_habilitat()]
+		detalls.text = "%s · %s · Força %s\n%s\nAtac: %s" % [e.nom, e.text_dieta(), "★".repeat(e.forca), e.text_habilitat(), e.text_atac()]
 		detalls.add_theme_font_size_override("font_size", 13)
 		detalls.add_theme_color_override("font_color", Color(0.85, 0.87, 0.95))
 		info.add_child(detalls)
+		# Com es comporta: pacífic, neutral o agressiu
+		var comportament := OptionButton.new()
+		var claus := Criatures.COMPORTAMENTS.keys()
+		for k in claus:
+			comportament.add_item(Criatures.COMPORTAMENTS[k])
+		comportament.selected = claus.find(Criatures.comportament(d.uid))
+		comportament.tooltip_text = "Pacífic: no ataca mai · Neutral: et defensa dels que se t'acosten · Agressiu: ataca tots els enemics del voltant"
+		comportament.item_selected.connect(func(i): Criatures.canviar_comportament(d.uid, claus[i]))
+		info.add_child(comportament)
 		var boto := Button.new()
 		if d.uid == Criatures.activa:
 			boto.text = "Que descansi"

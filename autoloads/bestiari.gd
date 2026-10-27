@@ -338,6 +338,7 @@ func _mostrar(id: String):
 		t += "[b]Dieta:[/b] %s\n" % e.text_dieta()
 		t += "[b]Caràcter:[/b] %s\n" % e.text_caracter()
 		t += "[b]Força:[/b] %s%s\n" % ["★".repeat(e.forca), "☆".repeat(5 - e.forca)]
+		t += "[b]Atac:[/b] %s\n" % e.text_atac()
 		t += "\n[b]Com domesticar-la:[/b] %s\n" % e.text_captura()
 		if domesticada:
 			t += "\n[b]Quan et segueix:[/b] %s\n" % e.text_habilitat()

@@ -9,7 +9,7 @@ class_name Criatura
 ## i llavors F a prop obre el minijoc (Domesticacio).
 
 enum Estat { QUIET, PASSEJANT, FUGINT, PERSEGUINT, ANANT_ESQUER, MENJANT, HIPNOTITZADA, DOMESTICANT,
-	SEGUINT, AJUDANT, A_LA_BARCA }
+	SEGUINT, AJUDANT, A_LA_BARCA, ATACANT, BUSCANT, PORTANT }
 
 const GRAVETAT := 20.0
 const RADI_PASSEIG := 4.5
@@ -34,6 +34,12 @@ var feina: Node3D = null
 var temps_cop := 0.0
 var temps_habilitat := 0.0
 var enfadada := false        # una tranquil·la que has atacat
+var objectiu_atac: Node3D = null
+var temps_atac := 0.0
+var portant := ""            # l'objecte que porta a la boca (BUSCAR)
+var icona_portant: Label3D
+var particules_llum: CPUParticles3D
+var particules_velocitat: CPUParticles3D
 var mirall := false
 
 var sprite: Sprite3D
@@ -105,6 +111,39 @@ func _ready():
 			llum.shadow_enabled = false
 			llum.position = Vector3.UP * alcada * 0.6
 			add_child(llum)
+			# Unes llumetes al voltant quan és fosc
+			particules_llum = CPUParticles3D.new()
+			particules_llum.amount = 10
+			particules_llum.lifetime = 1.6
+			particules_llum.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			particules_llum.emission_sphere_radius = 0.6
+			particules_llum.gravity = Vector3(0, 0.3, 0)
+			particules_llum.initial_velocity_max = 0.1
+			particules_llum.mesh = EfectesCriatura._quad(especie.color.lightened(0.5), 0.06)
+			particules_llum.position = Vector3.UP * alcada * 0.6
+			particules_llum.emitting = false
+			add_child(particules_llum)
+		if especie.habilitat == EspecieCriatura.Ajuda.VELOCITAT:
+			# Línies de vent quan correu junts
+			particules_velocitat = CPUParticles3D.new()
+			particules_velocitat.amount = 14
+			particules_velocitat.lifetime = 0.4
+			particules_velocitat.local_coords = false
+			particules_velocitat.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			particules_velocitat.emission_sphere_radius = 0.35
+			particules_velocitat.gravity = Vector3.ZERO
+			particules_velocitat.initial_velocity_max = 0.0
+			particules_velocitat.scale_amount_min = 0.6
+			particules_velocitat.mesh = EfectesCriatura._quad(Color(1, 1, 1, 0.7), 0.05)
+			particules_velocitat.position = Vector3.UP * alcada * 0.4
+			particules_velocitat.emitting = false
+			add_child(particules_velocitat)
+		if especie.habilitat == EspecieCriatura.Ajuda.DEFENSA:
+			SalutJugador.vida_canviat.connect(_on_vida_jugador)
+		icona_portant = _label(80, Color.WHITE)
+		icona_portant.position = Vector3(0.25, alcada * 0.55, 0.05)
+		icona_portant.no_depth_test = false
+		add_child(icona_portant)
 	else:
 		add_to_group("criatures_salvatges")
 		add_to_group("interactuables")
@@ -332,11 +371,18 @@ func _salvatge(_delta) -> Array:
 				_canviar_estat(Estat.QUIET)
 				desti = casa
 				return [Vector3.ZERO, 1.0]
+			# Les que disparen es queden a una distància; les que mosseguen s'acosten
+			if especie.atac == EspecieCriatura.Atac.PROJECTIL:
+				if d_jugador < especie.abast_atac * 0.85:
+					if temps_cop > especie.recarrega() * 1.3:
+						temps_cop = 0.0
+						_disparar(jugador, true)
+					return [-cap_jugador.normalized() * (0.6 if d_jugador < 3.0 else 0.0), 1.0]
+				return [cap_jugador.normalized(), 1.2]
 			if d_jugador < 1.1:
-				if temps_cop > 1.3:
+				if temps_cop > especie.recarrega() * 1.1:
 					temps_cop = 0.0
-					SalutJugador.prendre_dany(especie.dany)
-					_saltet()
+					_mossegar(jugador, true)
 				return [Vector3.ZERO, 1.0]
 			return [cap_jugador.normalized(), 1.35]
 		Estat.ANANT_ESQUER:
@@ -387,38 +433,58 @@ func _company(delta) -> Array:
 	if cap_jugador.length() > 14.0 or absf(jugador.global_position.y - global_position.y) > 4.0:
 		apareixer_al_costat_del_jugador()
 		return [Vector3.ZERO, 1.0]
+	temps_atac += delta
 	_habilitats(delta, jugador)
 	match estat:
+		Estat.ATACANT:
+			return _atacar(jugador)
 		Estat.AJUDANT:
-			if not is_instance_valid(feina) or temps_estat > 8.0 or (feina.is_in_group("enemics") and _pla(feina.global_position - jugador.global_position).length() > 10.0):
+			if not is_instance_valid(feina) or temps_estat > 8.0:
 				_acabar_feina()
 				return [Vector3.ZERO, 1.0]
-			var abast := 1.0 if feina.is_in_group("enemics") else 0.8
-			var m := _cap_a(feina.global_position, abast)
+			var m := _cap_a(feina.global_position, 1.2)
 			if m == Vector3.ZERO:
 				_fer_feina()
 			return [m, 1.8]
+		Estat.BUSCANT:
+			# Remou la terra una estona; després surt la troballa i la porta
+			if temps_estat > 1.4:
+				_trobar_alguna_cosa()
+			return [Vector3.ZERO, 1.0]
+		Estat.PORTANT:
+			if cap_jugador.length() < 1.3:
+				_lliurar()
+				return [Vector3.ZERO, 1.0]
+			return [cap_jugador.normalized(), 1.9]
 		_:
 			# Segueix una mica per darrere
 			if cap_jugador.length() > 2.2:
 				return [cap_jugador.normalized(), clampf(cap_jugador.length() / 2.0, 1.0, 2.6)]
 			return [Vector3.ZERO, 1.0]
 
+## Què fa segons l'habilitat i el comportament (només quan et segueix tranquil·la)
 func _habilitats(delta: float, jugador: Node3D):
-	var h := especie.habilitat
 	if llum:
-		var objectiu: float = especie.valor_habilitat if GestorTemps.es_nit() else 0.0
-		llum.light_energy = move_toward(llum.light_energy, objectiu, delta)
+		var nit := GestorTemps.es_nit()
+		var objectiu: float = especie.valor_habilitat * (0.85 + 0.15 * sin(temps_anim * 3.0)) if nit else 0.0
+		llum.light_energy = move_toward(llum.light_energy, objectiu, delta * 2.0)
+		particules_llum.emitting = nit
+	if particules_velocitat:
+		particules_velocitat.emitting = _pla(velocity).length() > especie.velocitat * 1.5
 	if estat != Estat.SEGUINT:
 		return
 	temps_habilitat -= delta
-	match h:
-		EspecieCriatura.Ajuda.ATACAR:
-			if temps_habilitat <= 0.0:
-				temps_habilitat = 0.5
-				feina = _enemic_proper(jugador, 7.0)
-				if feina:
-					_canviar_estat(Estat.AJUDANT)
+	# Atacar (segons el comportament que li hagis triat)
+	if temps_atac > 0.4:
+		var enemic := _triar_enemic(jugador)
+		if enemic:
+			objectiu_atac = enemic
+			_canviar_estat(Estat.ATACANT)
+			if especie.habilitat == EspecieCriatura.Ajuda.ATACAR:
+				_mostrar_icona("💢")
+				get_tree().create_timer(0.8).timeout.connect(_mostrar_icona.bind(""))
+			return
+	match especie.habilitat:
 		EspecieCriatura.Ajuda.REGAR:
 			if temps_habilitat <= 0.0:
 				temps_habilitat = 4.0
@@ -429,19 +495,74 @@ func _habilitats(delta: float, jugador: Node3D):
 		EspecieCriatura.Ajuda.BUSCAR:
 			if temps_habilitat <= 0.0 and is_on_floor():
 				temps_habilitat = especie.valor_habilitat
-				_trobar_alguna_cosa()
+				_canviar_estat(Estat.BUSCANT)
+				EfectesCriatura.arrels(get_parent(), global_position, 1.4)
 
-func _enemic_proper(jugador: Node3D, radi: float) -> Node3D:
+## L'enemic que atacaria ara mateix (o null), segons el comportament
+func _triar_enemic(jugador: Node3D) -> Node3D:
+	var radi := 0.0
+	match Criatures.comportament(uid):
+		"pacific":
+			return null
+		"neutral":
+			radi = 3.5     # només els que se t'acosten
+		_:
+			radi = 8.0
 	var millor: Node3D = null
 	var millor_d := radi
-	for e in get_tree().get_nodes_in_group("enemics"):
-		if not is_instance_valid(e):
+	var candidats := get_tree().get_nodes_in_group("enemics")
+	# Les salvatges que t'ataquen també compten com a enemics
+	for c in get_tree().get_nodes_in_group("criatures_salvatges"):
+		if c.estat == Estat.PERSEGUINT:
+			candidats.append(c)
+	for e in candidats:
+		if not is_instance_valid(e) or ("fugint" in e and e.fugint):
 			continue
 		var d := _pla(e.global_position - jugador.global_position).length()
 		if d < millor_d:
 			millor = e
 			millor_d = d
 	return millor
+
+func _atacar(jugador: Node3D) -> Array:
+	var e := objectiu_atac
+	if not is_instance_valid(e) or not (e.is_in_group("enemics") or e.is_in_group("criatures_salvatges")) \
+			or _pla(e.global_position - jugador.global_position).length() > 11.0 or Criatures.comportament(uid) == "pacific":
+		objectiu_atac = null
+		_canviar_estat(Estat.SEGUINT)
+		return [Vector3.ZERO, 1.0]
+	var cap := _pla(e.global_position - global_position)
+	mirall = _cap_a_la_camera(cap) < 0.0
+	if especie.atac == EspecieCriatura.Atac.PROJECTIL:
+		if cap.length() > especie.abast_atac * 0.8:
+			return [cap.normalized(), 1.8]
+		if temps_atac >= especie.recarrega():
+			temps_atac = 0.0
+			_disparar(e, false)
+		return [Vector3.ZERO, 1.0]
+	if cap.length() > 1.0:
+		return [cap.normalized(), 2.0]
+	if temps_atac >= especie.recarrega():
+		temps_atac = 0.0
+		_mossegar(e, false)
+	return [Vector3.ZERO, 1.0]
+
+func _disparar(objectiu: Node3D, contra_jugador: bool):
+	_saltet()
+	var boca := global_position + Vector3.UP * offset_sprite.y * 1.2
+	EfectesCriatura.projectil(get_parent(), boca, objectiu, especie.color_projectil, especie.dany_atac(), contra_jugador)
+
+func _mossegar(objectiu: Node3D, contra_jugador: bool):
+	# S'abalança cap a l'objectiu i torna
+	var cap := _pla(objectiu.global_position - global_position).normalized()
+	var t := create_tween()
+	t.tween_property(sprite, "position", offset_sprite + cap * 0.45, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property(sprite, "position", offset_sprite, 0.15)
+	EfectesCriatura.mossegada(get_parent(), objectiu.global_position, mirall)
+	if contra_jugador:
+		SalutJugador.prendre_dany(especie.dany_atac())
+	else:
+		objectiu.prendre_dany(especie.dany_atac(), global_position)
 
 func _cultiu_amb_set(jugador: Node3D, radi: float) -> Node3D:
 	var millor: Node3D = null
@@ -456,17 +577,16 @@ func _cultiu_amb_set(jugador: Node3D, radi: float) -> Node3D:
 	return millor
 
 func _fer_feina():
-	if feina.is_in_group("enemics"):
-		if temps_cop >= 1.0:
-			temps_cop = 0.0
-			_saltet()
-			feina.prendre_dany(roundi(especie.valor_habilitat), global_position)
-		return   # segueix atacant fins que mori o s'allunyi
 	if feina.is_in_group("cultius"):
-		feina.regar()
-		Progressio.accio_feta.emit("regar", 1)
-		TextFlotant.mostrar(get_parent(), feina.global_position + Vector3.UP * 0.8, "💧", Color(0.5, 0.8, 1.0))
+		# Esquitxa suc fins al cultiu
 		_saltet()
+		EfectesCriatura.esquitx(get_parent(), global_position + Vector3.UP * 0.5, feina.global_position, especie.color.lightened(0.2))
+		var cultiu := feina
+		get_tree().create_timer(0.45).timeout.connect(func():
+			if is_instance_valid(cultiu):
+				cultiu.regar()
+				Progressio.accio_feta.emit("regar", 1)
+				TextFlotant.mostrar(get_parent(), cultiu.global_position + Vector3.UP * 0.8, "💧", Color(0.5, 0.8, 1.0)))
 	_acabar_feina()
 
 func _acabar_feina():
@@ -475,16 +595,51 @@ func _acabar_feina():
 	feina = null
 	_canviar_estat(Estat.SEGUINT)
 
+## Surt la troballa de terra i se la posa a la boca per portar-te-la
 func _trobar_alguna_cosa():
 	if especie.troballes.is_empty():
+		_canviar_estat(Estat.SEGUINT)
 		return
-	var objecte: String = especie.troballes[randi() % especie.troballes.size()]
-	if not Inventari.afegir(objecte, 1):
-		return
+	portant = especie.troballes[randi() % especie.troballes.size()]
+	icona_portant.text = CatalegObjectes.info(portant).icona
+	icona_portant.visible = true
+	icona_portant.scale = Vector3.ONE * 0.2
+	var t := icona_portant.create_tween()
+	t.tween_property(icona_portant, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_saltet()
+	_mostrar_icona("❗")
+	get_tree().create_timer(0.7).timeout.connect(_mostrar_icona.bind(""))
+	_canviar_estat(Estat.PORTANT)
+
+## Arriba al teu costat i te la dona
+func _lliurar():
+	var objecte := portant
+	portant = ""
+	_canviar_estat(Estat.SEGUINT)
+	var jugador := _jugador()
+	# L'objecte vola de la boca fins al jugador
+	var vol := icona_portant.duplicate() as Label3D
+	get_parent().add_child(vol)
+	vol.global_position = icona_portant.global_position
+	icona_portant.visible = false
+	var t := vol.create_tween()
+	t.tween_property(vol, "global_position", jugador.global_position + Vector3.UP * 1.2, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(vol, "scale", Vector3.ONE * 0.5, 0.3)
+	t.tween_callback(vol.queue_free)
 	var info := CatalegObjectes.info(objecte)
-	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.0, "+1 %s" % info.icona, Color(1.0, 0.9, 0.6))
-	EventBus.avis.emit("%s ha trobat %s" % [etiqueta.text, info.nom.to_lower()])
+	if Inventari.afegir(objecte, 1):
+		TextFlotant.mostrar(get_parent(), jugador.global_position + Vector3.UP * 1.6, "+1 %s" % info.icona, Color(1.0, 0.9, 0.6))
+		EventBus.avis.emit("%s t'ha portat %s" % [etiqueta.text, info.nom.to_lower()])
+
+## El cranc: quan reps mal, t'envolta un moment una closca protectora
+func _on_vida_jugador(actual, _maxima):
+	if not is_inside_tree() or not domesticada:
+		return
+	if actual < get_meta("vida_abans", actual):
+		var jugador := _jugador()
+		if jugador:
+			EfectesCriatura.escut(jugador, especie.color.lightened(0.3))
+	set_meta("vida_abans", actual)
 
 func apareixer_al_costat_del_jugador():
 	var jugador := _jugador()
