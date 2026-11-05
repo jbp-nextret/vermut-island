@@ -2,6 +2,8 @@ extends Node
 class_name GestorServei
 ## Controla una sessió de servei: obre la vermuteria, fa entrar clients
 ## mentre queden seients lliures i tanca quan s'acaba el temps.
+## Abans d'obrir tries la carta (quant de cada beguda vols vendre, MenuCarta): cada client
+## que entra en reserva una, i quan ja no en queda cap no n'entren més.
 
 signal servei_obert
 signal servei_tancat
@@ -27,15 +29,17 @@ var guanys := 0
 ## El posa CasaInterior segons el nivell de decoració
 var multiplicador_propina := 1.0
 
-func alternar() -> void:
-	if obert:
-		tancar()
-	else:
-		obrir()
+## La carta d'avui: producte -> quantes en queden per demanar
+var carta := {}
+var pendents := {}   # Poring -> producte (encara no l'ha pagat)
+var avisat_sense_estoc := false
 
-func obrir() -> void:
+func obrir(p_carta: Dictionary = {}) -> void:
 	if obert or not GameState.pot_obrir_vermuteria():
 		return
+	carta = p_carta.duplicate()
+	pendents.clear()
+	avisat_sense_estoc = false
 	obert = true
 	clients_servits = 0
 	clients_enfadats = 0
@@ -81,7 +85,15 @@ func _fer_entrar_client() -> void:
 	var lliures := get_tree().get_nodes_in_group("seats").filter(func(s): return s.is_free() and s.es_utilitzable())
 	if lliures.is_empty():
 		return
+	var comanda := _triar_comanda()
+	if comanda.is_empty():
+		if not avisat_sense_estoc:
+			avisat_sense_estoc = true
+			EventBus.avis.emit("🍷 Ja has venut tot el que havies preparat per avui")
+		return
 	var p: Poring = PORING.instantiate()
+	p.comanda_prevista = comanda
+	pendents[p] = comanda
 	get_parent().add_child(p)
 	p.global_position = porta.global_position
 	p.multiplicador_propina = multiplicador_propina
@@ -89,9 +101,40 @@ func _fer_entrar_client() -> void:
 	p.order_placed.connect(func(po, producte): comanda_feta.emit(po, producte))
 	p.ha_pagat.connect(_on_client_ha_pagat)
 	p.ha_marxat_enfadat.connect(func(_po): clients_enfadats += 1)
-	p.left.connect(func(_po): _avancar_seguent_client())
+	p.left.connect(_on_client_marxa)
 
-func _on_client_ha_pagat(_poring: Poring, quantitat: int) -> void:
+## Una beguda de la carta a l'atzar (com més n'hi ha, més probable)
+func _triar_comanda() -> String:
+	var total := 0
+	for producte in carta:
+		total += int(carta[producte])
+	if total <= 0:
+		return ""
+	var r := randi() % total
+	for producte in carta:
+		r -= int(carta[producte])
+		if r < 0:
+			carta[producte] = int(carta[producte]) - 1
+			return producte
+	return ""
+
+## Quantes en queden per vendre (de totes)
+func queden_a_la_carta() -> int:
+	var total := 0
+	for producte in carta:
+		total += int(carta[producte])
+	return total
+
+## Si marxa sense haver begut, la seva beguda torna a la carta
+func _on_client_marxa(p: Poring) -> void:
+	if pendents.has(p):
+		carta[pendents[p]] = int(carta.get(pendents[p], 0)) + 1
+		pendents.erase(p)
+		avisat_sense_estoc = false
+	_avancar_seguent_client()
+
+func _on_client_ha_pagat(poring: Poring, quantitat: int) -> void:
+	pendents.erase(poring)
 	clients_servits += 1
 	guanys += quantitat
 

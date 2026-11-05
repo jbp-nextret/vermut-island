@@ -14,6 +14,8 @@ var descripcio: RichTextLabel
 var estat: RichTextLabel
 var pestanyes: TabContainer
 var text_missions: RichTextLabel
+var llista_criatures: VBoxContainer
+var caselles_barra: Array[CasellaBarra] = []
 var seleccionat := ""
 
 func _ready():
@@ -66,6 +68,25 @@ func _ready():
 	descripcio = _text_ric(Vector2(COLS * (MIDA_CASELLA.x + 6), 90))
 	esquerra.add_child(descripcio)
 
+	# Barra ràpida: s'hi arrosseguen eines i objectes (de la fila d'eines o de la motxilla)
+	esquerra.add_child(_titol_seccio("Barra ràpida"))
+	var fila_barra := HBoxContainer.new()
+	fila_barra.add_theme_constant_override("separation", 3)
+	esquerra.add_child(fila_barra)
+	for i in BarraRapida.CASELLES:
+		var c := CasellaBarra.new(i)
+		c.es_pot_buidar = true
+		fila_barra.add_child(c)
+		caselles_barra.append(c)
+	var ajuda := Label.new()
+	ajuda.text = "Arrossega eines i objectes de la motxilla a les caselles · Clic dret: buidar"
+	ajuda.add_theme_font_size_override("font_size", 12)
+	ajuda.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9))
+	ajuda.autowrap_mode = TextServer.AUTOWRAP_WORD
+	ajuda.custom_minimum_size = Vector2(COLS * (MIDA_CASELLA.x + 6), 0)
+	esquerra.add_child(ajuda)
+	BarraRapida.canviada.connect(_actualitzar_barra)
+
 	# Dreta: estat de la partida
 	var dreta := VBoxContainer.new()
 	dreta.add_theme_constant_override("separation", 10)
@@ -79,6 +100,16 @@ func _ready():
 	text_missions = _text_ric(Vector2(400, 430))
 	text_missions.name = "Missions"
 	pestanyes.add_child(text_missions)
+	# Criatures domesticades: quina et segueix, noms i habilitats
+	var scroll := ScrollContainer.new()
+	scroll.name = "Criatures"
+	scroll.custom_minimum_size = Vector2(400, 430)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pestanyes.add_child(scroll)
+	llista_criatures = VBoxContainer.new()
+	llista_criatures.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	llista_criatures.add_theme_constant_override("separation", 8)
+	scroll.add_child(llista_criatures)
 
 func _titol_seccio(text: String) -> Label:
 	var l := Label.new()
@@ -114,7 +145,7 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func obrir():
-	if visible or not MenuPausa.en_partida() or GameState.en_dialeg or Mapa.visible:
+	if visible or not MenuPausa.en_partida() or GameState.en_dialeg or Mapa.visible or Bestiari.visible:
 		return
 	visible = true
 	Engine.time_scale = 1.0
@@ -122,6 +153,8 @@ func obrir():
 	_omplir_objectes()
 	_omplir_estat()
 	_omplir_missions()
+	_omplir_criatures()
+	_actualitzar_barra()
 
 func tancar():
 	visible = false
@@ -171,6 +204,15 @@ func _casella(id: String, quantitat: int) -> Button:
 	q.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	b.add_child(q)
 	b.pressed.connect(_mostrar_descripcio.bind(id))
+	# Els objectes que es poden fer servir (olives, vermut hipnòtic) s'arrosseguen a la barra
+	if BarraRapida.es_pot_posar(id):
+		b.set_drag_forwarding(func(_p):
+			var vista := Label.new()
+			vista.text = info.icona
+			vista.add_theme_font_size_override("font_size", 28)
+			b.set_drag_preview(vista)
+			return {"barra_rapida": id, "des_de": -1}, Callable(), Callable())
+		b.tooltip_text += " (arrossega'l a la barra ràpida)"
 	b.mouse_entered.connect(_mostrar_descripcio.bind(id))
 	return b
 
@@ -181,6 +223,33 @@ func _mostrar_descripcio(id: String):
 	descripcio.text = "[b]%s %s[/b]  ×%d\n%s" % [info.icona, info.nom, quantitat, info.descripcio]
 
 # ─────────────── Estat de la partida
+
+func _actualitzar_barra():
+	for c in caselles_barra:
+		c.actualitzar()
+
+func _omplir_criatures():
+	for f in llista_criatures.get_children():
+		f.queue_free()
+	if Criatures.col_leccio.is_empty():
+		var l := RichTextLabel.new()
+		l.bbcode_enabled = true
+		l.fit_content = true
+		l.custom_minimum_size = Vector2(380, 0)
+		l.add_theme_font_size_override("normal_font_size", 15)
+		l.text = "[color=#aaaaaa]Encara no has domesticat cap criatura.\n\nLlança [b]olives marinades[/b] (L) a prop de les herbívores i, mentre mengen, acosta't i prem F. A les carnívores, un [b]vermut hipnòtic[/b]. Totes dues coses es fan a la barrica.[/color]"
+		llista_criatures.add_child(l)
+		return
+	for d in Criatures.col_leccio:
+		if Criatures.especie(d.especie) != null:
+			llista_criatures.add_child(FitxaCriatura.crear(d.uid))
+	# Si canvies què fa una criatura, la llista es torna a fer
+	if not Criatures.col_leccio_canviada.is_connected(_refer_criatures):
+		Criatures.col_leccio_canviada.connect(_refer_criatures)
+
+func _refer_criatures():
+	if visible:
+		_omplir_criatures()
 
 func _omplir_missions():
 	var t := ""
@@ -245,7 +314,12 @@ func _omplir_estat():
 		t += "Avui encara no has obert (pots fins a les 20:00)\n"
 	else:
 		t += "Tancada fins demà\n"
-	t += "🍷 Vermuts disponibles: %d\n\n" % Barrica.vermuts_disponibles()
+	var estoc := []
+	for producte in Celler.SERVIBLES:
+		var n := Celler.estoc(producte)
+		if n > 0:
+			estoc.append("%s %d" % [CatalegObjectes.info(producte).icona, n])
+	t += "A les barriques: %s\n\n" % ("  ".join(estoc) if not estoc.is_empty() else "res a punt per servir")
 
 	# Hort
 	t += "[color=#ffcc8c][b]L'hort[/b][/color]\n" + _text_hort()

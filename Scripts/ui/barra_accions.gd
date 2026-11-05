@@ -1,8 +1,7 @@
 extends CanvasLayer
 class_name BarraAccions
-## Barra d'accions a baix al centre. Cada botó es pot fer servir amb la seva tecla o
-## clicant-lo amb el ratolí:
-##   ✨ mode combat · 💨 estocada · 🔥 bola de foc  |  🌱 plantar · 💧 regar · ⛏ llaurar
+## Barra d'accions a baix al centre: la barra ràpida (9 caselles, vegeu BarraRapida) i,
+## a la dreta, els botons de la motxilla, les habilitats, el mapa i el bestiari.
 ## A sobre surten el nom del botó (en passar-hi el ratolí), les instruccions del mode
 ## actiu i els avisos de les eines.
 
@@ -10,6 +9,7 @@ var jugador: Node
 var plantador: Plantador
 var regador: Regador
 var llaurador: Llaurador
+var llancador: Llancador
 
 var fila: HBoxContainer
 var label_info: Label
@@ -18,6 +18,8 @@ var tween_avis: Tween
 var nom_sobre := ""
 var botons := {}
 var a_punt := {}
+var caselles: Array[CasellaBarra] = []
+var progres_abans := {}
 
 func _ready():
 	fila = HBoxContainer.new()
@@ -32,23 +34,26 @@ func _ready():
 	fila.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	fila.offset_bottom = -6
 
-	_boto("combat", "✨", "mode_combat", Color(0.55, 0.85, 1.0), "Mode combat (clic: tall)", func(): jugador.toggle_mode_combat())
-	_boto("estocada", "💨", "", Color(0.6, 0.85, 1.0), "Estocada", func(): jugador._atac_magic("estocada", jugador._direccio_mirada()), "Dret")
-	_boto("foc", "🔥", "atac_magia", Color(1.0, 0.55, 0.15), "Bola de foc", func(): jugador.disparar_bola_foc(jugador._direccio_mirada()))
+	# Barra ràpida: 9 caselles configurables (1–9, rodeta o clic; Tab per a la roda)
+	for i in BarraRapida.CASELLES:
+		var c := CasellaBarra.new(i)
+		c.clicada.connect(func(index):
+			if GameState.pot_atacar():
+				BarraRapida.seleccionar(index))
+		c.ratoli_a_sobre.connect(func(es_sobre, nom): _on_ratoli_a_sobre(es_sobre, nom))
+		fila.add_child(c)
+		caselles.append(c)
+	BarraRapida.canviada.connect(func():
+		for c in caselles:
+			c.actualitzar())
 	var separador := Control.new()
 	separador.custom_minimum_size = Vector2(14, 0)
 	separador.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fila.add_child(separador)
-	_boto("plantar", "🌱", "plantar", Color(0.55, 0.95, 0.5), "Plantar (mantén P: triar cultiu)", func(): plantador.alternar())
-	_boto("regar", "💧", "regar", Color(0.45, 0.75, 1.0), "Regar", _alternar.bind(regador))
-	_boto("llaurar", "⛏", "llaurar", Color(0.85, 0.65, 0.35), "Llaurar", _alternar.bind(llaurador))
-	var separador2 := Control.new()
-	separador2.custom_minimum_size = Vector2(14, 0)
-	separador2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fila.add_child(separador2)
-	_boto("motxilla", "🎒", "inventari", Color(0.95, 0.8, 0.5), "Motxilla", func(): MenuInventari.obrir())
+	_boto("motxilla", "🎒", "inventari", Color(0.95, 0.8, 0.5), "Motxilla (configura la barra ràpida)", func(): MenuInventari.obrir())
 	_boto("habilitats", "🌟", "habilitats", Color(1.0, 0.85, 0.4), "Habilitats", func(): MenuHabilitats.obrir())
 	_boto("mapa", "🗺️", "mapa", Color(0.6, 0.85, 0.95), "Mapa", func(): Mapa.obrir())
+	_boto("bestiari", "📖", "bestiari", Color(0.95, 0.75, 0.55), "Bestiari", func(): Bestiari.obrir())
 
 	label_info = _label(11, Color(0.92, 0.95, 1.0))
 	add_child(label_info)
@@ -69,18 +74,34 @@ func _ready():
 	jugador.mana_insuficient.connect(func(): _mostrar_avis("No tens prou mana"))
 	jugador.magia_bloquejada.connect(func():
 		_mostrar_avis("Encara no saps llançar boles de foc (Habilitats → Màgia d'atac)")
-		botons.foc.sacsejar())
+		_sacsejar_eina("foc"))
 	Inventari.motxilla_plena.connect(func(_item): _mostrar_avis("La motxilla és plena (amplia-la a Mundà → Motxilla gran)"))
 	llaurador.avis.connect(_mostrar_avis)
 	EventBus.avis.connect(_mostrar_avis)
+	llancador.avis.connect(_mostrar_avis)
+	get_tree().current_scene.tanques.avis.connect(_mostrar_avis)
 	if jugador.has_signal("magia_no_disponible"):
-		jugador.magia_no_disponible.connect(func(): botons.foc.sacsejar())
+		jugador.magia_no_disponible.connect(func(): _sacsejar_eina("foc"))
 
-func _alternar(eina: Node):
-	if eina.actiu:
-		eina.sortir()
-	else:
-		eina.entrar()
+func _sacsejar_eina(id: String):
+	for i in BarraRapida.CASELLES:
+		if BarraRapida.accio(BarraRapida.caselles[i]) == id:
+			caselles[i].sacsejar()
+
+## Progrés (recàrrega) de cada eina de la barra
+func _progres(id: String) -> float:
+	match BarraRapida.accio(id):
+		"espasa":
+			return jugador.combat.progres_tall()
+		"foc":
+			return jugador.progres_magia() if Progressio.te("bola_foc") else 1.0
+		"regar":
+			return regador.progres()
+		"llaurar":
+			return llaurador.progres()
+		"olives_marinades", "vermut_hipnotic":
+			return llancador.progres()
+	return 1.0
 
 func _boto(clau: String, simbol: String, accio: String, color: Color, nom: String, callback: Callable, tecla_fixa := ""):
 	var tecla := tecla_fixa
@@ -108,15 +129,23 @@ func _process(_delta):
 	if not visible:
 		return
 	var en_combat: bool = jugador.estat == 1   # Estat.COMBAT
-	_actualitzar("combat", en_combat, jugador.combat.progres_tall())
-	_actualitzar("estocada", true, jugador.combat.progres_estocada())
-	_actualitzar("foc", Progressio.te("bola_foc"), jugador.progres_magia() if Progressio.te("bola_foc") else 1.0)
-	_actualitzar("plantar", plantador.actiu, 1.0)
-	_actualitzar("regar", regador.actiu, regador.progres())
-	_actualitzar("llaurar", llaurador.actiu, llaurador.progres())
+	var triada := BarraRapida.seleccionada()
+	for i in caselles.size():
+		var c := caselles[i]
+		var id: String = BarraRapida.caselles[i]
+		c.seleccionada = i == triada
+		var p := _progres(id)
+		if p >= 1.0 and progres_abans.get(i, 1.0) < 1.0 and BarraRapida.accio(id) != "espasa":
+			c.bategar()   # s'acaba de recarregar
+		progres_abans[i] = p
+		c.progres = p
+		if Engine.get_process_frames() % 15 == i:
+			c.actualitzar()   # quantitats i si està disponible
+		c.queue_redraw()
 	_actualitzar("motxilla", true, 1.0)
 	_actualitzar("habilitats", true, 1.0)
 	_actualitzar("mapa", true, 1.0)
+	_actualitzar("bestiari", true, 1.0)
 	# Si tens punts per gastar, el botó d'habilitats batega
 	if Progressio.punts > 0 and Engine.get_process_frames() % 120 == 0:
 		botons.habilitats.bategar()
@@ -129,12 +158,24 @@ func _process(_delta):
 		label_info.text = "" if plantador.roda_oberta else "Clic: plantar · Arrossega: àrea · Q/E: canviar · Clic dret: sortir"
 	elif regador.actiu:
 		label_info.text = "Clic: regar · Clic dret: sortir"
+	elif llancador.actiu:
+		var info := CatalegObjectes.info(llancador.objecte())
+		label_info.text = "%s %s: %d · Clic: llançar · Q/E: canviar · Clic dret: sortir" % [info.icona, info.nom, llancador.quantitat()]
 	elif llaurador.actiu:
 		label_info.text = "Clic: llaurar · Arrossega: àrea · Clic dret: sortir" if llaurador.pot_arrossegar() else "Clic: llaurar · Clic dret: sortir"
+	elif get_tree().current_scene.tanques.actiu:
+		var tq = get_tree().current_scene.tanques
+		label_info.text = "%s: %d · Clic (o arrossega): posar · Clic dret: treure · Tanca una zona per fer un corral" % [CatalegObjectes.info(tq.objecte).nom, Inventari.tenir(tq.objecte)]
+	elif BarraRapida.mode_eina == "talar":
+		label_info.text = "🪓 Clic sobre un arbre: talar · Clic dret: deixar-ho"
+	elif BarraRapida.mode_eina == "picar":
+		label_info.text = "⛏️ Clic sobre una roca: picar · Clic dret: deixar-ho"
+	elif BarraRapida.mode_foc:
+		label_info.text = "Clic: bola de foc · Clic dret: deixar-ho"
 	elif en_combat and not plantador.actiu:
 		label_info.text = "Clic: tall · Clic dret: estocada" + (" · E: bola de foc" if Progressio.te("bola_foc") else "")
 	else:
-		label_info.text = ""
+		label_info.text = "1–9: eines · Tab (mantenir): roda d'eines"
 
 func _actualitzar(clau: String, activa: bool, progres: float):
 	var b: IconaAccio = botons[clau]

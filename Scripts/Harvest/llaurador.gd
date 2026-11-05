@@ -251,6 +251,9 @@ func _llaurar_seleccio():
 
 func _convertir(info: Dictionary):
 	mon.llaurar_cella(info.cella)
+	# Si hi havia un punt d'excavació, l'aixada en desenterra el que hi ha
+	if "punts_excavacio" in mon and mon.punts_excavacio:
+		mon.punts_excavacio.excavar(info.cella)
 	Progressio.guanyar_xp("llaurar")
 	_terrossos(info.superficie)
 

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EspecieExtinta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/arqueologia/especie_extinta.gd" id="1_ext"]
+[ext_resource type="Script" path="res://Scripts/arqueologia/part_fossil.gd" id="2_part"]
+
+[sub_resource type="Resource" id="Part_closca"]
+script = ExtResource("2_part")
+id = "closca"
+nom = "Closca"
+raresa = 0
+
+[sub_resource type="Resource" id="Part_cap"]
+script = ExtResource("2_part")
+id = "cap"
+nom = "Cap"
+raresa = 1
+
+[resource]
+script = ExtResource("1_ext")
+id = "trilobit_moll"
+nom = "Trilobit de moll"
+descripcio = "Un petit artròpode marí que vivia als fons de la badia. És el fòssil més comú de l'illa."
+epoca = "Quan tot era mar"
+parts = Array[ExtResource("2_part")]([SubResource("Part_closca"), SubResource("Part_cap")])
+frequencia = 1.4
+habilitat_reviscuda = "Neteja l'aigua i fa créixer més ràpid els cultius de la vora."
+color = Color(0.75, 0.6, 0.45, 1)

@@ -2,6 +2,10 @@ extends CanvasLayer
 ## Comptador de rendiment (F3): fotogrames per segon, temps de cada fotograma (el pitjor
 ## dels últims segons), tics de física i resolució. Serveix per saber si les estrebades
 ## vénen del rendiment (el joc no arriba als Hz del monitor) o d'una altra cosa.
+##
+## Només en proves (executant des de l'editor): F4 dona un kit per provar la captura
+## de criatures i l'elaboració (olives, vermut hipnòtic, raïm, fibra) i desbloqueja
+## la bola de foc i la motxilla al màxim.
 
 var label: Label
 var temps_fotogrames: Array[float] = []
@@ -21,6 +25,28 @@ func _ready():
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F3:
 		visible = not visible
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F4 and OS.is_debug_build():
+		_kit_de_proves()
+
+func _kit_de_proves():
+	# Habilitats: la bola de foc i la motxilla al màxim
+	for id in ["bola_foc", "motxilla"]:
+		var h := ArbreHabilitats.habilitat(id)
+		if h:
+			Progressio.habilitats[id] = maxi(Progressio.rang(id), h.max)
+	Progressio._aplicar_efectes()
+	Progressio.habilitats_canviades.emit()
+	Progressio.guardar()
+	for objecte in [["olives_marinades", 10], ["vermut_hipnotic", 6], ["olives", 9], ["raim", 12], ["fibra", 8], ["vermut", 12], ["vermut_blanc", 6], ["tanca_fusta", 30], ["porta_tanca", 2], ["fusta", 15], ["pedra", 10], ["moneda_or", 2], ["fragments_fossil", 4]]:
+		Inventari.afegir(objecte[0], objecte[1], true)   # encara que la motxilla sigui plena
+	# I tots els plànols de la taula de fabricació
+	while Fabricacio.aprendre_planol_nou() != null:
+		pass
+	# I les barriques que fermenten, a punt
+	for c in Celler.barriques:
+		Celler.barriques[c].fi = Celler.ara()
+	Celler._canvi("")
+	EventBus.avis.emit("🧪 Kit de proves: bola de foc, motxilla al màxim, olives, vermut hipnòtic, raïm, vermuts i barriques a punt")
 
 func _process(delta):
 	temps_fotogrames.append(delta * 1000.0)

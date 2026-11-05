@@ -5,8 +5,12 @@ signal diners_canviats(diners: int)
 signal items_canviats
 signal motxilla_plena(item: String)
 
-## Quants tipus d'objecte diferents hi caben (l'habilitat "Motxilla gran" ho amplia)
-var max_espais := 8
+## Quants tipus d'objecte diferents hi caben (l'habilitat "Motxilla gran" ho amplia).
+## Les eines també hi ocupen un espai.
+var max_espais := 12
+
+## Les eines que té sempre el jugador (si no les té, se li donen en carregar)
+const EINES_INICIALS := ["eina_espasa", "eina_destral", "eina_pic", "eina_regadora", "eina_aixada"]
 
 const FITXER := "user://inventari.save"
 const VERSIO := 2
@@ -22,13 +26,17 @@ func _ready():
 		# Partida nova: per provar, comencem amb llavors i una mica de raïm
 		afegir("llavor_raim", 150)
 		afegir("raim", RAIM_INICIAL)
+	for eina in EINES_INICIALS:
+		if tenir(eina) <= 0:
+			afegir(eina, 1, true)
 
 func espais_ocupats() -> int:
 	return items.values().filter(func(q): return q > 0).size()
 
 ## Retorna false si l'objecte és nou i la motxilla ja és plena
-func afegir(item: String, quantitat: int = 1) -> bool:
-	if tenir(item) <= 0 and espais_ocupats() >= max_espais:
+## (`forcar`: hi entra igualment; per a les eines, que no es poden perdre)
+func afegir(item: String, quantitat: int = 1, forcar := false) -> bool:
+	if tenir(item) <= 0 and espais_ocupats() >= max_espais and not forcar:
 		motxilla_plena.emit(item)
 		return false
 	items[item] = items.get(item, 0) + quantitat
@@ -90,6 +98,10 @@ func carregar() -> bool:
 		for clau in items_desats:
 			items[clau] = int(items_desats[clau])   # el JSON ho torna com a float
 	diners = int(dades.get("diners", 0))
+	# El "vermut preparat" d'abans ara és vermut negre
+	if items.has("dosis_vermut"):
+		items["vermut"] = items.get("vermut", 0) + items["dosis_vermut"]
+		items.erase("dosis_vermut")
 	if int(dades.get("versio", 1)) < 2:
 		# Ara el vermut es fa amb raïm: les partides d'abans en reben una mica per començar
 		items["raim"] = items.get("raim", 0) + RAIM_INICIAL

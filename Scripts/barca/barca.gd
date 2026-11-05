@@ -25,8 +25,8 @@ class_name Barca
 @export var limit_mar := 62.0
 
 const ALCADA_COBERTA := 0.25
-## Seients: 0 = qui condueix (popa), 1 i 2 = companys (proa)
-const SEIENTS := [Vector3(0.0, ALCADA_COBERTA, 1.05), Vector3(-0.42, ALCADA_COBERTA, -0.55), Vector3(0.42, ALCADA_COBERTA, -0.55)]
+## Seients: 0 = qui condueix (popa), 1 i 2 = companys (proa), 3 = la criatura (a la punta)
+const SEIENTS := [Vector3(0.0, ALCADA_COBERTA, 1.05), Vector3(-0.42, ALCADA_COBERTA, -0.55), Vector3(0.42, ALCADA_COBERTA, -0.55), Vector3(0.0, ALCADA_COBERTA, -1.6)]
 ## Diferència entre els peus i l'origen del personatge
 const ALCADA_PEUS := 0.19
 const MEITAT_LLARG := 1.7   # per trobar el punt de la barca més proper al jugador

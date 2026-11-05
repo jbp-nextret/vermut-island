@@ -88,6 +88,20 @@ func _draw():
 						_text(font, p + Vector2(0, -9), mk.text, 13, Color(1, 1, 1, 0.9))
 					if mk.marca in ["!", "?"]:
 						_text(font, p + Vector2(10, 2), mk.marca, 20, Color(1.0, 0.85, 0.2))
+	# Punts d'excavació (amb la brúixola) i la taula de fabricació
+	for mk in mapa.marcadors:
+		var p := a_pantalla(mk.pos)
+		if mk.tipus == "tresor":
+			var color: Color = PartFossil.COLORS_RARESA[clampi(mk.raresa, 0, 2)]
+			var r: float = 4.0 + mk.raresa * 1.5
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r * 0.6, 0), p + Vector2(0, r), p + Vector2(-r * 0.6, 0)]), color)
+		elif mk.tipus == "taula" and mapa.explorat_a(mk.pos):
+			draw_circle(p, 5.0, Color(0.6, 0.4, 0.9))
+			draw_arc(p, 7.0, 0, TAU, 16, Color(0.85, 0.7, 1.0), 1.5)
+	# Criatures de cada illa (també a la boira: el "?" convida a anar-hi)
+	for mk in mapa.marcadors:
+		if mk.tipus == "criatures":
+			_criatures(a_pantalla(mk.pos), mk.especies)
 	# Objectius de missió: sempre (encara que no s'hagi explorat), per sobre de tot
 	for mk in mapa.marcadors:
 		if mk.tipus == "objectiu":
@@ -131,6 +145,25 @@ func _objectiu(p: Vector2, destacat_ara: bool):
 	draw_colored_polygon(rombe, Color(1.0, 0.82, 0.15))
 	rombe.append(rombe[0])
 	draw_polyline(rombe, Color(0.25, 0.15, 0.0), 1.5)
+
+func _criatures(p: Vector2, ids: Array):
+	const MIDA := 22.0
+	var font := ThemeDB.fallback_font
+	var inici := p - Vector2((ids.size() * (MIDA + 3.0) - 3.0) / 2.0, MIDA / 2.0)
+	for i in ids.size():
+		var e: EspecieCriatura = Criatures.especie(ids[i])
+		var r := Rect2(inici + Vector2(i * (MIDA + 3.0), 0), Vector2(MIDA, MIDA))
+		var c := r.get_center()
+		var vista := Criatures.vista(e.id)
+		draw_circle(c, MIDA * 0.62, Color(0, 0, 0, 0.55))
+		draw_circle(c, MIDA * 0.55, Color(0.95, 0.88, 0.72) if vista else Color(0.25, 0.22, 0.32))
+		if vista:
+			draw_texture_rect(e.textura(), r.grow(-2.0), false)
+			if Criatures.domesticada(e.id):
+				draw_arc(c, MIDA * 0.55, 0, TAU, 20, Color(1.0, 0.55, 0.7), 2.0)
+		else:
+			var amplada := font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+			draw_string(font, c + Vector2(-amplada / 2.0, 6.0), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1.0, 0.85, 0.3))
 
 func _casa(p: Vector2):
 	var c := Color(0.85, 0.45, 0.3)
