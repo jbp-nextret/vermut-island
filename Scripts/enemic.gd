@@ -204,6 +204,11 @@ func restaurar_aparenca():
 
 func morir():
 	Progressio.guanyar_xp("enemic" if vida_maxima >= 40 else "enemic_petit")
+	# Derrotat en pausa tàctica: botí extra
+	if Tactica.activa:
+		var monedes := 5 if vida_maxima < 40 else 12
+		Inventari.afegir_diners(monedes)
+		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.4, "+%d 🪙" % monedes, Color(1.0, 0.85, 0.4))
 	GestorOnades.enemic_mort(self)
 	mostrar_particules_mort()
 	queue_free()

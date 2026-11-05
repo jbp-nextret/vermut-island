@@ -19,6 +19,7 @@ const XP := {
 	"plantar": 2, "regar": 1, "collir": 5, "llaurar": 1,
 	"talar": 3, "picar": 3, "herba": 1,
 	"servir": 4, "obrir_vermuteria": 10,
+	"domesticar": 20, "excavar": 6, "fabricar": 2,
 }
 
 ## Un punt per a cada arbre (màgia d'atac, màgia útil i mundà), però es poden gastar on es vulgui
@@ -27,7 +28,7 @@ const PUNTS_PER_NIVELL := 3
 const VERSIO := 2
 
 const VIDA_BASE := 100
-const ESPAIS_BASE := 8
+const ESPAIS_BASE := 12
 
 var nivell := 1
 var xp := 0
@@ -45,7 +46,9 @@ static func xp_per_nivell(n: int) -> int:
 
 func guanyar_xp(motiu: String, multiplicador: float = 1.0) -> void:
 	accio_feta.emit(motiu, 1)
-	guanyar_xp_directa(roundi(XP.get(motiu, 0) * multiplicador), motiu)
+	# El son hi compta: descansat se n'aprèn més, cansat menys
+	var son: float = Descans.mult_xp() if has_node("/root/Descans") else 1.0
+	guanyar_xp_directa(roundi(XP.get(motiu, 0) * multiplicador * son), motiu)
 
 ## Experiència d'una quantitat concreta (p. ex. la recompensa d'una missió)
 func guanyar_xp_directa(quantitat: int, motiu: String) -> void:
@@ -68,7 +71,11 @@ func rang(id: String) -> int:
 
 func valor(id: String) -> float:
 	var h := ArbreHabilitats.habilitat(id)
-	return h.per_rang * rang(id) if h else 0.0
+	var total: float = h.per_rang * rang(id) if h else 0.0
+	# La criatura que et segueix també hi pot sumar (p. ex. el gat de moll, velocitat)
+	if has_node("/root/Criatures"):
+		total += get_node("/root/Criatures").bonus(id)
+	return total
 
 ## Si l'habilitat es pot fer servir (com a mínim un rang)
 func te(id: String) -> bool:
@@ -111,6 +118,9 @@ func _aplicar_efectes():
 	SalutJugador.vida_actual = mini(SalutJugador.vida_actual, SalutJugador.vida_maxima)
 	SalutJugador.emit_signal("vida_canviat", SalutJugador.vida_actual, SalutJugador.vida_maxima)
 	Inventari.max_espais = ESPAIS_BASE + roundi(valor("motxilla")) + (Grup.espais_extra() if has_node("/root/Grup") else 0)
+	# En aprendre la bola de foc, apareix el grimori a la motxilla (és l'eina per llançar-la)
+	if te("bola_foc") and Inventari.tenir("eina_grimori_foc") <= 0:
+		Inventari.afegir("eina_grimori_foc", 1, true)
 
 # ─────────────── Desar / carregar
 

@@ -32,6 +32,8 @@ var order := ""
 var wait_time := 0.0
 var propina := 0
 var multiplicador_propina := 1.0   # segons la decoració de la vermuteria
+var comanda_prevista := "vermut"    # la tria el GestorServei en entrar (segons l'estoc)
+var color_comanda := Color.WHITE
 var posicio_bombolla: Vector3
 
 func _ready() -> void:
@@ -91,9 +93,10 @@ func _change_state(new_state: State) -> void:
 			sprite.play("walking")
 		State.WAITING_ORDER:
 			sprite.play("idle")
-			order = product_icons.keys().pick_random()
-			order_icon.texture = product_icons[order]
-			order_icon.modulate = Color.WHITE
+			order = comanda_prevista
+			order_icon.texture = product_icons.get(order, product_icons["vermut"])
+			color_comanda = Celler.color(order)
+			order_icon.modulate = color_comanda
 			wait_time = 0.0
 			_mostrar_bombolla()
 			order_placed.emit(self, order)
@@ -114,7 +117,7 @@ func _change_state(new_state: State) -> void:
 func _actualitzar_paciencia() -> void:
 	var r := clampf(wait_time / patience, 0.0, 1.0)
 	# La icona es va tornant vermella...
-	order_icon.modulate = Color.WHITE.lerp(COLOR_ENFADAT, r)
+	order_icon.modulate = color_comanda.lerp(COLOR_ENFADAT, r)
 	# ...i l'últim quart de la paciència la bombolla tremola
 	if r > 0.75:
 		var forca := (r - 0.75) * 0.3
@@ -158,7 +161,7 @@ func _acabar_de_beure() -> void:
 
 func _pagar() -> void:
 	Progressio.guanyar_xp("servir")
-	var quantitat := preu_base + propina
+	var quantitat := Celler.preu(order) * preu_base / 10 + propina
 	Inventari.afegir_diners(quantitat)
 	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.4, "+%d" % quantitat, COLOR_DINERS)
 	ha_pagat.emit(self, quantitat)
@@ -180,7 +183,7 @@ func pot_interactuar(jugador: InteraccioJugador) -> bool:
 		and is_instance_valid(seat) and seat.es_utilitzable()   # sense taula no es pot servir
 
 func text_interaccio(_jugador: InteraccioJugador) -> String:
-	return "Servir " + order
+	return "Servir " + CatalegObjectes.info(order).nom.to_lower()
 
 func interactuar(jugador: InteraccioJugador) -> void:
 	var got: Drink = jugador.deixar_objecte()

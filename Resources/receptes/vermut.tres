@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Recepta" format=3]
+
+[ext_resource type="Script" path="res://Scripts/fabricacio/recepta.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = "vermut"
+resultat = "vermut"
+quantitat = 6
+ingredients = Dictionary[String, int]({"raim": 2})
+lloc = "barrica"
+categoria = "Begudes"
+planol = false
+hores = 24.0
+ordre = 1

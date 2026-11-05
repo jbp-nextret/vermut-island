@@ -11,6 +11,11 @@ var blocs_plantables = ["cube-top_001","cube-top_002","cube-top_003","cube-top_0
 # El mode plantar (roda, cursor, vista prèvia, àrees) el porta el Plantador
 var plantador: Plantador
 var recolector: Recolector
+var llancador: Llancador
+var generador_criatures: GeneradorCriatures
+var punts_excavacio: PuntsExcavacio
+var tanques: Tanques
+const POSICIO_TAULA := Vector3(1.5, 1.0, -15.0)
 var generador_illes: GeneradorIlles
 var regenerador: RegeneradorRecursos
 var regador: Regador
@@ -66,6 +71,22 @@ func _ready():
 		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
 	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
 	add_child(regenerador)
+	# Criatures salvatges: a les illetes i alguna de mansa a la illa principal
+	generador_criatures = GeneradorCriatures.new()
+	generador_criatures.name = "GeneradorCriatures"
+	generador_criatures.configurar(self, $GridMap)
+	for i in generador_illes.illes.size():
+		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "illetes")
+	generador_criatures.afegir_zona("Illa principal", _celles_herba_principals(), GeneradorCriatures.A_LA_PRINCIPAL, "principal")
+	add_child(generador_criatures)
+	# Arqueologia: marques a terra on hi ha fòssils o tresors (es desenterren llaurant)
+	punts_excavacio = PuntsExcavacio.new()
+	punts_excavacio.name = "PuntsExcavacio"
+	punts_excavacio.configurar(self, $GridMap)
+	for i in generador_illes.illes.size():
+		punts_excavacio.afegir_zona(generador_illes.illes[i].herba, PuntsExcavacio.PER_ILLETA, "illetes")
+	punts_excavacio.afegir_zona(_celles_herba_principals(), PuntsExcavacio.A_LA_PRINCIPAL, "principal")
+	add_child(punts_excavacio)
 
 	recolector = Recolector.new()
 	recolector.name = "Recolector"
@@ -98,16 +119,31 @@ func _ready():
 	llaurador.name = "Llaurador"
 	llaurador.configurar(self, plantador, $Personatge)
 	add_child(llaurador)
-	# Només un mode d'eina alhora: plantar, regar o llaurar
-	for eina in [plantador, regador, llaurador]:
+	# La taula de fabricació màgica, a prop de casa
+	var taula := TaulaFabricacio.new()
+	taula.name = "TaulaFabricacio"
+	taula.position = POSICIO_TAULA
+	add_child(taula)
+	# Tanques de fusta (en tancar una zona, es fa un corral)
+	tanques = Tanques.new()
+	tanques.name = "Tanques"
+	tanques.configurar(self, $GridMap, plantador, $Personatge)
+	add_child(tanques)
+	llancador = Llancador.new()
+	llancador.name = "Llancador"
+	llancador.configurar($Personatge)
+	add_child(llancador)
+	# Només un mode d'eina alhora: plantar, regar, llaurar o llançar
+	for eina in [plantador, regador, llaurador, llancador, tanques]:
 		eina.mode_canviat.connect(func(actiu): if actiu: _nomes_una_eina(eina))
 
-	recolector.eines_actives = [plantador, regador, llaurador]
+	recolector.eines_actives = [plantador, regador, llaurador, llancador, tanques]
 	var barra := BarraAccions.new()
 	barra.jugador = $Personatge
 	barra.plantador = plantador
 	barra.regador = regador
 	barra.llaurador = llaurador
+	barra.llancador = llancador
 	add_child(barra)
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
@@ -264,6 +300,15 @@ func nivell_aigua() -> float:
 ## Hi ha cultius, terra llaurada o la zona de l'hort a menys de `radi`? (els recursos no hi
 ## tornen a sortir, per no ficar-se al mig dels camps)
 func zona_de_conreu_a_prop(posicio: Vector3, radi: float) -> bool:
+	# La taula de fabricació, les tanques i els corrals també es mantenen lliures
+	for taula in get_tree().get_nodes_in_group("taula_fabricacio"):
+		if taula.ocupa(posicio, radi):
+			return true
+	if tanques and tanques.es_tanca(posicio):
+		return true
+	for corral in get_tree().get_nodes_in_group("corral"):
+		if corral.ocupa(posicio, radi):
+			return true
 	for c in get_tree().get_nodes_in_group("cultius"):
 		if Vector2(c.global_position.x - posicio.x, c.global_position.z - posicio.z).length() < radi:
 			return true
@@ -313,7 +358,7 @@ func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min:
 
 ## En entrar en un mode d'eina, surt dels altres
 func _nomes_una_eina(eina: Node) -> void:
-	for altra in [plantador, regador, llaurador]:
+	for altra in [plantador, regador, llaurador, llancador, tanques]:
 		if altra != eina and altra.actiu:
 			altra.sortir()
 
