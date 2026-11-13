@@ -105,6 +105,8 @@ func crear(tipus: int, cella: Vector3i, etapa: int, dia_etapa: int, zona: int) -
 			recurs = visual.get_node("Recurs")
 		_:
 			var model := model_arbre if tipus == RecursNatural.Tipus.ARBRE else model_herba
+			if model == null:
+				return null
 			visual = model.duplicate()
 			# A la mateixa alçada sobre el terra que el model de l'escena
 			var alcada_model: float = model.get_meta("alcada_sobre_terra", 0.0)

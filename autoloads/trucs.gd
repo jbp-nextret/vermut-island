@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Consola de trucs per provar el joc (només executant des de l'editor o en compilacions
-## de depuració). S'obre i es tanca amb la tecla º (la de sota d'Esc) o F10.
+## de depuració). S'obre i es tanca amb la tecla º (la de sota d'Esc).
 ## Escriu `ajuda` per veure les comandes. Tab completa, ↑/↓ recorren l'historial.
 ## Mentre és oberta, el joc s'atura.
 
@@ -92,7 +92,7 @@ func _input(event: InputEvent):
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var k := event as InputEventKey
-	if k.physical_keycode == KEY_QUOTELEFT or k.physical_keycode == KEY_F10:
+	if k.physical_keycode == KEY_QUOTELEFT:
 		get_viewport().set_input_as_handled()
 		alternar()
 	elif visible and k.physical_keycode == KEY_ESCAPE:

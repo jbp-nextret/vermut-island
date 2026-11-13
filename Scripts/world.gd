@@ -62,12 +62,14 @@ func _ready():
 	# Recursos que surten sols cada dia (a les illetes i, menys, a l'illa principal)
 	regenerador = RegeneradorRecursos.new()
 	regenerador.name = "RegeneradorRecursos"
-	var model_arbre := get_node_or_null("Tree1") as Node3D
+	# L'arbre és el model 3D (no cal que n'hi hagi cap a l'escena); l'origen és a terra
+	var model_arbre := Arbre3D.new()
+	model_arbre.set_meta("alcada_sobre_terra", 0.0)
 	var model_herba := get_node_or_null("Grass1") as Node3D
-	for model in [model_arbre, model_herba]:
-		if model:
-			model.set_meta("alcada_sobre_terra", model.global_position.y - _terra_sota(model.global_position).y)
+	if model_herba:
+		model_herba.set_meta("alcada_sobre_terra", model_herba.global_position.y - _terra_sota(model_herba.global_position).y)
 	regenerador.configurar(self, $GridMap, model_arbre, model_herba)
+	model_arbre.free()
 	for i in generador_illes.illes.size():
 		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
 	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)

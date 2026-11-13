@@ -5,7 +5,7 @@ extends CanvasLayer
 ##
 ## Només en proves (executant des de l'editor): F4 dona un kit per provar la captura
 ## de criatures i l'elaboració (olives, vermut hipnòtic, raïm, fibra) i desbloqueja
-## la bola de foc i la motxilla al màxim. La resta de trucs són a la consola (º o F10,
+## la bola de foc i la motxilla al màxim. La resta de trucs són a la consola (º,
 ## autoloads/trucs.gd).
 
 var label: Label
