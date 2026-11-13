@@ -3,6 +3,7 @@ shader_type spatial;
 //  - vora fosca al voltant de les siluetes (objectes, personatges i desnivells del terreny)
 //  - gradació de color suau i una vinyeta als costats
 //  - posterització amb dithering ordenat, per donar-li un aire més de pixel art
+//  - ombres de núvols que passen pel terra (les controla Ambient: `ombra_nuvols`)
 render_mode unshaded, depth_draw_never, depth_test_disabled, cull_disabled, fog_disabled;
 
 uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
@@ -18,6 +19,10 @@ uniform vec3 tint : source_color = vec3(1.0, 0.99, 0.96);   // un pèl càlid
 // Els colors molt saturats (el verd fluorescent de l'herba al sol) es suavitzen: 0 = res
 uniform float suavitzar_saturats : hint_range(0.0, 1.0) = 0.35;
 uniform float exposicio : hint_range(0.5, 1.5) = 0.97;
+// Ombres de núvols: com de fosques (0 = cap), on són (es van movent amb el vent) i mida
+uniform float ombra_nuvols = 0.0;
+uniform vec2 desplacament_nuvols = vec2(0.0);
+uniform float mida_nuvols = 9.0;
 uniform float vinyeta : hint_range(0.0, 1.0) = 0.12;
 // Nivells de color per canal (0 = sense posterització)
 uniform float nivells_color = 24.0;
@@ -45,6 +50,29 @@ float profunditat(vec2 uv, mat4 inv_projeccio) {
 	return -vista.z;
 }
 
+// La posició (a l'espai de la càmera) del que es veu en aquest punt de la pantalla
+vec3 posicio_vista(vec2 uv, mat4 inv_projeccio) {
+	float d = texture(DEPTH_TEXTURE, uv).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	vec3 ndc = vec3(uv, d) * 2.0 - 1.0;
+#else
+	vec3 ndc = vec3(uv * 2.0 - 1.0, d);
+#endif
+	vec4 vista = inv_projeccio * vec4(ndc, 1.0);
+	return vista.xyz / vista.w;
+}
+
+float soroll_valor(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);
+	float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
+	float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+	float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	vec2 pixel = 1.0 / VIEWPORT_SIZE;
@@ -61,6 +89,13 @@ void fragment() {
 	}
 
 	vec3 c = texture(SCREEN_TEXTURE, uv).rgb;
+	// Ombres de núvols: soroll en el pla del terra (on hi ha alguna cosa, no al cel)
+	if (ombra_nuvols > 0.001 && texture(DEPTH_TEXTURE, uv).r < 0.9999) {
+		vec3 mon = (INV_VIEW_MATRIX * vec4(posicio_vista(uv, INV_PROJECTION_MATRIX), 1.0)).xyz;
+		vec2 p = (mon.xz - desplacament_nuvols) / mida_nuvols;
+		float n = soroll_valor(p) * 0.65 + soroll_valor(p * 2.3 + 7.0) * 0.35;
+		c *= 1.0 - ombra_nuvols * smoothstep(0.48, 0.62, n);
+	}
 	float lluminancia = dot(c, vec3(0.299, 0.587, 0.114));
 	c = mix(vec3(lluminancia), c, saturacio);
 	// Com més saturat és un color, més se li treu (els poc saturats queden igual)

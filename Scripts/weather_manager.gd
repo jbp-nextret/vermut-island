@@ -43,6 +43,9 @@ var fulles: GPUParticles3D
 
 ## Des de fora: el flaix del llamp (el llegeix el cicle de dia i nit)
 var flaix := 0.0
+## El vent d'ara (el mateix que van als shaders), per a qui el necessiti (Ambient)
+var direccio_vent := Vector2.RIGHT
+var forca_vent := 0.0
 
 func _ready():
 	jugador = get_tree().get_first_node_in_group("player")
@@ -69,6 +72,8 @@ func _process(delta):
 	RenderingServer.global_shader_parameter_set("wind_strength", forca)
 	RenderingServer.global_shader_parameter_set("wind_speed", wind_speed * (1.0 + Meteorologia.vent * 4.0))
 	RenderingServer.global_shader_parameter_set("wind_direction", direccio)
+	direccio_vent = direccio
+	forca_vent = forca
 
 	_actualitzar_pluja(direccio, forca)
 	_actualitzar_fulles(direccio, forca)

@@ -69,6 +69,10 @@ func _ready():
 	if model_herba:
 		model_herba.set_meta("alcada_sobre_terra", model_herba.global_position.y - _terra_sota(model_herba.global_position).y)
 	regenerador.configurar(self, $GridMap, model_arbre, model_herba)
+	# Pol·len, papallones, cuques de llum, raigs de sol i ombres de núvols
+	var ambient := Ambient.new()
+	ambient.name = "Ambient"
+	add_child(ambient)
 	model_arbre.free()
 	for i in generador_illes.illes.size():
 		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)

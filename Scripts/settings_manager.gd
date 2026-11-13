@@ -17,6 +17,7 @@ const PER_DEFECTE := {
 	"sacseig": 1.0,
 	"suavitat_camera": 0.25,   # 0 = enganxada al personatge, 1 = molt suau
 	"particules_meteo": true,
+	"efectes_ambient": true,
 	# Joc
 	"numeros_dany": true,
 	"boles_guiades": true,
