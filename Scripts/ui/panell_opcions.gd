@@ -84,6 +84,14 @@ func _pestanya_joc():
 	_interruptor(l, "Números de dany", "numeros_dany")
 	_interruptor(l, "Boles de foc guiades cap a l'enemic apuntat", "boles_guiades")
 	_interruptor(l, "Ajudes de controls a la pantalla", "ajudes")
+	var titol := Label.new()
+	titol.text = "Textos a la pantalla"
+	titol.add_theme_color_override("font_color", Color(1.0, 0.85, 0.55))
+	l.add_child(titol)
+	_interruptor(l, "Noms sobre criatures i personatges", "noms_sobre")
+	_interruptor(l, "Indicacions en passar per sobre d'arbres i roques (\"Cal la destral\")", "indicacions_eines")
+	_interruptor(l, "Textos que suren (\"+3 fusta\", \"+5 XP\"...)", "textos_flotants")
+	_interruptor(l, "Avisos de baix (\"Estàs cansat\", \"Nova criatura\"...)", "avisos")
 
 func _pestanya_controls():
 	var l := _pestanya("Controls")

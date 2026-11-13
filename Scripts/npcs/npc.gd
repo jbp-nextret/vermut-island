@@ -175,7 +175,7 @@ func _process(_delta):
 	marcador.visible = not m.is_empty() and Converses.npc_actual != self
 	# El nom surt quan el jugador és a prop
 	var jugador := _jugador()
-	etiqueta_nom.visible = jugador != null and _pla(jugador.global_position - global_position).length() < 4.0 and Converses.npc_actual != self and not marcador.visible
+	etiqueta_nom.visible = SettingsManager.valor("noms_sobre") and jugador != null and _pla(jugador.global_position - global_position).length() < 4.0 and Converses.npc_actual != self and not marcador.visible
 
 func _canviar_estat(nou: Estat):
 	estat = nou

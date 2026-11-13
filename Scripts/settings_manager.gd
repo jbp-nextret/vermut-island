@@ -22,6 +22,11 @@ const PER_DEFECTE := {
 	"numeros_dany": true,
 	"boles_guiades": true,
 	"ajudes": true,
+	# Textos a la pantalla (per a un joc més net)
+	"noms_sobre": true,          # noms de criatures i personatges (quan hi ets a prop)
+	"indicacions_eines": true,   # "🪓 Talar", "Cal la destral" en passar per sobre d'un arbre o roca
+	"textos_flotants": true,     # "+3 🪵", "+5 XP", "💫"...
+	"avisos": true,              # els missatges de baix ("Estàs cansat", "Nova criatura"...)
 	# So (0..1)
 	"volum_general": 0.8,
 	"volum_musica": 0.7,

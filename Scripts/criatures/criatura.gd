@@ -325,7 +325,7 @@ func prendre_dany(quantitat: int, origen: Vector3 = Vector3.INF):
 	flash = 0.2
 	barra_vida.mostrar(vida, vida_maxima)
 	if SettingsManager.valor("numeros_dany"):
-		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.9, str(quantitat), Color.WHITE)
+		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.9, str(quantitat), Color.WHITE, true)
 	if origen.is_finite():
 		var lluny := _pla(global_position - origen).normalized()
 		velocity += lluny * 5.0 + Vector3.UP * 2.0
@@ -1012,4 +1012,4 @@ func _process(delta):
 	# La primera vegada que te la mires de prop, entra al bestiari
 	if not domesticada and jugador and not Criatures.vista(especie.id) and _pla(jugador.global_position - global_position).length() < 9.0:
 		Criatures.veure(especie.id)
-	etiqueta.visible = estat != Estat.DOMESTICANT and jugador != null and _pla(jugador.global_position - global_position).length() < 4.0 and not icona.visible
+	etiqueta.visible = SettingsManager.valor("noms_sobre") and estat != Estat.DOMESTICANT and jugador != null and _pla(jugador.global_position - global_position).length() < 4.0 and not icona.visible

@@ -1,8 +1,11 @@
 extends Label3D
 class_name TextFlotant
 ## Text 3D que puja i s'esvaeix ("+12", "Grr!"...).
+## L'opció "textos_flotants" els amaga (`sempre`: els números de dany, que tenen la seva).
 
-static func mostrar(pare: Node, posicio: Vector3, text_mostrar: String, color := Color.WHITE) -> void:
+static func mostrar(pare: Node, posicio: Vector3, text_mostrar: String, color := Color.WHITE, sempre := false) -> void:
+	if not sempre and not SettingsManager.valor("textos_flotants"):
+		return
 	var t := TextFlotant.new()
 	t.text = text_mostrar
 	t.modulate = color

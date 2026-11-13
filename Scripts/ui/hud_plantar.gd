@@ -161,6 +161,8 @@ func _mostrar_tira(index: int, direccio: int):
 	bot.tween_property(panell, "scale", Vector2.ONE, 0.12)
 
 func _mostrar_avis(text: String):
+	if not SettingsManager.valor("avisos"):
+		return
 	label_avis.text = text
 	if tween_avis:
 		tween_avis.kill()

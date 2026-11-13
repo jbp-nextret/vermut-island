@@ -187,6 +187,8 @@ func _actualitzar(clau: String, activa: bool, progres: float):
 	b.queue_redraw()
 
 func _mostrar_avis(text: String):
+	if not SettingsManager.valor("avisos"):
+		return
 	label_avis.text = text
 	if tween_avis:
 		tween_avis.kill()

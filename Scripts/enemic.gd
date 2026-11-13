@@ -179,7 +179,7 @@ func prendre_dany(quantitat: int, origen: Vector3 = Vector3.INF):
 		return
 	vida_actual -= quantitat
 	if SettingsManager.valor("numeros_dany"):
-		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.8, str(quantitat), Color(1, 0.95, 0.6) if quantitat >= 30 else Color.WHITE)
+		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.8, str(quantitat), Color(1, 0.95, 0.6) if quantitat >= 30 else Color.WHITE, true)
 	if origen.is_finite():
 		var lluny := global_position - origen
 		lluny.y = 0

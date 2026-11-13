@@ -30,7 +30,7 @@ func _ready():
 func _process(delta):
 	temps_des_del_cop += delta
 	recurs_sota_ratoli = _recurs_sota_ratoli() if _pot_recollectar() else null
-	etiqueta.visible = recurs_sota_ratoli != null
+	etiqueta.visible = recurs_sota_ratoli != null and SettingsManager.valor("indicacions_eines")
 	if recurs_sota_ratoli:
 		var a_labast := _a_labast(recurs_sota_ratoli)
 		var eina_ok := _te_eina(recurs_sota_ratoli)
