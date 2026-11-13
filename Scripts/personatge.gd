@@ -195,7 +195,7 @@ func _physics_process(delta):
 	if direction.length() > 0:
 		direction = direction.normalized()
 		direction = direction.rotated(Vector3.UP, angle_camera())
-	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat")) * Descans.mult_velocitat()
+	var current_speed = (SPRINT_SPEED if Input.is_action_pressed("sprint") else SPEED) * (1.0 + Progressio.valor("velocitat")) * Descans.mult_velocitat() * Trucs.velocitat_jugador
 	if profunditat_aigua() > 0.4:
 		current_speed *= ALENTIMENT_AIGUA
 	velocity.x = direction.x * current_speed

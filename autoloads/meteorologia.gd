@@ -21,6 +21,7 @@ var nuvols := 0.0       # 0..1 quant enfosqueix
 var boira := 0.0        # 0..1
 var vent := 0.05
 var es_tempesta := false
+var forcat := -1         # per provar: un Tipus que es manté tot el dia (-1: el que toqui)
 
 func _process(delta):
 	var o := objectiu(GestorTemps.dia_actual, GestorTemps.hora_actual)
@@ -54,6 +55,8 @@ func temps_del_dia(dia: int) -> Dictionary:
 ## Els valors cap on ha d'anar el temps ara mateix
 func objectiu(dia: int, hora: float) -> Dictionary:
 	var d := temps_del_dia(dia)
+	if forcat >= 0:   # la consola de trucs (meteo)
+		d = {"tipus": forcat, "inici": 0.0, "fi": 24.0}
 	var o := {"tipus": d.tipus, "pluja": 0.0, "nuvols": 0.0, "boira": 0.0, "vent": VENT[d.tipus], "tempesta": false}
 	match d.tipus:
 		Tipus.ENNUVOLAT:
