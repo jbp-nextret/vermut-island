@@ -43,8 +43,9 @@ func _ready():
 	GestorPartida.registrar_mundo(self)
 	# La casa i els arbres es tornen semitransparents quan tapen el personatge
 	get_node("Casa").add_to_group("ocultables")
+	_arbres_3d()
 	for node in get_children():
-		if node is Sprite3D and node.name.begins_with("Tree"):
+		if node is Arbre3D:
 			node.add_to_group("ocultables")
 	# Illetes al voltant de l'illa principal (sempre les mateixes per a la mateixa llavor)
 	generador_illes = GeneradorIlles.new()
@@ -54,7 +55,7 @@ func _ready():
 
 	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
 	for node in get_children():
-		if node is Sprite3D and node.name.begins_with("Tree"):
+		if node is Arbre3D:
 			_afegir_recurs(node, RecursNatural.Tipus.ARBRE, 3, "fusta", 2, 4, 3, "talar")
 		elif node is Sprite3D and node.name.begins_with("Grass"):
 			_afegir_recurs(node, RecursNatural.Tipus.HERBA, 1, "fibra", 1, 2, 1, "herba")
@@ -343,6 +344,20 @@ func _retirar_recursos_en_conflicte():
 	for r in get_tree().get_nodes_in_group("recursos"):
 		if r.disponible() and r.conreu_a_prop():
 			r.retirar()
+
+## Els arbres de l'escena (sprites provisionals "Tree*") es canvien pel model 3D, al
+## mateix lloc i amb el mateix nom (perquè el desat de recursos talats segueixi valent)
+func _arbres_3d():
+	for node in get_children():
+		if node is Sprite3D and node.name.begins_with("Tree"):
+			var nom := node.name
+			var terra := _terra_sota(node.global_position)
+			remove_child(node)
+			node.free()
+			var arbre := Arbre3D.new()
+			arbre.name = nom
+			add_child(arbre)
+			arbre.global_position = terra
 
 func _afegir_recurs(node: Node3D, tipus: int, cops: int, objecte: String, q_min: int, q_max: int, dies: int, xp: String):
 	var r := RecursNatural.new()

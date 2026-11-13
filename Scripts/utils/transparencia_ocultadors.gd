@@ -41,6 +41,10 @@ func _process(delta):
 			continue
 		actual = move_toward(actual, objectiu, VELOCITAT * delta)
 		transparencies[objecte] = actual
+		# Els arbres 3D ho fan amb el seu shader (un tramat de píxels)
+		if objecte.has_method("posar_opacitat"):
+			objecte.posar_opacitat(1.0 - actual)
+			continue
 		for m in _malles(objecte):
 			_aplicar(m, actual)
 
