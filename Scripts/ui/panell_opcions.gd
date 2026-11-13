@@ -73,6 +73,7 @@ func _pestanya_grafics():
 	_interruptor(l, "Sincronització vertical (VSync)", "vsync")
 	_interruptor(l, "Postprocessat (F10)", "postprocessat")
 	_interruptor(l, "Vores al voltant dels objectes", "vores")
+	_seleccio(l, "Resolució del món", "resolucio_pixel", [[0, "Nativa"], [540, "540 px"], [480, "480 px"], [360, "360 px (per defecte)"], [270, "270 px"], [180, "180 px"]])
 	_interruptor(l, "Pluja i partícules del temps", "particules_meteo")
 	_control_lliscant(l, "Sacseig de càmera", "sacseig")
 	_control_lliscant(l, "Suavitat de la càmera", "suavitat_camera")
@@ -113,6 +114,26 @@ func _interruptor(pare: Control, text: String, clau: String):
 	c.toggled.connect(func(actiu): SettingsManager.canviar(clau, actiu))
 	c.set_meta("clau", clau)
 	pare.add_child(c)
+
+## Un desplegable: opcions = [[valor, text], ...]
+func _seleccio(pare: Control, text: String, clau: String, opcions: Array):
+	var fila := HBoxContainer.new()
+	fila.add_theme_constant_override("separation", 12)
+	var nom := Label.new()
+	nom.text = text
+	nom.custom_minimum_size = Vector2(190, 0)
+	fila.add_child(nom)
+	var o := OptionButton.new()
+	o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for i in opcions.size():
+		o.add_item(opcions[i][1], i)
+		o.set_item_metadata(i, opcions[i][0])
+		if opcions[i][0] == SettingsManager.valor(clau):
+			o.select(i)
+	o.item_selected.connect(func(i): SettingsManager.canviar(clau, o.get_item_metadata(i)))
+	o.set_meta("clau", clau)
+	fila.add_child(o)
+	pare.add_child(fila)
 
 func _control_lliscant(pare: Control, text: String, clau: String):
 	var fila := HBoxContainer.new()
@@ -174,5 +195,9 @@ func _restaurar():
 			node.set_pressed_no_signal(SettingsManager.valor(clau))
 		elif node is HSlider:
 			node.value = SettingsManager.valor(clau)
+		elif node is OptionButton:
+			for i in node.item_count:
+				if node.get_item_metadata(i) == SettingsManager.valor(clau):
+					node.select(i)
 	for accio in botons_tecles:
 		botons_tecles[accio].text = SettingsManager.tecla_de(accio)

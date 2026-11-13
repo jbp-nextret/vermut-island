@@ -12,13 +12,19 @@ uniform vec4 color_vora : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float intensitat_vora : hint_range(0.0, 1.0) = 0.75;
 // Quanta diferència de profunditat (en unitats del món) fa falta perquè hi hagi vora
 uniform float llindar_profunditat = 0.1;
-uniform float saturacio : hint_range(0.0, 2.0) = 0.95;
-uniform float contrast : hint_range(0.5, 1.5) = 1.04;
-uniform vec3 tint : source_color = vec3(1.0, 0.98, 0.94);   // un pèl càlid
-uniform float vinyeta : hint_range(0.0, 1.0) = 0.3;
+uniform float saturacio : hint_range(0.0, 2.0) = 1.0;
+uniform float contrast : hint_range(0.5, 1.5) = 1.05;
+uniform vec3 tint : source_color = vec3(1.0, 0.99, 0.96);   // un pèl càlid
+// Els colors molt saturats (el verd fluorescent de l'herba al sol) es suavitzen: 0 = res
+uniform float suavitzar_saturats : hint_range(0.0, 1.0) = 0.35;
+uniform float exposicio : hint_range(0.5, 1.5) = 0.97;
+uniform float vinyeta : hint_range(0.0, 1.0) = 0.12;
 // Nivells de color per canal (0 = sense posterització)
-uniform float nivells_color = 32.0;
-uniform float dithering : hint_range(0.0, 1.0) = 0.5;
+uniform float nivells_color = 24.0;
+uniform float dithering : hint_range(0.0, 1.0) = 0.25;
+// La vora: 0 = del color `color_vora`; 1 = el color de sota enfosquit (més suau)
+uniform float vora_del_color : hint_range(0.0, 1.0) = 1.0;
+uniform float enfosquiment_vora : hint_range(0.0, 1.0) = 0.55;
 
 const float BAYER[16] = float[](0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0,
                                 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0);
@@ -40,22 +46,27 @@ float profunditat(vec2 uv, mat4 inv_projeccio) {
 }
 
 void fragment() {
+	vec2 uv = SCREEN_UV;
 	vec2 pixel = 1.0 / VIEWPORT_SIZE;
-	float d = profunditat(SCREEN_UV, INV_PROJECTION_MATRIX);
+	float d = profunditat(uv, INV_PROJECTION_MATRIX);
 
 	// Vora: algun veí és clarament més a prop -> som just fora d'una silueta
 	float vora = 0.0;
 	vec2 veins[4] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
 	for (int i = 0; i < 4; i++) {
-		float dv = profunditat(SCREEN_UV + veins[i] * pixel, INV_PROJECTION_MATRIX);
+		float dv = profunditat(uv + veins[i] * pixel, INV_PROJECTION_MATRIX);
 		if (d - dv > llindar_profunditat) {
 			vora = 1.0;
 		}
 	}
 
-	vec3 c = texture(SCREEN_TEXTURE, SCREEN_UV).rgb;
+	vec3 c = texture(SCREEN_TEXTURE, uv).rgb;
 	float lluminancia = dot(c, vec3(0.299, 0.587, 0.114));
 	c = mix(vec3(lluminancia), c, saturacio);
+	// Com més saturat és un color, més se li treu (els poc saturats queden igual)
+	float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
+	c = mix(vec3(lluminancia), c, 1.0 - suavitzar_saturats * smoothstep(0.25, 0.9, sat));
+	c *= exposicio;
 	c = (c - 0.5) * contrast + 0.5;
 	c *= tint;
 	// Vinyeta: els costats una mica més foscos
@@ -68,5 +79,7 @@ void fragment() {
 		c = floor(c * nivells_color + 0.5 + soroll * dithering) / nivells_color;
 	}
 
-	ALBEDO = mix(clamp(c, 0.0, 1.0), color_vora.rgb, vora * intensitat_vora);
+	c = clamp(c, 0.0, 1.0);
+	vec3 color_de_la_vora = mix(color_vora.rgb, c * (1.0 - enfosquiment_vora), vora_del_color);
+	ALBEDO = mix(c, color_de_la_vora, vora * intensitat_vora);
 }

@@ -13,6 +13,7 @@ const PER_DEFECTE := {
 	"vsync": true,
 	"postprocessat": true,
 	"vores": true,
+	"resolucio_pixel": 360,   # alçada del món en píxels (0 = resolució nativa)
 	"sacseig": 1.0,
 	"suavitat_camera": 0.25,   # 0 = enganxada al personatge, 1 = molt suau
 	"particules_meteo": true,

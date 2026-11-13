@@ -10,6 +10,7 @@ extends Camera3D
 ##    (que no giren amb la càmera) es veurien de costat o per darrere.
 ##  - segueix el jugador amb una mica de suavitat
 ##  - postprocessat (vores blanques i color): F10 l'activa o el desactiva
+##  - la baixa resolució (pixel art) la fa l'autoload ResolucioPixel amb un SubViewport
 
 const ZOOM_SPEED = 0.5
 const MIN_ZOOM = 7.0
@@ -105,6 +106,7 @@ func _process(delta: float) -> void:
 		pivot.global_position = actual
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 		pivot.rotation.x = lerp_angle(pivot.rotation.x, inclinacio_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
+
 
 ## Quan el jugador apareix en un altre lloc (porta, càrrega...), la càmera hi salta de cop
 func centrar_de_cop():
