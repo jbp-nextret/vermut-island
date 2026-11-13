@@ -12,7 +12,6 @@
 [ext_resource type="Texture2D" uid="uid://b7ryajyvuj75s" path="res://Sprites/grass.png" id="10_7yo87"]
 [ext_resource type="Texture2D" uid="uid://br4wteai5as35" path="res://Sprites/water-1.png" id="10_8l3nt"]
 [ext_resource type="Shader" uid="uid://de4xtd18dfkws" path="res://Shaders/vegetation_wind.gdshader" id="11_kwl8l"]
-[ext_resource type="Texture2D" uid="uid://dmdln37pqvewt" path="res://Sprites/arbres.png" id="11_ti1bm"]
 [ext_resource type="PackedScene" uid="uid://cjuavns4hlv0r" path="res://Scenes/GridMap.tscn" id="12_waglr"]
 [ext_resource type="Script" uid="uid://wvb1oedkxme" path="res://Scripts/weather_manager.gd" id="14_8l3nt"]
 [ext_resource type="PackedScene" uid="uid://5jy6a7016vyg" path="res://Scenes/EnemicVolador.tscn" id="16_rwt1y"]
@@ -112,13 +111,6 @@ render_priority = 0
 shader = ExtResource("11_kwl8l")
 shader_parameter/texture_albedo = ExtResource("10_7yo87")
 shader_parameter/nomes_fulles = false
-shader_parameter/texels_moviment = 2.0
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_waglr"]
-render_priority = 0
-shader = ExtResource("11_kwl8l")
-shader_parameter/texture_albedo = ExtResource("11_ti1bm")
-shader_parameter/nomes_fulles = true
 shader_parameter/texels_moviment = 2.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_rwt1y"]
@@ -293,28 +285,6 @@ texture_filter = 0
 texture = ExtResource("10_7yo87")
 region_enabled = true
 region_rect = Rect2(224, 0, 32, 32)
-
-[node name="Tree1" type="Sprite3D" parent="." unique_id=372274798]
-transform = Transform3D(5.142301, 0, -6.1283555, 0, 8, 0, 6.1283555, 0, 5.142301, 9.412313, 3.2075734, 1.7006369)
-material_override = SubResource("ShaderMaterial_waglr")
-billboard = 2
-shaded = true
-alpha_cut = 1
-texture_filter = 0
-texture = ExtResource("11_ti1bm")
-region_enabled = true
-region_rect = Rect2(5, 0, 64, 64)
-
-[node name="Tree2" type="Sprite3D" parent="." unique_id=1037149039]
-transform = Transform3D(5.142301, 0, -6.1283555, 0, 8, 0, 6.1283555, 0, 5.142301, 4.501028, 3.2075734, 11.190505)
-material_override = SubResource("ShaderMaterial_waglr")
-billboard = 2
-shaded = true
-alpha_cut = 1
-texture_filter = 0
-texture = ExtResource("11_ti1bm")
-region_enabled = true
-region_rect = Rect2(134, 8, 55, 56)
 
 [node name="GridMap" parent="." unique_id=708098584 instance=ExtResource("12_waglr")]
 data = {

@@ -18,7 +18,7 @@ const MODELS := {
 }
 const MODEL_ADULT_ANTIC := "res://Models/arbre.glb"
 const SHADER := preload("res://Shaders/arbre.gdshader")
-const ESCALA := 1.0
+const ESCALA := 1.4
 
 ## Colors del degradat (del gris fosc al clar de la textura)
 const COLOR_TRONC_FOSC := Color(0.2, 0.12, 0.07)
