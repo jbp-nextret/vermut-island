@@ -30,6 +30,7 @@ const PROBABILITAT_OLIVES := 0.6
 @export var dies_per_etapa := 2
 
 const ESCALA_ETAPA := [0.35, 0.65, 1.0]
+const ESTAT_ETAPA := ["brot", "jove", "adult"]   # el model de cada etapa (arbres 3D)
 const PROPORCIO_ETAPA := [0.34, 0.67, 1.0]   # de cops i de recursos que dona
 
 ## Creat pel regenerador de recursos: quan s'esgota desapareix (en surten de nous en un
@@ -65,6 +66,16 @@ func alcada_actual() -> float:
 ## Posa el visual a la mida (i l'alçada) de l'etapa, de cop o amb una animació
 func _aplicar_mida(animat := false):
 	var v := visual()
+	# Els arbres 3D amb un model per etapa no s'encongeixen: es canvia el model
+	if v.has_method("posar_estat") and v.posar_estat(ESTAT_ETAPA[etapa]):
+		if alcada_adult >= 0.0:
+			v.global_position.y = terra_y + alcada_adult
+		if animat:
+			v.scale = escala_original * 0.6
+			v.create_tween().tween_property(v, "scale", escala_original, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		else:
+			v.scale = escala_original
+		return
 	if not animat:
 		v.scale = escala_actual()
 		if alcada_adult >= 0.0:
@@ -149,11 +160,31 @@ func _esgotar():
 			t.tween_property(v, "scale", Vector3(escala_original.x * 1.1, escala_original.y * 0.05, escala_original.z), 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_:
 			t.tween_property(v, "scale", escala_original * 0.05, 0.2)
-	if dinamic:
+	if te_soca():
+		t.tween_callback(_quedar_soca)
+	elif dinamic:
 		t.tween_callback(visual().queue_free)
 	else:
 		t.tween_callback(func(): _mostrar(false))
 	GestorPartida.call_deferred("guardar_mundo")
+
+## Els arbres 3D amb model de soca: en talar-los en queda la soca, i d'aquí torna a
+## créixer un brot al cap d'uns dies (al mateix lloc)
+func te_soca() -> bool:
+	return tipus == Tipus.ARBRE and visual().has_method("posar_estat") and Arbre3D.te_model("soca")
+
+func es_soca() -> bool:
+	return not disponible() and te_soca() and visual().visible
+
+func _quedar_soca():
+	if disponible():
+		return   # ja ha tornat a créixer (p. ex. si l'animació de caure s'havia aturat)
+	var v := visual()
+	v.posar_estat("soca")
+	v.visible = true
+	v.scale = escala_original
+	if alcada_adult >= 0.0:
+		v.global_position.y = terra_y + maxf(alcada_adult, 0.0)
 
 func _process(_delta):
 	var dia: int = GestorTemps.dia_actual
@@ -183,10 +214,17 @@ func retirar():
 
 ## Ocupa el terra en aquest punt? (per no plantar-hi ni llaurar-hi a sobre)
 func ocupa(punt: Vector3) -> bool:
-	return disponible() and Vector2(punt.x - global_position.x, punt.z - global_position.z).length() < radi_ocupat
+	return (disponible() or es_soca()) and Vector2(punt.x - global_position.x, punt.z - global_position.z).length() < radi_ocupat
 
 func reapareixer():
 	esgotat_dia = -1
+	# De la soca en surt un brot, que tornarà a créixer
+	if te_soca():
+		etapa = 0
+		dia_etapa = GestorTemps.dia_actual
+		_mostrar(true)
+		_aplicar_mida(true)
+		return
 	_mostrar(true)
 	var v := visual()
 	v.scale = escala_actual() * 0.2
@@ -252,4 +290,7 @@ static func restaurar(mon: Node, d: Dictionary) -> void:
 		var r := mon.get_node_or_null(NodePath(cami)) as RecursNatural
 		if r:
 			r.esgotat_dia = int(d[cami])
-			r._mostrar(false)
+			if r.te_soca():
+				r._quedar_soca()
+			else:
+				r._mostrar(false)

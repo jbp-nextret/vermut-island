@@ -178,13 +178,20 @@ func _superficie(cella: Vector3i) -> Vector3:
 func estat() -> Array:
 	var llista := []
 	for r in recursos:
-		if is_instance_valid(r) and r.disponible():
+		# Els disponibles i les soques (que tornaran a créixer)
+		if is_instance_valid(r) and (r.disponible() or r.es_soca()):
 			var c: Vector3i = r.get_meta("cella")
-			llista.append({"tipus": r.tipus, "cella": [c.x, c.y, c.z], "etapa": r.etapa, "dia_etapa": r.dia_etapa, "zona": r.get_meta("zona", 0)})
+			var d := {"tipus": r.tipus, "cella": [c.x, c.y, c.z], "etapa": r.etapa, "dia_etapa": r.dia_etapa, "zona": r.get_meta("zona", 0)}
+			if not r.disponible():
+				d["talat"] = r.esgotat_dia
+			llista.append(d)
 	return llista
 
 func restaurar(llista: Array):
 	for d in llista:
 		var c: Array = d.get("cella", [0, 0, 0])
-		crear(int(d.get("tipus", 0)), Vector3i(int(c[0]), int(c[1]), int(c[2])), int(d.get("etapa", 2)), int(d.get("dia_etapa", 0)), int(d.get("zona", 0)))
+		var r := crear(int(d.get("tipus", 0)), Vector3i(int(c[0]), int(c[1]), int(c[2])), int(d.get("etapa", 2)), int(d.get("dia_etapa", 0)), int(d.get("zona", 0)))
+		if r and d.has("talat"):
+			r.esgotat_dia = int(d.talat)
+			r.call_deferred("_quedar_soca")
 	ultim_dia = GestorTemps.dia_actual   # ja té el que tocava: no omplir de cop
