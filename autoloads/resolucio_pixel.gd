@@ -34,6 +34,7 @@ var camera_etiquetes: Camera3D
 var imatge_etiquetes: TextureRect
 var factor := 1
 var alcada := 0          # alçada visible en píxels del joc
+var amplada := 0         # i amplada
 var actiu := false
 
 func _ready():
@@ -90,6 +91,7 @@ func _recalcular():
 	factor = maxi(1, floori(pantalla.y / objectiu))
 	var visible_px := (pantalla / factor).ceil()
 	alcada = int(visible_px.y)
+	amplada = int(visible_px.x)
 	sv.size = Vector2i(visible_px) + Vector2i.ONE * MARGE * 2
 	sv_etiquetes.size = Vector2i(pantalla)
 
@@ -97,6 +99,12 @@ func _recalcular():
 func _node_afegit(n: Node):
 	if n is Label3D:
 		(n as Label3D).layers = CAPA_ETIQUETES
+		# Per sobre de les altres coses transparents (l'aigua), també a resolució nativa
+		(n as Label3D).render_priority = 10
+	elif n is VisualInstance3D:
+		# Alguns nodes tenen totes les capes marcades (p. ex. el mar): fora de la dels
+		# textos, o taparien les etiquetes
+		(n as VisualInstance3D).layers &= ~CAPA_ETIQUETES
 
 func _process(_delta):
 	var principal := get_tree().root.get_camera_3d()
@@ -116,7 +124,7 @@ func _process(_delta):
 
 func _copiar_camera(c: Camera3D):
 	camera.projection = c.projection
-	camera.keep_aspect = Camera3D.KEEP_HEIGHT
+	camera.keep_aspect = c.keep_aspect
 	camera.near = c.near
 	camera.far = c.far
 	camera.fov = c.fov
@@ -126,9 +134,11 @@ func _copiar_camera(c: Camera3D):
 	camera.h_offset = 0.0
 	camera.v_offset = 0.0
 	camera.current = true
-	# Amb el marge, la imatge és una mica més alta que el que es veu
-	var alt_total := float(sv.size.y)
-	var escala := alt_total / float(alcada)
+	# Amb el marge, la imatge és una mica més gran que el que es veu. La mida de la càmera
+	# ortogonal és l'alçada o l'amplada que es veu, segons el keep_aspect de la càmera
+	var per_amplada := c.keep_aspect == Camera3D.KEEP_WIDTH
+	var px_visibles := float(amplada if per_amplada else alcada)
+	var escala := float(sv.size.x if per_amplada else sv.size.y) / px_visibles
 	var xf := c.global_transform
 	# El desplaçament de la càmera (el sacseig) passat a la posició
 	xf.origin += xf.basis.x.normalized() * c.h_offset + xf.basis.y.normalized() * c.v_offset
@@ -136,7 +146,7 @@ func _copiar_camera(c: Camera3D):
 	if c.projection == Camera3D.PROJECTION_ORTHOGONAL:
 		camera.size = c.size * escala
 		# Mida d'un píxel del joc en unitats del món, i la càmera a la graella de píxels
-		var texel := c.size / float(alcada)
+		var texel := c.size / px_visibles
 		var dreta := xf.basis.x.normalized()
 		var amunt := xf.basis.y.normalized()
 		var a := xf.origin.dot(dreta)

@@ -40,14 +40,19 @@ void fragment() {
     vec4 blended_water_color = mix(water_color1, water_color2, blend_factor);
 
     float depthValue = texture(DepthTexture, SCREEN_UV).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+    vec4 worldPosition = INV_PROJECTION_MATRIX * vec4(vec3(SCREEN_UV, depthValue) * 2.0 - 1.0, 1.0);
+#else
     vec4 worldPosition = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, depthValue, 1.0);
+#endif
     worldPosition.xyz /= worldPosition.w;
     float foamEffect = clamp(1.0 - smoothstep(worldPosition.z + FoamSize, worldPosition.z, VERTEX.z), 0.0, 1.0);
     float foamOpacity = 1.0 - foamEffect;
     float foamEffectRounded = round(foamOpacity);
     float finalOpacity = foamEffectRounded + WaterOpacity;
 	
-    ALBEDO = blended_water_color.rgb * albedo;
+    // L'escuma (a tocar de la costa) és blanca, no del color de l'aigua
+    ALBEDO = mix(blended_water_color.rgb * albedo, vec3(0.93, 0.97, 1.0), foamEffectRounded * 0.85);
     ALPHA = finalOpacity;
     EMISSION = vec3(foamEffectRounded) * FoamGlowIntensity;
     METALLIC = 0.0;
