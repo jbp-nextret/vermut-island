@@ -160,7 +160,7 @@ func _esgotar():
 			t.tween_property(v, "scale", Vector3(escala_original.x * 1.1, escala_original.y * 0.05, escala_original.z), 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_:
 			t.tween_property(v, "scale", escala_original * 0.05, 0.2)
-	if te_soca():
+	if te_soca() and etapa == ESCALA_ETAPA.size() - 1:   # els brots i els joves no deixen soca
 		t.tween_callback(_quedar_soca)
 	elif dinamic:
 		t.tween_callback(visual().queue_free)
@@ -174,7 +174,7 @@ func te_soca() -> bool:
 	return tipus == Tipus.ARBRE and visual().has_method("posar_estat") and Arbre3D.te_model("soca")
 
 func es_soca() -> bool:
-	return not disponible() and te_soca() and visual().visible
+	return not disponible() and te_soca() and etapa == ESCALA_ETAPA.size() - 1
 
 func _quedar_soca():
 	if disponible():
@@ -218,7 +218,7 @@ func ocupa(punt: Vector3) -> bool:
 
 func reapareixer():
 	esgotat_dia = -1
-	# De la soca en surt un brot, que tornarà a créixer
+	# De la soca (o d'on hi havia el brot) en surt un brot, que tornarà a créixer
 	if te_soca():
 		etapa = 0
 		dia_etapa = GestorTemps.dia_actual
@@ -282,15 +282,17 @@ static func estats(mon: Node) -> Dictionary:
 	var d := {}
 	for r in mon.get_tree().get_nodes_in_group("recursos"):
 		if not r.disponible() and not r.dinamic:   # els dinàmics els desa el regenerador
-			d[str(mon.get_path_to(r))] = r.esgotat_dia
+			d[str(mon.get_path_to(r))] = {"dia": r.esgotat_dia, "soca": r.es_soca()}
 	return d
 
 static func restaurar(mon: Node, d: Dictionary) -> void:
 	for cami in d:
 		var r := mon.get_node_or_null(NodePath(cami)) as RecursNatural
 		if r:
-			r.esgotat_dia = int(d[cami])
-			if r.te_soca():
+			# (les partides antigues només hi tenien el dia)
+			var v = d[cami]
+			r.esgotat_dia = int(v.dia) if v is Dictionary else int(v)
+			if r.te_soca() and (not v is Dictionary or v.get("soca", true)):
 				r._quedar_soca()
 			else:
 				r._mostrar(false)

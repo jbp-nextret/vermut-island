@@ -263,7 +263,9 @@ func _mostrar_icona(text: String):
 
 func pot_interactuar(jugador: Node) -> bool:
 	if domesticada:
-		return estat in [Estat.SEGUINT, Estat.CORRAL] and _pla(jugador.global_position - global_position).length() < 1.6
+		# Només es pot acaronar un cop al dia
+		return estat in [Estat.SEGUINT, Estat.CORRAL] and not Criatures.acaronada_avui(uid) \
+			and _pla(jugador.global_position - global_position).length() < 1.6
 	return capturable() and _pla(jugador.global_position - global_position).length() < ABAST_DOMESTICAR
 
 func text_interaccio(_jugador: Node) -> String:
@@ -276,6 +278,9 @@ func punt_interaccio() -> Vector3:
 
 func interactuar(_interaccio: Node) -> void:
 	if domesticada:
+		if not Criatures.acaronar(uid):
+			return
+		TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 0.9, "+%d XP" % Criatures.XP_ACARONAR, Color(1.0, 0.75, 0.85))
 		_mostrar_icona("❤")
 		temps_cop = 0.0
 		var t := create_tween()

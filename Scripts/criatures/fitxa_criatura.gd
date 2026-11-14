@@ -48,6 +48,14 @@ func _ready():
 	nivell.text = "  Nv %d" % n
 	nivell.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	fila_nom.add_child(nivell)
+	# Si avui ja l'has acaronada
+	var cor := Label.new()
+	var feta := Criatures.acaronada_avui(uid)
+	cor.text = "  ❤ ✓" if feta else "  🤍"
+	cor.add_theme_color_override("font_color", Color(1.0, 0.6, 0.75) if feta else Color(0.7, 0.7, 0.75))
+	cor.tooltip_text = "Avui ja l'has acaronada" if feta else "Encara no l'has acaronada avui (F a prop)"
+	cor.mouse_filter = Control.MOUSE_FILTER_STOP
+	fila_nom.add_child(cor)
 	# Experiència fins al nivell següent
 	var barra := ProgressBar.new()
 	barra.custom_minimum_size = Vector2(0, 6)

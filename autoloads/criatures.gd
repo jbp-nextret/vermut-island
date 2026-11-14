@@ -210,6 +210,22 @@ static func mult_recarrega(n: int) -> float:
 static func mult_habilitat(n: int) -> float:
 	return 1.0 + 0.05 * (n - 1)
 
+## Acaronar-la: un cop al dia per criatura (li dona una mica d'experiència)
+const XP_ACARONAR := 5
+
+func acaronada_avui(uid: String) -> bool:
+	return int(dades(uid).get("acaronada", -1)) == int(GestorTemps.dia_actual)
+
+func acaronar(uid: String) -> bool:
+	var d := dades(uid)
+	if d.is_empty() or acaronada_avui(uid):
+		return false
+	d.acaronada = int(GestorTemps.dia_actual)
+	guanyar_xp(uid, XP_ACARONAR)
+	guardar()
+	col_leccio_canviada.emit()
+	return true
+
 ## Guanya experiència (en combatre, regar, trobar coses, treballar al corral...)
 func guanyar_xp(uid: String, quantitat: int):
 	var d := dades(uid)
