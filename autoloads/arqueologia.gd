@@ -135,22 +135,27 @@ func donar(b: Dictionary, posicio: Vector3 = Vector3.INF):
 		else:
 			if posicio.is_finite():
 				TextFlotant.mostrar(get_tree().current_scene, posicio + Vector3.UP * 1.0, "📜 %s" % CatalegObjectes.info(r.resultat).nom, PartFossil.COLORS_RARESA[clampi(b.raresa, 0, 2)])
+			var ir := CatalegObjectes.info(r.resultat)
+			PopupTroballa.mostrar("📜", "Un plànol: %s" % ir.nom, PartFossil.NOMS_RARESA[clampi(b.raresa, 0, 2)],
+				"Ja el pots fer a la taula de fabricació.", PartFossil.COLORS_RARESA[clampi(b.raresa, 0, 2)])
 			Progressio.guanyar_xp("excavar", 1.0 + b.raresa)
 			troballa.emit(b)
 			return
+	var color_r: Color = PartFossil.COLORS_RARESA[clampi(b.raresa, 0, 2)]
 	if b.id == "diners":
 		Inventari.afegir_diners(b.quantitat)
 		text = "+%d 🪙" % b.quantitat
+		PopupTroballa.mostrar("🪙", "%d monedes antigues" % b.quantitat, PartFossil.NOMS_RARESA[clampi(b.raresa, 0, 2)], "", color_r)
 	else:
 		Inventari.afegir(b.id, b.quantitat)
 		var info := CatalegObjectes.info(b.id)
 		text = "+%d %s" % [b.quantitat, info.icona]
 		var nova := not trobada(b.id)
 		trobats[b.id] = int(trobats.get(b.id, 0)) + b.quantitat
-		var nom: String = info.nom
-		if b.raresa > 0:
-			nom += " (%s)" % PartFossil.NOMS_RARESA[b.raresa]
-		EventBus.avis.emit(("📖 Nou fòssil: %s" if nova and b.tipus == "fossil" else "Has trobat: %s") % nom)
+		var nom_curt: String = info.nom
+		PopupTroballa.mostrar(info.icona, ("%s ×%d" % [nom_curt, b.quantitat]) if b.quantitat > 1 else nom_curt,
+			PartFossil.NOMS_RARESA[clampi(b.raresa, 0, 2)] + ("  ·  📖 Nou al bestiari!" if nova and b.tipus == "fossil" else ""),
+			str(info.get("descripcio", "")), color_r)
 	if posicio.is_finite():
 		var color: Color = PartFossil.COLORS_RARESA[clampi(b.raresa, 0, 2)]
 		TextFlotant.mostrar(get_tree().current_scene, posicio + Vector3.UP * 1.0, text, color)
