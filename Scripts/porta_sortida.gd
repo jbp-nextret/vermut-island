@@ -1,10 +1,24 @@
 extends Area3D
+## La porta de casa (a dins): F per sortir. Mentre la vermuteria és oberta no es pot sortir.
 
 signal salir_casa
 
 func _ready():
-	body_entered.connect(_on_body_entered)
+	add_to_group("interactuables")
 
-func _on_body_entered(body):
-	if body.is_in_group("player"):
-		salir_casa.emit()
+func pot_interactuar(_jugador: Node) -> bool:
+	return GameState.mode != GameState.Mode.CONSTRUIR
+
+func text_interaccio(_jugador: Node) -> String:
+	if GameState.mode == GameState.Mode.SERVEI:
+		return "🔒 Tanca la vermuteria per sortir"
+	return "🚪 Sortir"
+
+func punt_interaccio() -> Vector3:
+	return global_position + Vector3.UP * 0.2
+
+func interactuar(_interaccio: Node) -> void:
+	if GameState.mode == GameState.Mode.SERVEI:
+		EventBus.avis.emit("Ara no pots sortir: estàs servint. Tanca la vermuteria primer.")
+		return
+	salir_casa.emit()

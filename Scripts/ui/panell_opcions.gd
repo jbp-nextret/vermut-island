@@ -90,6 +90,7 @@ func _pestanya_joc():
 	l.add_child(titol)
 	_interruptor(l, "Noms sobre criatures i personatges", "noms_sobre")
 	_interruptor(l, "Indicacions en passar per sobre d'arbres i roques (\"Cal la destral\")", "indicacions_eines")
+	_interruptor(l, "L'eina que portes, al costat del punter", "eina_al_cursor")
 	_interruptor(l, "Textos que suren (\"+3 fusta\", \"+5 XP\"...)", "textos_flotants")
 	_interruptor(l, "Avisos de baix (\"Estàs cansat\", \"Nova criatura\"...)", "avisos")
 

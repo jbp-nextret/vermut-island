@@ -3,8 +3,9 @@ class_name Tanques
 ## Tanques de fusta que el jugador construeix (mode construir tanques, des de la barra
 ## ràpida amb l'objecte "tanca_fusta" o "porta_tanca"):
 ##   - Clic: posa una tanca a la casella (arrossegant, en posa en línia)
-##   - Clic dret: treu la tanca de sota el ratolí (te la torna)
 ##   - Esc: sortir del mode
+## Per treure-les: amb la destral (les de fusta i les portes) o el pic (les de pedra) a la
+## mà, cops a la tanca; quan cau te la torna.
 ## Les tanques s'enganxen soles amb les veïnes. Quan una zona queda tancada del tot
 ## (les portes també tanquen), es detecta com a corral i hi apareix un Corral.
 ## Es desa a user://tanques.save.
@@ -17,6 +18,13 @@ const ABAST := 8.0
 const ALCADA := 0.9
 const MAX_CORRAL := 160        # cel·les; més gran ja no compta com a tancat
 const VEINS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+## Per detectar si una zona és tancada també es mira en diagonal: una cantonada sense
+## tanca (encara que hi hagi un arbre) deixa escapar les criatures
+const VEINS_8 := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
+const ABAST_DESMUNTAR := 2.8
+## Cops per desmuntar-ne una
+const COPS := {"tanca": 3, "porta": 3, "pedra": 5}
 ## Objecte de la motxilla <-> tipus de tanca
 const TIPUS := {"tanca_fusta": "tanca", "porta_tanca": "porta", "tanca_pedra": "pedra"}
 
@@ -42,6 +50,10 @@ var cella_cursor = null        # Vector2i o null
 var superficie_cursor := Vector3.ZERO
 var y_cursor := 0
 var fantasma: Node3D
+var cops_rebuts := {}            # Vector2i -> cops que ha rebut
+var tanca_sota_ratoli = null     # Vector2i o null (fora del mode construir)
+var etiqueta: Label3D
+var temps_des_del_cop := 99.0
 
 func configurar(p_mon: Node3D, p_gridmap: GridMap, p_plantador: Plantador, p_jugador: Node3D):
 	mon = p_mon
@@ -54,6 +66,15 @@ func _ready():
 	fantasma.top_level = true
 	fantasma.visible = false
 	add_child(fantasma)
+	etiqueta = Label3D.new()
+	etiqueta.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	etiqueta.no_depth_test = true
+	etiqueta.font_size = 40
+	etiqueta.outline_size = 12
+	etiqueta.pixel_size = 0.008
+	etiqueta.top_level = true
+	etiqueta.visible = false
+	add_child(etiqueta)
 	_carregar()
 	Criatures.assignacions_canviades.connect(func(): Criatures.repartir_corrals(corrals))
 	await get_tree().physics_frame
@@ -80,6 +101,7 @@ func sortir_si_actiu():
 
 func _unhandled_input(event: InputEvent):
 	if not actiu:
+		_desmuntar_input(event)
 		return
 	if event.is_action_pressed("ui_cancel"):
 		sortir()
@@ -90,13 +112,13 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 	elif event.is_action_released("accio_primaria"):
 		arrossegant = false
-	elif event.is_action_pressed("accio_secundaria"):
-		_treure_aqui()
-		get_viewport().set_input_as_handled()
 
-func _process(_delta):
+func _process(delta):
+	temps_des_del_cop += delta
 	if not actiu:
+		_desmuntar_process()
 		return
+	etiqueta.visible = false
 	if not GameState.pot_atacar():
 		sortir()
 		return
@@ -157,12 +179,92 @@ func _posar_aqui(avisar := true):
 	if jugador.has_method("encarar"):
 		jugador.encarar(superficie_cursor, true, 0.6)
 
-func _treure_aqui():
-	if cella_cursor == null or not tanques.has(cella_cursor):
+# ─────────────── Desmuntar amb la destral o el pic
+
+## L'eina que cal per a una tanca: "talar" (destral) o "picar" (pic)
+static func eina_per(tipus: String) -> String:
+	return "picar" if tipus == "pedra" else "talar"
+
+func _desmuntar_process():
+	tanca_sota_ratoli = null
+	etiqueta.visible = false
+	var accio := BarraRapida.accio_activa()
+	if not accio in ["talar", "picar"] or not GameState.pot_atacar() or jugador == null:
 		return
-	var t: Dictionary = tanques[cella_cursor]
-	treure(cella_cursor)
-	Inventari.afegir(objecte_de(t.tipus), 1, true)
+	tanca_sota_ratoli = _tanca_sota_ratoli()
+	if tanca_sota_ratoli == null:
+		return
+	var t: Dictionary = tanques[tanca_sota_ratoli]
+	if not SettingsManager.valor("indicacions_eines"):
+		return
+	var ok := eina_per(t.tipus) == accio
+	var lluny := _distancia(tanca_sota_ratoli) > ABAST_DESMUNTAR
+	etiqueta.text = ("Cal el pic ⛏️" if t.tipus == "pedra" else "Cal la destral 🪓") if not ok else ("Massa lluny" if lluny else "🔨 Desmuntar")
+	etiqueta.modulate = Color(1, 1, 1) if ok and not lluny else Color(1, 0.6, 0.55)
+	etiqueta.global_position = _superficie(tanca_sota_ratoli, t.y) + Vector3.UP * 1.4
+	etiqueta.visible = true
+
+func _desmuntar_input(event: InputEvent):
+	if tanca_sota_ratoli == null or not event.is_action_pressed("accio_primaria"):
+		return
+	var c: Vector2i = tanca_sota_ratoli
+	var t: Dictionary = tanques[c]
+	if eina_per(t.tipus) != BarraRapida.accio_activa():
+		return   # amb l'altra eina no fa res (el clic segueix)
+	get_viewport().set_input_as_handled()
+	if _distancia(c) > ABAST_DESMUNTAR or temps_des_del_cop < 0.4:
+		return
+	temps_des_del_cop = 0.0
+	var punt := _superficie(c, t.y)
+	if jugador.has_method("encarar"):
+		jugador.encarar(punt, true, 1.6)
+	var durada := EinaMagica.invocar(mon, punt + Vector3.UP * 0.4, "pic" if t.tipus == "pedra" else "destral", Color(0.75, 0.9, 1.0))
+	get_tree().create_timer(durada).timeout.connect(func(): _cop(c))
+
+func _cop(c: Vector2i):
+	if not tanques.has(c):
+		return
+	var t: Dictionary = tanques[c]
+	cops_rebuts[c] = int(cops_rebuts.get(c, 0)) + 1
+	if is_instance_valid(t.node):
+		var n: Node3D = t.node
+		var base := n.position
+		var tw := n.create_tween()
+		tw.tween_property(n, "position", base + Vector3(0.06, 0, 0.04), 0.05)
+		tw.tween_property(n, "position", base, 0.08)
+	if jugador.has_method("camera_shake"):
+		jugador.camera_shake(0.04)
+	if cops_rebuts[c] >= int(COPS.get(t.tipus, 3)):
+		cops_rebuts.erase(c)
+		treure(c)
+		var objecte := objecte_de(t.tipus)
+		Inventari.afegir(objecte, 1, true)
+		TextFlotant.mostrar(mon, _superficie(c, t.y) + Vector3.UP * 0.8, "+1 %s" % CatalegObjectes.info(objecte).icona)
+
+func _distancia(c: Vector2i) -> float:
+	return Vector2(c.x + 0.5 - jugador.global_position.x, c.y + 0.5 - jugador.global_position.z).length()
+
+## La tanca sota el ratolí: primer per col·lisió (les tanques i murs), si no per la
+## casella del terra (les portes, que no en tenen)
+func _tanca_sota_ratoli():
+	if tanques.is_empty():
+		return null
+	var camera := get_viewport().get_camera_3d()
+	if camera:
+		var ratoli := get_viewport().get_mouse_position()
+		var origen := camera.project_ray_origin(ratoli)
+		var consulta := PhysicsRayQueryParameters3D.create(origen, origen + camera.project_ray_normal(ratoli) * 200.0)
+		var xoc := get_world_3d().direct_space_state.intersect_ray(consulta)
+		if xoc and xoc.collider:
+			for c in tanques:
+				if tanques[c].node == xoc.collider:
+					return c
+	var info := plantador._cella_sota_ratoli()
+	if info.is_empty():
+		return null
+	var cella: Vector3i = info.cella
+	var c2 := Vector2i(cella.x, cella.z)
+	return c2 if tanques.has(c2) else null
 
 # ─────────────── Posar i treure
 
@@ -311,7 +413,7 @@ func _detectar_corrals():
 					zona.append(c)
 					if c.x <= mn.x or c.x >= mx.x or c.y <= mn.y or c.y >= mx.y:
 						tancada = false
-					for v in VEINS:
+					for v in VEINS_8:
 						var n: Vector2i = c + v
 						if n.x < mn.x or n.x > mx.x or n.y < mn.y or n.y > mx.y:
 							continue

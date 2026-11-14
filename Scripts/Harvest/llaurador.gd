@@ -4,6 +4,7 @@ class_name Llaurador
 ##  - T: entra/surt del mode llaurar.
 ##  - Clic: llaura la cel·la. Arrossegant: selecciona una àrea i en deixar anar la llaura.
 ##  - Clic dret / Esc: cancel·la l'àrea o surt del mode.
+##  - Clic a una terra llaurada sense res plantat: la torna a deixar d'herba.
 ## La terra nova agafa la peça de vora o cantonada que toca (autotiling) i es desa.
 
 signal mode_canviat(actiu: bool)
@@ -142,6 +143,10 @@ func _info(c: Vector3i) -> Dictionary:
 	if mon.llaurades.has(c):
 		info.valida = false
 		info.motiu = "Aquesta terra ja és cultivable"
+		# Si no hi ha res plantat, es pot desfer (tornar a ser herba)
+		if not mon.cultiu_a_prop(superficie + Vector3.UP * 0.4) \
+				and Vector2(superficie.x - jugador.global_position.x, superficie.z - jugador.global_position.z).length() <= abast():
+			info.desfer = true
 	elif not mon.es_herba(nom):
 		info.valida = false
 		info.motiu = "Només es pot llaurar l'herba"
@@ -197,7 +202,7 @@ func _mostrar(infos: Array):
 			add_child(q)
 			quads.append(q)
 		quads[i].visible = true
-		quads[i].material_override = material_ok if infos[i].valida else material_ko
+		quads[i].material_override = material_ok if infos[i].valida else (_material_desfer() if infos[i].get("desfer", false) and infos.size() == 1 else material_ko)
 		quads[i].global_position = infos[i].superficie + Vector3.UP * 0.03
 	for i in range(infos.size(), quads.size()):
 		quads[i].visible = false
@@ -216,6 +221,11 @@ func _cancel_lar():
 
 func _llaurar_seleccio():
 	arrossegant = false
+	# Un sol clic a terra llaurada buida: es desfà
+	if seleccio.size() == 1 and seleccio[0].get("desfer", false):
+		_desfer(seleccio[0])
+		_cancel_lar()
+		return
 	var valides := seleccio.filter(func(i): return i.valida)
 	if valides.is_empty():
 		if not seleccio.is_empty():
@@ -248,6 +258,26 @@ func _llaurar_seleccio():
 		get_tree().create_timer(durada + n * 0.03).timeout.connect(func(): _convertir(info))
 	get_tree().create_timer(durada + valides.size() * 0.03 + 0.1).timeout.connect(func(): GestorPartida.guardar_mundo())
 	_cancel_lar()
+
+var _mat_desfer: StandardMaterial3D
+func _material_desfer() -> StandardMaterial3D:
+	if _mat_desfer == null:
+		_mat_desfer = (material_ok as StandardMaterial3D).duplicate()
+		_mat_desfer.albedo_color = Color(0.55, 0.8, 1.0, 0.45)
+	return _mat_desfer
+
+## Torna la terra a ser herba (amb l'aixada, sense gastar mana)
+func _desfer(info: Dictionary):
+	if temps_des_de_llaurar < RECARREGA:
+		return
+	temps_des_de_llaurar = 0.0
+	if jugador.has_method("encarar"):
+		jugador.encarar(info.superficie)
+	var durada := _aixada(info.superficie)
+	get_tree().create_timer(durada).timeout.connect(func():
+		mon.desllaurar_cella(info.cella)
+		_terrossos(info.superficie)
+		GestorPartida.guardar_mundo())
 
 func _convertir(info: Dictionary):
 	mon.llaurar_cella(info.cella)

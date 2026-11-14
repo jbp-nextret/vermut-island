@@ -25,6 +25,7 @@ const PER_DEFECTE := {
 	# Textos a la pantalla (per a un joc més net)
 	"noms_sobre": true,          # noms de criatures i personatges (quan hi ets a prop)
 	"indicacions_eines": true,   # "🪓 Talar", "Cal la destral" en passar per sobre d'un arbre o roca
+	"eina_al_cursor": true,      # l'eina que portes, petita al costat del punter
 	"textos_flotants": true,     # "+3 🪵", "+5 XP", "💫"...
 	"avisos": true,              # els missatges de baix ("Estàs cansat", "Nova criatura"...)
 	# So (0..1)

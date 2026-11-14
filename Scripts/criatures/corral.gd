@@ -155,3 +155,9 @@ func _on_produccio(uid: String, objecte: String):
 func _process(_delta):
 	var n := Criatures.objectes_magatzem()
 	cistella.text = "🧺 %d" % n if n > 0 else ""
+	# Quantes n'hi viuen i quantes hi caben
+	var dins := 0
+	for c in criatures.values():
+		if is_instance_valid(c) and c.mode_corral == "corral":
+			dins += 1
+	retol.text = "Corral %d/%d" % [dins, capacitat()]

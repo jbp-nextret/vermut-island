@@ -68,6 +68,13 @@ func actualitzar():
 	icona.text = "" if c.is_empty() else BarraRapida.info(c).icona
 	quantitat.text = str(Inventari.tenir(c)) if BarraRapida.mostra_quantitat(c) else ""
 	icona.modulate = Color.WHITE if c.is_empty() or BarraRapida.disponible(c) else Color(1, 1, 1, 0.35)
+	# El nom (i què és) en passar-hi el ratolí per sobre
+	if c.is_empty():
+		tooltip_text = ""
+	else:
+		var info: Dictionary = CatalegObjectes.info(c)
+		var desc := str(info.get("descripcio", ""))
+		tooltip_text = "%s %s" % [info.icona, info.nom] + (("\n" + desc) if not desc.is_empty() else "")
 	queue_redraw()
 
 func _gui_input(event):

@@ -64,6 +64,43 @@ const TASQUES := {"talar": {"objecte": "fusta", "minuts": 60}, "picar": {"object
 ## Quantes criatures hi caben en total als corrals que has construït (amb tanques).
 ## Es recorda encara que no siguis al món (p. ex. a dins de casa), per a la producció.
 var capacitat_corrals := 0
+
+## La menjadora dels corrals: racions de menjar. Cada vegada que una criatura (al corral o
+## a una tasca) produeix, en menja una si n'hi ha: llavors en fa el doble, i amb menjar
+## de qualitat (galeta daurada) a vegades en surt una cosa millor.
+const MENJARS := {
+	"galeta_criatura": {"racions": 6, "daurat": false},
+	"galeta_daurada": {"racions": 6, "daurat": true},
+	"raim": {"racions": 1, "daurat": false},
+	"olives": {"racions": 1, "daurat": false},
+	"fibra": {"racions": 1, "daurat": false},
+}
+const MAX_RACIONS := 60
+const PROB_MILLOR := 0.3
+## Què surt de millor amb menjar de qualitat
+const MILLORS := {"olives": "olives_marinades", "fibra": "corda", "raim": "vermut",
+	"llavor_raim": "galeta_criatura", "pedra": "ampolla_antiga", "fusta": "tanca_fusta"}
+var racions := 0
+var racions_daurades := 0
+
+## Posa menjar a la menjadora (de la motxilla). Retorna quantes racions hi ha afegit.
+func alimentar(objecte: String, quantitat := 1) -> int:
+	var m: Dictionary = MENJARS.get(objecte, {})
+	if m.is_empty():
+		return 0
+	quantitat = mini(quantitat, Inventari.tenir(objecte))
+	var hi_cap := (MAX_RACIONS - racions - racions_daurades) / int(m.racions)
+	quantitat = mini(quantitat, hi_cap)
+	if quantitat <= 0:
+		return 0
+	Inventari.treure(objecte, quantitat)
+	if m.daurat:
+		racions_daurades += quantitat * int(m.racions)
+	else:
+		racions += quantitat * int(m.racions)
+	guardar()
+	col_leccio_canviada.emit()
+	return quantitat * int(m.racions)
 const XP_PRODUCCIO := 5
 
 ## El que han produït les criatures i encara no has recollit (a la cistella del corral)
@@ -141,9 +178,30 @@ func _produir():
 		var interval := minuts_produccio(d.uid)
 		while d.progres_feina >= interval:
 			d.progres_feina -= interval
-			magatzem[objecte] = int(magatzem.get(objecte, 0)) + 1
+			# Si hi ha menjar a la menjadora, en menja i en fa el doble (o alguna cosa millor)
+			var quantes := 1
+			var millor := ""
+			if racions_daurades > 0:
+				racions_daurades -= 1
+				quantes = 2
+				if randf() < PROB_MILLOR and MILLORS.has(objecte):
+					millor = MILLORS[objecte]
+			elif racions > 0:
+				racions -= 1
+				quantes = 2
+			magatzem[objecte] = int(magatzem.get(objecte, 0)) + quantes
+			if not millor.is_empty():
+				magatzem[millor] = int(magatzem.get(millor, 0)) + 1
 			guanyar_xp(d.uid, XP_PRODUCCIO)
-			produccio.emit(d.uid, objecte)
+			produccio.emit(d.uid, millor if not millor.is_empty() else objecte)
+
+## Quants minuts de joc falten perquè torni a produir (i el progrés, de 0 a 1)
+func minuts_que_falten(uid: String) -> float:
+	var d := dades(uid)
+	return maxf(0.0, minuts_produccio(uid) - float(d.get("progres_feina", 0.0)))
+
+func progres_produccio(uid: String) -> float:
+	return clampf(float(dades(uid).get("progres_feina", 0.0)) / maxf(1.0, minuts_produccio(uid)), 0.0, 1.0)
 
 ## Passa el que hi ha a la cistella a la motxilla. Retorna quants objectes.
 func recollir() -> int:
@@ -395,7 +453,8 @@ func guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"col_leccio": col_leccio, "activa": activa, "vistes": vistes, "domesticades": domesticades,
-			"magatzem": magatzem, "ultim_minut": ultim_minut, "capacitat_corrals": capacitat_corrals}))
+			"magatzem": magatzem, "ultim_minut": ultim_minut, "capacitat_corrals": capacitat_corrals,
+			"racions": racions, "racions_daurades": racions_daurades}))
 
 func carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -409,6 +468,8 @@ func carregar():
 		magatzem = d.get("magatzem", {})
 		ultim_minut = float(d.get("ultim_minut", -1.0))
 		capacitat_corrals = int(d.get("capacitat_corrals", 0))
+		racions = int(d.get("racions", 0))
+		racions_daurades = int(d.get("racions_daurades", 0))
 		domesticades = d.get("domesticades", {})
 		# Partides d'abans del bestiari: el que ja tens compta com a vist i domesticat
 		for c in col_leccio:

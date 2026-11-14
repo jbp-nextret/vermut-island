@@ -24,6 +24,7 @@ var llaurador: Llaurador
 # Terra llaurada: l'única on es pot plantar. Hi ha la que ha llaurat el jugador i l'hort
 # original (vegeu _marcar_hort_original)
 var llaurades := {}   # Vector3i -> true
+var desllaurades := {}  # les de l'hort original que el jugador ha tornat a fer herba
 const NOMS_HERBA := ["cube-top", "cube_half-top"]
 ## Peça de terra i gir (graus) segons quins veïns són herba (W=oest, E=est, N=nord, S=sud).
 ## Les tires i els extrems que no tenen peça pròpia fan servir la _019 i la _020 girades.
@@ -152,6 +153,7 @@ func _ready():
 	barra.llaurador = llaurador
 	barra.llancador = llancador
 	add_child(barra)
+	add_child(IconaCursor.new())
 	var hud_plantar := HudPlantar.new()
 	hud_plantar.plantador = plantador
 	add_child(hud_plantar)
@@ -409,11 +411,30 @@ func llaurar_cella(cella: Vector3i) -> void:
 	var gridmap: GridMap = $GridMap
 	var nom := gridmap.mesh_library.get_item_name(gridmap.get_cell_item(cella))
 	llaurades[cella] = true
+	desllaurades.erase(cella)
 	if es_herba(nom):
 		gridmap.set_cell_item(cella, gridmap.mesh_library.find_item_by_name(_prefix_terra(nom) + "005"))
 	for dx in range(-1, 2):
 		for dz in range(-1, 2):
 			_autotile(cella + Vector3i(dx, 0, dz))
+
+## Torna una terra llaurada a herba (i arregla les vores de les veïnes)
+func desllaurar_cella(cella: Vector3i) -> void:
+	var gridmap: GridMap = $GridMap
+	var item := gridmap.get_cell_item(cella)
+	if item == GridMap.INVALID_CELL_ITEM:
+		return
+	var nom := gridmap.mesh_library.get_item_name(item)
+	llaurades.erase(cella)
+	desllaurades[cella] = true
+	var herba := "cube_half-top" if nom.begins_with("cube_half") else "cube-top"
+	var nou := gridmap.mesh_library.find_item_by_name(herba)
+	if nou != GridMap.INVALID_CELL_ITEM:
+		gridmap.set_cell_item(cella, nou)
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			if dx != 0 or dz != 0:
+				_autotile(cella + Vector3i(dx, 0, dz))
 
 func _prefix_terra(nom: String) -> String:
 	return "cube_half-top_" if nom.begins_with("cube_half") else "cube-top_"
@@ -473,6 +494,7 @@ func guardar_mundo():
 	
 	var mundo_data = {
 		"llaurades": llaurades.keys().map(func(c): return [c.x, c.y, c.z]),
+		"desllaurades": desllaurades.keys().map(func(c): return [c.x, c.y, c.z]),
 		"recursos": RecursNatural.estats(self),
 		"recursos_dinamics": regenerador.estat(),
 		"cultius": cultius_data,
@@ -516,6 +538,9 @@ func carregar_mundo():
 	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
 	if mundo_data.has("recursos_dinamics"):
 		regenerador.restaurar(mundo_data.recursos_dinamics)
+	# Primer la terra de l'hort que s'ha tornat herba, després la llaurada
+	for c in mundo_data.get("desllaurades", []):
+		desllaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	for c in mundo_data.get("llaurades", []):
 		llaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 	var cultius_data = mundo_data.get("cultius", [])
