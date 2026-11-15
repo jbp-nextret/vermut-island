@@ -608,9 +608,21 @@ func _crear_cercle_alquimia():
 	cercle.modulate = cercle_colors[0]
 	cercle.modulate.a = 0.0
 
-	add_child(cercle)  # fill del Personatge, es mou amb ell
-	cercle.position = Vector3(0, 0.05, 0)
+	# Arran de terra: abans era a l'alçada de l'origen del personatge, que és uns 20 cm
+	# per sobre dels peus, i quedava surant (o dins del terra si saltaves). Ara cada frame
+	# es busca on és el terra sota el personatge i el segueix.
+	cercle.top_level = true
+	cercle.render_priority = 1
+	cercle.no_depth_test = false
+	add_child(cercle)
 	cercle.rotation_degrees.x = -90
+	var seguir := func():
+		if not is_instance_valid(cercle):
+			return
+		cercle.global_position = _terra_sota() + Vector3.UP * 0.04
+	seguir.call()
+	get_tree().process_frame.connect(seguir)
+	cercle.tree_exiting.connect(func(): get_tree().process_frame.disconnect(seguir))
 
 	var tween_aparicio = create_tween()
 	tween_aparicio.set_parallel(true)
@@ -637,6 +649,14 @@ func _crear_cercle_alquimia():
 		fade_out.tween_property(cercle, "scale", Vector3.ONE * 1.3, 0.5)
 		fade_out.chain().tween_callback(cercle.queue_free)
 	)
+
+## El punt de terra just sota el personatge (si no en troba, sota els peus)
+func _terra_sota() -> Vector3:
+	var p := posicio_visual if posicio_visual != Vector3.ZERO else global_position
+	var raig := PhysicsRayQueryParameters3D.create(p + Vector3.UP * 0.5, p + Vector3.DOWN * 4.0, 1)
+	raig.exclude = [get_rid()]
+	var cop := get_world_3d().direct_space_state.intersect_ray(raig)
+	return cop.position if not cop.is_empty() else p + Vector3.DOWN * 0.19
 
 ## L'enemic que hi ha sota el ratolí (el més proper al cursor, dins d'un petit radi), o null
 func enemic_apuntat() -> Node3D:

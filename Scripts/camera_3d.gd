@@ -18,8 +18,9 @@ const ZOOM_SPEED = 0.5
 const MIN_ZOOM = 7.0
 const MAX_ZOOM = 14.0   # amb la "Distància de visió" normal (vegeu ZOOM_MAXIM)
 ## Fins on es pot allunyar el zoom i fins on arriben les ombres, segons l'opció
-const ZOOM_MAXIM := {"curta": 12.0, "normal": 14.0, "llarga": 19.0, "molt_llarga": 25.0}
-const OMBRES := {"curta": 80.0, "normal": 110.0, "llarga": 160.0, "molt_llarga": 230.0}
+## (més lluny que abans, sobretot per veure venir les onades)
+const ZOOM_MAXIM := {"curta": 14.0, "normal": 20.0, "llarga": 27.0, "molt_llarga": 36.0}
+const OMBRES := {"curta": 100.0, "normal": 150.0, "llarga": 210.0, "molt_llarga": 300.0}
 ## El desenfocament del fons: [quant, a quantes unitats per darrere del personatge comença]
 const DESENFOCAMENT := {"cap": [0.0, 0.0], "suau": [0.07, 18.0], "normal": [0.2, 10.0]}
 const PAS_GIR := 45.0
@@ -96,6 +97,10 @@ func _ajustar_desenfocament():
 	atributs.dof_blur_near_enabled = false
 	attributes = atributs
 
+## Com més lluny, passos més grans (si no, calia girar molt la rodeta)
+func _pas_zoom() -> float:
+	return maxf(ZOOM_SPEED, target_size * 0.08)
+
 func zoom_maxim() -> float:
 	return ZOOM_MAXIM.get(SettingsManager.valor("distancia_visio"), MAX_ZOOM)
 
@@ -149,9 +154,9 @@ func _input(event):
 		return   # construint a casa hi ha una altra càmera activa
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			target_size = clamp(target_size - ZOOM_SPEED, MIN_ZOOM, zoom_maxim())
+			target_size = clamp(target_size - _pas_zoom(), MIN_ZOOM, zoom_maxim())
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			target_size = clamp(target_size + ZOOM_SPEED, MIN_ZOOM, zoom_maxim())
+			target_size = clamp(target_size + _pas_zoom(), MIN_ZOOM, zoom_maxim())
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			girant_amb_ratoli = event.pressed
 			if not event.pressed and _amb_passos(_mode()):
