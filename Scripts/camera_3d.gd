@@ -7,9 +7,9 @@ extends Camera3D
 ##        s'ajusta al pas més proper (sempre es veu l'escena "ben posada")
 ##      · a terra amb la càmera lliure, i en barca: sense passos (Z / C giren 45°)
 ##      · dins de casa: a passos de 45° i com a molt GIR_MAXIM per banda (per les parets)
-##  - inclinació (perspectiva): X / V, o arrossegant amb el botó central en vertical.
-##    Més baixa = més de costat, útil per al plataformeig. Els nivells poden fixar una
-##    vista concreta amb `establir_vista()`.
+##  - inclinació (perspectiva): el jugador ja no la pot canviar (des de dalt, els sprites
+##    pixelats no queden bé). Només els nivells la poden fixar amb `establir_vista()`
+##    (p. ex. més de costat per al plataformeig). Les accions inclinar_camera_* no fan res.
 ##  - segueix el jugador amb una mica de suavitat
 ##  - postprocessat (vores blanques i color): F10 l'activa o el desactiva
 ##  - la baixa resolució (pixel art) la fa l'autoload ResolucioPixel amb un SubViewport
@@ -162,7 +162,6 @@ func _input(event):
 			if not event.pressed and _amb_passos(_mode()):
 				gir_objectiu = _ajustar_al_pas(gir_objectiu)
 	elif event is InputEventMouseMotion and girant_amb_ratoli:
-		inclinacio_objectiu = _limitar_inclinacio(inclinacio_objectiu - event.relative.y * SENSIBILITAT_GIR)
 		gir_objectiu = _limitar(gir_objectiu - event.relative.x * SENSIBILITAT_GIR)
 
 func _unhandled_input(event):
@@ -172,10 +171,6 @@ func _unhandled_input(event):
 		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) - deg_to_rad(_pas()))
 	elif event.is_action_pressed("girar_camera_dreta"):
 		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) + deg_to_rad(_pas()))
-	elif event.is_action_pressed("inclinar_camera_avall"):
-		inclinacio_objectiu = _limitar_inclinacio(inclinacio_objectiu + deg_to_rad(PAS_INCLINACIO))
-	elif event.is_action_pressed("inclinar_camera_amunt"):
-		inclinacio_objectiu = _limitar_inclinacio(inclinacio_objectiu - deg_to_rad(PAS_INCLINACIO))
 	elif event.is_action_pressed("reset_camera"):
 		gir_objectiu = gir_inicial
 		inclinacio_objectiu = inclinacio_inicial
