@@ -77,6 +77,7 @@ func _pestanya_grafics():
 	_seleccio(l, "Distància de visió", "distancia_visio", [["curta", "Curta"], ["normal", "Normal"], ["llarga", "Llarga"], ["molt_llarga", "Molt llarga"]])
 	_seleccio(l, "Fons desenfocat", "desenfocament", [["cap", "Gens"], ["suau", "Suau (per defecte)"], ["normal", "Fort"]])
 	_interruptor(l, "Pluja i partícules del temps", "particules_meteo")
+	_interruptor(l, "Efectes del personatge (pols, batecs, espurnes)", "efectes_personatge")
 	_interruptor(l, "Efectes d'ambient (raigs de sol, insectes, ombres de núvols)", "efectes_ambient")
 	_control_lliscant(l, "Sacseig de càmera", "sacseig")
 	_control_lliscant(l, "Suavitat de la càmera", "suavitat_camera")

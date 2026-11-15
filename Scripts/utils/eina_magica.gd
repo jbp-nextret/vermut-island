@@ -7,6 +7,7 @@ static var _materials := {}
 
 ## Fa el cop a `punt`. Retorna quant triga a tocar (per sincronitzar-hi l'efecte).
 static func invocar(pare: Node, punt: Vector3, eina: String, color: Color) -> float:
+	EfectesJugador.batec(pare, 0.8)
 	var camera := pare.get_viewport().get_camera_3d()
 	var pivot := Node3D.new()
 	pare.add_child(pivot)

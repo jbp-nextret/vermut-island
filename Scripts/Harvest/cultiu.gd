@@ -423,6 +423,7 @@ func text_interaccio(_jugador) -> String:
 
 func interactuar(_jugador) -> void:
 	Progressio.guanyar_xp("collir")
+	EfectesJugador.batec(self)
 	var raim := randi_range(raim_min, raim_max)
 	Inventari.afegir("raim", raim)
 	TextFlotant.mostrar(get_parent(), global_position + Vector3.UP * 1.2, "+%d 🍇" % raim, Color(0.75, 0.55, 1.0))

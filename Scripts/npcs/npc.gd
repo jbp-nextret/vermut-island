@@ -21,7 +21,7 @@ enum Estat { QUIET, PASSEJANT, SEGUINT, AJUDANT, TORNANT }
 
 const GRAVETAT := 20.0
 const DISTANCIA_SEGUIR := 1.8      # no s'acosta més que això al jugador
-const DISTANCIA_TELEPORT := 16.0   # si queda tan lluny, apareix al costat del jugador
+const DISTANCIA_TELEPORT := 16.0   # si queda tan lluny, apareix fora de la pantalla i ve caminant (Seguidors)
 const RADI_AJUDA := 7.0            # busca feina a aquesta distància del jugador
 const INTERVAL_AJUDA := 5.0
 const SEPARACIO_CAPES := 0.002
@@ -162,8 +162,13 @@ func _physics_process(delta):
 			Estat.AJUDANT:
 				moviment = _ajudar()
 
-	velocity.x = moviment.x * velocitat * (1.6 if estat in [Estat.SEGUINT, Estat.AJUDANT] else 1.0)
-	velocity.z = moviment.z * velocitat * (1.6 if estat in [Estat.SEGUINT, Estat.AJUDANT] else 1.0)
+	var rapid := 1.6 if estat in [Estat.SEGUINT, Estat.AJUDANT] else 1.0
+	# Si s'ha quedat enrere, corre per atrapar el jugador
+	var j := _jugador()
+	if estat == Estat.SEGUINT and j and _pla(j.global_position - global_position).length() > 5.0:
+		rapid = 2.8
+	velocity.x = moviment.x * velocitat * rapid
+	velocity.z = moviment.z * velocitat * rapid
 	move_and_slide()
 	_animar(moviment)
 
@@ -202,7 +207,7 @@ func _seguir_jugador(delta: float) -> Vector3:
 		return Vector3.ZERO
 	var d := _pla(jugador.global_position - global_position)
 	if d.length() > DISTANCIA_TELEPORT or absf(jugador.global_position.y - global_position.y) > 5.0:
-		_apareixer_al_costat_del_jugador()
+		_apareixer_fora_de_vista()
 		return Vector3.ZERO
 	# Busca feina de tant en tant
 	temps_ajuda += delta
@@ -261,8 +266,17 @@ func _apareixer_quan_estigui_llest():
 	set_physics_process(false)
 	for i in 3:
 		await get_tree().physics_frame
-	_apareixer_al_costat_del_jugador()
+	_apareixer_fora_de_vista()
 	set_physics_process(true)
+
+## Lluny de la pantalla, i d'allà ve caminant (si no es troba lloc, al costat del jugador)
+func _apareixer_fora_de_vista():
+	var p = Seguidors.punt_fora_de_vista(self, _jugador())
+	if p == null:
+		_apareixer_al_costat_del_jugador()
+		return
+	global_position = p + Vector3.UP * 0.25
+	velocity = Vector3.ZERO
 
 func _apareixer_al_costat_del_jugador():
 	var jugador := _jugador()

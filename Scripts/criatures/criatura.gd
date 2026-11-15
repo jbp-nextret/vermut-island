@@ -583,7 +583,7 @@ func _company(delta) -> Array:
 		return [Vector3.ZERO, 1.0]
 	var cap_jugador := _pla(jugador.global_position - global_position)
 	if cap_jugador.length() > 14.0 or absf(jugador.global_position.y - global_position.y) > 4.0:
-		apareixer_al_costat_del_jugador()
+		apareixer_fora_de_vista()
 		return [Vector3.ZERO, 1.0]
 	temps_atac += delta
 	_habilitats(delta, jugador)
@@ -910,6 +910,17 @@ func _on_vida_jugador(actual, _maxima):
 		if jugador:
 			EfectesCriatura.escut(jugador, especie.color.lightened(0.3))
 	set_meta("vida_abans", actual)
+
+## Lluny de la pantalla, i d'allà ve corrents (si no es troba lloc, al costat del jugador)
+func apareixer_fora_de_vista():
+	var p = Seguidors.punt_fora_de_vista(self, _jugador())
+	if p == null:
+		apareixer_al_costat_del_jugador()
+		return
+	global_position = p + Vector3.UP * 0.05
+	velocity = Vector3.ZERO
+	pos_anterior = global_position
+	_canviar_estat(Estat.SEGUINT)
 
 func apareixer_al_costat_del_jugador():
 	var jugador := _jugador()

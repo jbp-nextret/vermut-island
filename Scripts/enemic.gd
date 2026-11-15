@@ -13,6 +13,19 @@ extends CharacterBody3D
 
 const ALCADA_ATAC_VOLADOR := 0.6      # baixa en picat fins aquí per atacar
 
+# Voladors (ratpenats): s'acosten voleiant, fan cercles al voltant de l'objectiu, es
+# llancen en picat, ataquen i tornen a pujar (en lloc d'anar en línia recta i quedar-se quiets)
+enum Vol { APROPANT, VOLTANT, PICAT, RETIRADA }
+const ACCELERACIO_VOL := 7.0
+const RADI_VOLTA := 3.2
+const SEPARACIO_VOLADORS := 1.4
+var vol := Vol.APROPANT
+var temps_vol := 0.0
+var sentit_volta := 1.0
+var fase := 0.0
+var velocitat_vol := Vector3.ZERO
+var mirall := 1.0
+
 var vida_actual = 0
 var objectiu: Node3D = null
 var temps_darrer_atac: float = 0.0
@@ -71,12 +84,20 @@ func _ready():
 	jugador = get_tree().get_first_node_in_group("player")
 	if jugador == null:
 		jugador = get_parent().get_node_or_null("Personatge")
+	fase = randf() * TAU
+	sentit_volta = 1.0 if randf() < 0.5 else -1.0
+	_apareixer()
 
 func _process(_delta):
 	if pos_fisica_anterior.distance_to(global_position) > 2.0:
 		pos_fisica_anterior = global_position   # acaba d'aparèixer: sense interpolar
 	var fraccio := Engine.get_physics_interpolation_fraction()
 	sprite.position = offset_sprite + (pos_fisica_anterior.lerp(global_position, fraccio) - global_position)
+	if es_volador and not fugint:
+		# Aleteig: s'aixafa i s'estira, i puja i baixa una mica
+		var t := Time.get_ticks_msec() / 1000.0 * (14.0 if vol == Vol.PICAT else 9.0) + fase
+		sprite.scale = Vector3((1.0 + 0.08 * sin(t)) * mirall, 1.0 - 0.14 * sin(t), 1.0)
+		sprite.position.y += 0.08 * sin(t * 0.5)
 
 func _physics_process(delta):
 	pos_fisica_anterior = global_position
@@ -104,6 +125,9 @@ func _physics_process(delta):
 
 	temps_darrer_atac += delta
 	objectiu = obtenir_objectiu()
+	if es_volador:
+		_volar(delta, multiplicador)
+		return
 	velocitat_moviment.x = 0
 	velocitat_moviment.z = 0
 
@@ -139,6 +163,118 @@ func _physics_process(delta):
 			velocitat_moviment.y = 0
 		velocity = velocitat_moviment
 		move_and_slide()
+
+## El vol dels ratpenats (vegeu Vol)
+func _volar(delta: float, multiplicador: float):
+	temps_vol += delta
+	var desitjada := Vector3.ZERO
+	var rapidesa := velocitat * multiplicador
+	if objectiu:
+		var centre := objectiu.global_position
+		var pla := Vector3(global_position.x - centre.x, 0.0, global_position.z - centre.z)
+		var dist := pla.length()
+		var radi := pla / maxf(dist, 0.01)
+		match vol:
+			Vol.APROPANT:
+				# Cap a l'objectiu, alt i fent eses
+				var cap := Vector3(centre.x, centre.y + altura_vol, centre.z) - global_position
+				var costat := Vector3(-cap.z, 0.0, cap.x).normalized() * sin(temps_vol * 2.3 + fase) * 0.6
+				desitjada = (cap.normalized() + costat).normalized() * rapidesa
+				if dist < RADI_VOLTA * 1.3:
+					_canviar_vol(Vol.VOLTANT)
+			Vol.VOLTANT:
+				# Fa voltes al seu voltant una estona, i després es llança
+				var tangent := Vector3(-radi.z, 0.0, radi.x) * sentit_volta
+				var correccio := -radi * (dist - RADI_VOLTA) * 0.8
+				var alcada := (centre.y + altura_vol * 0.7 + 0.4 * sin(temps_vol * 3.0 + fase)) - global_position.y
+				desitjada = (tangent * rapidesa) + correccio + Vector3.UP * alcada * 2.0
+				if temps_vol > 0.9 + fmod(fase, 1.2) and temps_darrer_atac >= cooldown_atac:
+					_canviar_vol(Vol.PICAT)
+				elif dist > RADI_VOLTA * 2.5:
+					_canviar_vol(Vol.APROPANT)
+			Vol.PICAT:
+				var punt := centre + Vector3.UP * ALCADA_ATAC_VOLADOR
+				desitjada = (punt - global_position).normalized() * rapidesa * 2.4
+				if global_position.distance_to(punt) <= rango_atac:
+					if temps_darrer_atac >= cooldown_atac:
+						atacar_objectiu()
+						temps_darrer_atac = 0.0
+					_canviar_vol(Vol.RETIRADA)
+				elif temps_vol > 2.0:
+					_canviar_vol(Vol.RETIRADA)
+			Vol.RETIRADA:
+				# Torna a pujar, allunyant-se una mica
+				desitjada = (radi * 1.2 + Vector3.UP * 1.3).normalized() * rapidesa * 1.6
+				if temps_vol > 0.7:
+					sentit_volta = -sentit_volta if randf() < 0.4 else sentit_volta
+					_canviar_vol(Vol.VOLTANT)
+	else:
+		# Sense res a atacar: es queda voleiant
+		desitjada = Vector3(sin(temps_vol + fase), cos(temps_vol * 1.7) * 0.3, cos(temps_vol * 0.8 + fase)) * rapidesa * 0.4
+	# Que no s'amunteguin
+	for altre in get_tree().get_nodes_in_group("enemics_voladors"):
+		if altre == self:
+			continue
+		var lluny: Vector3 = global_position - altre.global_position
+		var d := lluny.length()
+		if d < SEPARACIO_VOLADORS and d > 0.01:
+			desitjada += lluny / d * (SEPARACIO_VOLADORS - d) * 3.0
+	# Gira de mica en mica (inèrcia): res de canvis de direcció de cop
+	velocitat_vol = velocitat_vol.lerp(desitjada, 1.0 - exp(-ACCELERACIO_VOL * delta))
+	global_position += velocitat_vol * delta
+	# Mai per sota de terra
+	if objectiu and global_position.y < objectiu.global_position.y + 0.3:
+		global_position.y = objectiu.global_position.y + 0.3
+	# Mira cap on va (vist des de la càmera)
+	var camera := get_viewport().get_camera_3d()
+	if camera:
+		var dreta := velocitat_vol.dot(camera.global_basis.x)
+		if absf(dreta) > 0.4:
+			mirall = -1.0 if dreta < 0.0 else 1.0
+
+func _canviar_vol(nou: Vol):
+	vol = nou
+	temps_vol = 0.0
+
+## En sortir: creix des de zero enmig d'un núvol fosc (no apareix de cop)
+func _apareixer():
+	var final := scale
+	scale = final * 0.05
+	var t := create_tween()
+	t.tween_property(self, "scale", final, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var p := CPUParticles3D.new()
+	p.one_shot = true
+	p.amount = 18
+	p.lifetime = 0.7
+	p.explosiveness = 0.9
+	p.local_coords = false
+	p.direction = Vector3.UP
+	p.spread = 180.0
+	p.initial_velocity_min = 0.8
+	p.initial_velocity_max = 2.0
+	p.gravity = Vector3(0, 0.6, 0)
+	p.damping_min = 1.5
+	p.damping_max = 2.5
+	var malla := SphereMesh.new()
+	malla.radius = 0.12
+	malla.height = 0.24
+	malla.radial_segments = 6
+	malla.rings = 3
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.22, 0.12, 0.3, 0.75)
+	malla.material = m
+	p.mesh = malla
+	var corba := Curve.new()
+	corba.add_point(Vector2(0, 1))
+	corba.add_point(Vector2(1, 0))
+	p.scale_amount_curve = corba
+	get_parent().add_child.call_deferred(p)
+	p.ready.connect(func():
+		p.global_position = global_position
+		p.emitting = true, CONNECT_ONE_SHOT)
+	p.finished.connect(p.queue_free)
 
 ## Va a pels cultius (l'esquer atrau més), però si el jugador és a prop i més a
 ## l'abast, el prefereix. Ja no es queda quiet si el cultiu més proper és lluny.

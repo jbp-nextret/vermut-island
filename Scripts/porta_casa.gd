@@ -4,7 +4,8 @@ extends Area3D
 @export var nom_casa: String = "Casa"
 @export var escena_interior: PackedScene  # Assigna la escena interior
 @export var posicio_entrada: Vector3 = Vector3.ZERO
-@export var sortida_world: Vector3 = Vector3.ZERO
+@export var sortida_world: Vector3 = Vector3.ZERO   # (antic: ara es calcula amb punt_sortida)
+const DISTANCIA_SORTIDA := 1.3
 
 var jugador_dins = false
 
@@ -41,5 +42,16 @@ func entrar_casa():
 		push_error("Falta assignar escena_interior a " + nom_casa)
 		return
 	GestorPartida.guardar_mundo()
-	EventBus.request_player_spawn(sortida_world)
+	EventBus.request_player_spawn(punt_sortida())
 	get_tree().change_scene_to_packed(escena_interior)
+
+## On apareix el jugador en sortir: just davant de la porta, cap a fora de la casa.
+## (Abans era una posició fixa, `sortida_world`, que s'havia quedat lluny en moure la casa.)
+func punt_sortida() -> Vector3:
+	var porta := punt_interaccio()
+	var casa := owner as Node3D if owner is Node3D else get_parent() as Node3D
+	var fora := Vector3(porta.x - casa.global_position.x, 0.0, porta.z - casa.global_position.z)
+	if fora.length() < 0.01:
+		fora = global_transform.basis.z
+		fora.y = 0.0
+	return porta + fora.normalized() * DISTANCIA_SORTIDA

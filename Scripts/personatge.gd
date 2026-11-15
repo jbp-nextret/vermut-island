@@ -124,6 +124,7 @@ var posicions_capes := {}
 func _ready():
 	ultim_lloc_segur = global_position
 	offset_esquelet = skeleton.position
+	add_child(EfectesJugador.crear(self))
 	pos_fisica_anterior = global_position
 	posicio_visual = global_position
 	add_to_group("player")
