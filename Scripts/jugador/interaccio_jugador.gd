@@ -44,8 +44,10 @@ func _unhandled_input(event):
 		if jugador.has_method("encarar"):
 			var es_gent: bool = objectiu.is_in_group("npcs") or objectiu.is_in_group("porings")
 			jugador.encarar(objectiu.punt_interaccio(), not es_gent, 2.0 if es_gent else 1.2)
-		objectiu.interactuar(self)
+		# Es marca abans: interactuar pot canviar d'escena (les portes de casa) i llavors
+		# aquest node ja no és a l'arbre i no té viewport
 		get_viewport().set_input_as_handled()
+		objectiu.interactuar(self)
 
 func _buscar_objectiu() -> Node:
 	if GameState.mode == GameState.Mode.CONSTRUIR or GameState.en_dialeg or GameState.a_barca:
