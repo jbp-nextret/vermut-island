@@ -81,6 +81,7 @@ func _pestanya_grafics():
 	_interruptor(l, "Efectes d'ambient (raigs de sol, insectes, ombres de núvols)", "efectes_ambient")
 	_control_lliscant(l, "Sacseig de càmera", "sacseig")
 	_control_lliscant(l, "Suavitat de la càmera", "suavitat_camera")
+	_interruptor(l, "Càmera lliure a terra (sense girs de 90°)", "camera_lliure")
 
 func _pestanya_joc():
 	var l := _pestanya("Joc")

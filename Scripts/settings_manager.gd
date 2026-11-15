@@ -19,6 +19,7 @@ const PER_DEFECTE := {
 	"particules_meteo": true,
 	"efectes_ambient": true,
 	"efectes_personatge": true,    # pols en saltar i aterrar, batecs, espurnes de màgia
+	"camera_lliure": false,        # a terra, girar la càmera sense passos de 90°
 	"desenfocament": "suau",       # el fons desenfocat: "cap", "suau" o "normal"
 	"distancia_visio": "normal",   # fins on es pot allunyar el zoom i fins on hi ha ombres
 	# Joc

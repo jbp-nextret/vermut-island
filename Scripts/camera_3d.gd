@@ -1,13 +1,15 @@
 extends Camera3D
 ## Càmera del jugador:
 ##  - zoom amb la rodeta
-##  - gir al voltant del jugador: Z / C a passos de 45°, o arrossegant amb el botó central
-##    en horitzontal (en deixar-lo, s'ajusta al pas més proper). R torna a la vista inicial.
+##  - gir al voltant del jugador: Z / C, o arrossegant amb el botó central en horitzontal.
+##    R torna a la vista inicial. Segons on ets i l'opció "Gir de la càmera" (vegeu _mode):
+##      · a terra (per defecte): a passos de 90°, tota la volta; en deixar d'arrossegar
+##        s'ajusta al pas més proper (sempre es veu l'escena "ben posada")
+##      · a terra amb la càmera lliure, i en barca: sense passos (Z / C giren 45°)
+##      · dins de casa: a passos de 45° i com a molt GIR_MAXIM per banda (per les parets)
 ##  - inclinació (perspectiva): X / V, o arrossegant amb el botó central en vertical.
 ##    Més baixa = més de costat, útil per al plataformeig. Els nivells poden fixar una
 ##    vista concreta amb `establir_vista()`.
-##    El gir està limitat a GIR_MAXIM per banda: més enllà, els sprites de vegetació
-##    (que no giren amb la càmera) es veurien de costat o per darrere.
 ##  - segueix el jugador amb una mica de suavitat
 ##  - postprocessat (vores blanques i color): F10 l'activa o el desactiva
 ##  - la baixa resolució (pixel art) la fa l'autoload ResolucioPixel amb un SubViewport
@@ -21,12 +23,13 @@ const OMBRES := {"curta": 80.0, "normal": 110.0, "llarga": 160.0, "molt_llarga":
 ## El desenfocament del fons: [quant, a quantes unitats per darrere del personatge comença]
 const DESENFOCAMENT := {"cap": [0.0, 0.0], "suau": [0.07, 18.0], "normal": [0.2, 10.0]}
 const PAS_GIR := 45.0
+const PAS_GIR_TERRA := 90.0
 const PAS_INCLINACIO := 10.0
 ## Com de des de dalt pot arribar a mirar (la vista inicial és -24°). Més avall de -40°
 ## ja comença a semblar una vista zenital i es perd la sensació de volum.
 const INCLINACIO_MINIMA := -40.0
 const INCLINACIO_MAXIMA := -12.0   # gairebé de costat
-const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial
+const GIR_MAXIM := 45.0   # graus a cada costat de la vista inicial (només dins de casa)
 const SENSIBILITAT_GIR := 0.008
 ## Com de ràpid segueix el jugador, segons l'opció "Suavitat de la càmera":
 ## 0 % = enganxada (sense retard) · 25 % (per defecte) ≈ 30 · 100 % = 6 (molt suau)
@@ -51,6 +54,7 @@ var gir_objectiu := 0.0
 var inclinacio_inicial := 0.0
 var inclinacio_objectiu := 0.0
 var girant_amb_ratoli := false
+var mode_abans := ""
 var postprocessat: MeshInstance3D
 
 func _ready():
@@ -123,6 +127,12 @@ func _process(delta: float) -> void:
 		# En vertical, sempre una mica esmorteïda: pujar o baixar un graó no la sacseja
 		actual.y = lerpf(actual.y, desti.y, 1.0 - exp(-SEGUIMENT_VERTICAL * delta))
 		pivot.global_position = actual
+		# En baixar de la barca, torna al pas més proper
+		var mode := _mode()
+		if mode != mode_abans:
+			if _amb_passos(mode) and not girant_amb_ratoli:
+				gir_objectiu = _ajustar_al_pas(gir_objectiu)
+			mode_abans = mode
 		pivot.rotation.y = lerp_angle(pivot.rotation.y, gir_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 		pivot.rotation.x = lerp_angle(pivot.rotation.x, inclinacio_objectiu, 1.0 - exp(-SUAVITAT_GIR * delta))
 
@@ -144,7 +154,7 @@ func _input(event):
 			target_size = clamp(target_size + ZOOM_SPEED, MIN_ZOOM, zoom_maxim())
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			girant_amb_ratoli = event.pressed
-			if not event.pressed:
+			if not event.pressed and _amb_passos(_mode()):
 				gir_objectiu = _ajustar_al_pas(gir_objectiu)
 	elif event is InputEventMouseMotion and girant_amb_ratoli:
 		inclinacio_objectiu = _limitar_inclinacio(inclinacio_objectiu - event.relative.y * SENSIBILITAT_GIR)
@@ -154,9 +164,9 @@ func _unhandled_input(event):
 	if not current:
 		return
 	if event.is_action_pressed("girar_camera_esquerra"):
-		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) - deg_to_rad(PAS_GIR))
+		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) - deg_to_rad(_pas()))
 	elif event.is_action_pressed("girar_camera_dreta"):
-		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) + deg_to_rad(PAS_GIR))
+		gir_objectiu = _limitar(_ajustar_al_pas(gir_objectiu) + deg_to_rad(_pas()))
 	elif event.is_action_pressed("inclinar_camera_avall"):
 		inclinacio_objectiu = _limitar_inclinacio(inclinacio_objectiu + deg_to_rad(PAS_INCLINACIO))
 	elif event.is_action_pressed("inclinar_camera_amunt"):
@@ -180,11 +190,29 @@ func establir_vista(gir_graus = null, inclinacio_graus = null) -> void:
 func _limitar_inclinacio(angle: float) -> float:
 	return clampf(angle, deg_to_rad(INCLINACIO_MINIMA), deg_to_rad(INCLINACIO_MAXIMA))
 
+## "casa", "barca", "passos" (a terra, per defecte) o "lliure" (a terra, amb l'opció)
+func _mode() -> String:
+	if GameState.dins_casa:
+		return "casa"
+	if jugador and "barca" in jugador and jugador.barca != null:
+		return "barca"
+	return "lliure" if SettingsManager.valor("camera_lliure") else "passos"
+
+func _amb_passos(mode: String) -> bool:
+	return mode in ["passos", "casa"]
+
+func _pas() -> float:
+	return PAS_GIR_TERRA if _mode() == "passos" else PAS_GIR
+
 func _limitar(angle: float) -> float:
+	if _mode() != "casa":
+		return angle   # tota la volta
 	return clampf(angle, gir_inicial - deg_to_rad(GIR_MAXIM), gir_inicial + deg_to_rad(GIR_MAXIM))
 
 func _ajustar_al_pas(angle: float) -> float:
-	var pas := deg_to_rad(PAS_GIR)
+	if not _amb_passos(_mode()):
+		return angle
+	var pas := deg_to_rad(_pas())
 	return gir_inicial + round((angle - gir_inicial) / pas) * pas
 
 func _crear_postprocessat():

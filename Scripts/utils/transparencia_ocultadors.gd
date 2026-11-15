@@ -4,7 +4,9 @@ class_name TransparenciaOcultadors
 ##
 ## Els objectes que es poden fer transparents són al grup "ocultables". Un objecte tapa
 ## el personatge si, vist des de la càmera, el personatge cau dins de la seva silueta
-## aproximada (el rectangle que ocupa a la pantalla) i és més a prop de la càmera.
+## aproximada (el rectangle que ocupa a la pantalla) i és més a prop de la càmera, o si
+## un raig des del personatge cap a la càmera xoca amb ell (ara que la càmera fa tota la
+## volta, el rectangle sol no n'hi ha prou quan el personatge és a prop d'una vora).
 
 const OPACITAT_TAPANT := 0.45   # quant es veu l'objecte quan tapa (0 = invisible)
 const VELOCITAT := 6.0          # rapidesa del fos
@@ -25,6 +27,7 @@ func _process(delta):
 	# Dos punts del personatge: els peus i el cap
 	var punts := [punt_jugador + Vector3.UP * 0.3, punt_jugador + Vector3.UP * 1.3]
 	var profunditat_jugador := -(vista * punt_jugador).z
+	var xocs := _xocs_cap_a_camera(camera, punts)
 
 	for objecte in get_tree().get_nodes_in_group("ocultables"):
 		var tapa := false
@@ -35,6 +38,11 @@ func _process(delta):
 			for p in punts:
 				if not camera.is_position_behind(p) and rect.has_point(camera.unproject_position(p)):
 					tapa = true
+		if not tapa:
+			for cos in xocs:
+				if cos == objecte or objecte.is_ancestor_of(cos):
+					tapa = true
+					break
 		var objectiu := 1.0 - OPACITAT_TAPANT if tapa else 0.0
 		var actual: float = transparencies.get(objecte, 0.0)
 		if is_equal_approx(actual, objectiu):
@@ -47,6 +55,23 @@ func _process(delta):
 			continue
 		for m in _malles(objecte):
 			_aplicar(m, actual)
+
+## Els cossos que hi ha entre el personatge i la càmera
+func _xocs_cap_a_camera(camera: Camera3D, punts: Array) -> Array:
+	var xocs := []
+	var espai := camera.get_world_3d().direct_space_state
+	var cap_camera := camera.global_basis.z
+	for p in punts:
+		var exclou: Array[RID] = [jugador.get_rid()]
+		for i in 3:
+			var raig := PhysicsRayQueryParameters3D.create(p, p + cap_camera * 30.0)
+			raig.exclude = exclou
+			var cop := espai.intersect_ray(raig)
+			if cop.is_empty():
+				break
+			xocs.append(cop.collider)
+			exclou.append(cop.rid)
+	return xocs
 
 ## La caixa que ocupa l'objecte al món (unint totes les seves malles)
 func _caixa(objecte: Node) -> AABB:
