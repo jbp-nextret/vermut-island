@@ -41,7 +41,6 @@ ambient_light_color = Color(1, 0.9411765, 0.8156863, 1)
 ambient_light_energy = 0.4
 glow_enabled = true
 glow_intensity = 0.5
-glow_bloom = 0.0
 glow_hdr_threshold = 1.3
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_45d1s"]
