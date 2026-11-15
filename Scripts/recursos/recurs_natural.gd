@@ -140,7 +140,7 @@ func rebre_tall(origen: Vector3, direccio: Vector3, abast: float, mig_angle: flo
 	rebre_cop()
 
 func _esgotar():
-	esgotat_dia = GestorTemps.dia_actual
+	esgotat_dia = Descans.dia_natura()
 	cops_rebuts = 0
 	var quantitat := maxi(1, roundi(randi_range(quantitat_min, quantitat_max) * PROPORCIO_ETAPA[etapa]))
 	var info := CatalegObjectes.info(objecte)
@@ -190,7 +190,7 @@ func _quedar_soca():
 		v.global_position.y = terra_y + maxf(alcada_adult, 0.0) * mida
 
 func _process(_delta):
-	var dia: int = GestorTemps.dia_actual
+	var dia: int = Descans.dia_natura()
 	# Creix: brot → jove → adult
 	if disponible() and etapa < 2 and dia >= dia_etapa + dies_per_etapa:
 		etapa += 1
@@ -211,7 +211,7 @@ func conreu_a_prop() -> bool:
 
 ## L'amaga sense donar res (quan és en un lloc on ara es conrea)
 func retirar():
-	esgotat_dia = GestorTemps.dia_actual
+	esgotat_dia = Descans.dia_natura()
 	cops_rebuts = 0
 	_mostrar(false)
 
@@ -224,7 +224,7 @@ func reapareixer():
 	# De la soca (o d'on hi havia el brot) en surt un brot, que tornarà a créixer
 	if te_soca():
 		etapa = 0
-		dia_etapa = GestorTemps.dia_actual
+		dia_etapa = Descans.dia_natura()
 		_mostrar(true)
 		_aplicar_mida(true)
 		return

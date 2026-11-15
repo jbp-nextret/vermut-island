@@ -1,6 +1,6 @@
 extends Node
 class_name PuntsExcavacio
-## Punts d'excavació: cada dia surten unes marques a terra (terra remoguda amb uns
+## Punts d'excavació: cada dia (en dormir) surten unes marques a terra (terra remoguda amb uns
 ## cuquets que es mouen) a la illa principal i a les illetes. Si hi llaures a sobre amb
 ## l'aixada, desenterres el que hi ha: un fòssil o un tresor. Les marques que brillen
 ## amaguen alguna cosa important i es desenterren amb el minijoc d'excavació.
@@ -35,10 +35,10 @@ func _ready():
 	_carregar()
 
 func _process(_delta):
-	if GestorTemps.dia_actual != dia:
+	if Descans.dia_natura() != dia:
 		if dia >= 0:
 			excavats.clear()
-		dia = GestorTemps.dia_actual
+		dia = Descans.dia_natura()
 		_generar()
 
 func hi_ha(cella: Vector3i) -> bool:
@@ -215,14 +215,14 @@ func _saltar_troballa(pos: Vector3, boti: Dictionary):
 func _guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"dia": GestorTemps.dia_actual, "excavats": excavats.map(func(c): return [c.x, c.y, c.z])}))
+		f.store_string(JSON.stringify({"dia": Descans.dia_natura(), "excavats": excavats.map(func(c): return [c.x, c.y, c.z])}))
 
 func _carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
 	if f == null:
 		return
 	var d = JSON.parse_string(f.get_as_text())
-	if d is Dictionary and int(d.get("dia", -1)) == GestorTemps.dia_actual:
+	if d is Dictionary and int(d.get("dia", -1)) == Descans.dia_natura():
 		for c in d.get("excavats", []):
 			excavats.append(Vector3i(int(c[0]), int(c[1]), int(c[2])))
 

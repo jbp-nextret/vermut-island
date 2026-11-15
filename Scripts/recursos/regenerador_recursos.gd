@@ -1,6 +1,6 @@
 extends Node
 class_name RegeneradorRecursos
-## Fa sortir recursos nous cada dia, com a Stardew Valley: brots d'arbre que creixen fins
+## Fa sortir recursos nous cada dia (mentre dormes: vegeu Descans.dia_natura), com a Stardew Valley: brots d'arbre que creixen fins
 ## a fer-se grans, roques i herba. Cada zona (les illetes i, amb menys densitat, l'illa
 ## principal) té una densitat objectiu; cada dia se'n creen uns quants fins arribar-hi.
 ## Els recursos creats així es desen amb la partida.
@@ -65,7 +65,7 @@ func afegir_zona(nom: String, celles: Array, factor: float = 1.0):
 	zones.append({"nom": nom, "factor": factor, "celles": celles})
 
 func _process(_delta):
-	var dia: int = GestorTemps.dia_actual
+	var dia: int = Descans.dia_natura()
 	if dia != ultim_dia:
 		var primer_cop := ultim_dia < 0
 		ultim_dia = dia
@@ -90,7 +90,7 @@ func regenerar(inicial := false):
 				var etapa := 0
 				if tipus == RecursNatural.Tipus.ARBRE and inicial:
 					etapa = rng.randi_range(0, 2)
-				crear(tipus, cella, etapa, GestorTemps.dia_actual, zi)
+				crear(tipus, cella, etapa, Descans.dia_natura(), zi)
 
 func crear(tipus: int, cella: Vector3i, etapa: int, dia_etapa: int, zona: int) -> RecursNatural:
 	var visual: Node3D
@@ -194,4 +194,4 @@ func restaurar(llista: Array):
 		if r and d.has("talat"):
 			r.esgotat_dia = int(d.talat)
 			r.call_deferred("_quedar_soca")
-	ultim_dia = GestorTemps.dia_actual   # ja té el que tocava: no omplir de cop
+	ultim_dia = Descans.dia_natura()   # ja té el que tocava: no omplir de cop

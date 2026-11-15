@@ -53,6 +53,7 @@ func _ready():
 	generador_illes.name = "GeneradorIlles"
 	add_child(generador_illes)
 	generador_illes.generar($GridMap)
+	Biomes.registrar(generador_illes.illes, illeta_propera())
 
 	# Arbres i herba es poden recol·lectar (les roques ja porten el seu RecursNatural)
 	for node in get_children():
@@ -528,6 +529,7 @@ func guardar_mundo():
 		"desllaurades": desllaurades.keys().map(func(c): return [c.x, c.y, c.z]),
 		"recursos": RecursNatural.estats(self),
 		"recursos_dinamics": regenerador.estat(),
+		"dia_recursos": regenerador.ultim_dia,
 		"cultius": cultius_data,
 		"plantes": plantes_data
 	}
@@ -569,6 +571,9 @@ func carregar_mundo():
 	RecursNatural.restaurar(self, mundo_data.get("recursos", {}))
 	if mundo_data.has("recursos_dinamics"):
 		regenerador.restaurar(mundo_data.recursos_dinamics)
+		# Si has dormit des de l'última vegada (a casa no hi ha el món), ara toca omplir
+		if mundo_data.has("dia_recursos"):
+			regenerador.ultim_dia = int(mundo_data.dia_recursos)
 	# Primer la terra de l'hort que s'ha tornat herba, després la llaurada
 	for c in mundo_data.get("desllaurades", []):
 		desllaurar_cella(Vector3i(int(c[0]), int(c[1]), int(c[2])))

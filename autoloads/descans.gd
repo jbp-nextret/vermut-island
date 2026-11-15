@@ -8,6 +8,9 @@ extends Node
 ##             6–9 h         bé (ho recupera tot i quedes Descansat)
 ##             10 h o més    massa (ho recupera tot, però quedes Ensopit i perds el dia)
 ## Les hores són de joc, i dins de casa el rellotge no corre.
+##
+## La natura (arbres que creixen, roques i herba que tornen a sortir, les marques
+## d'excavació) només avança mentre dorms: vegeu `dia_natura()`.
 
 signal estat_canviat
 
@@ -37,6 +40,7 @@ var efecte := ""              # "descansat", "endormiscat", "ensopit" o ""
 var efecte_fins := 0.0
 var estat_anterior := ""
 var desmaiant := false
+var _dia_natura := -1           # el dia fins on ha avançat la natura (canvia en dormir)
 
 func _ready():
 	ultim_despertar = Celler.ara()
@@ -101,6 +105,7 @@ func dormir(hores: float) -> String:
 		_posar_efecte("ensopit")
 		text = "Has dormit massa... 😪 Ensopit: %s." % EFECTES.ensopit.text
 	ultim_despertar = Celler.ara() - queda_despert
+	_avancar_natura()
 	SalutJugador.curar(ceili(SalutJugador.vida_maxima * recupera))
 	var j = get_tree().get_first_node_in_group("jugador")
 	if j and j.has_method("mana_max"):
@@ -157,6 +162,7 @@ func _desmaiar():
 			Inventari.gastar_diners(perdudes)
 		efecte = ""
 		ultim_despertar = Celler.ara() - 8.0   # no has descansat bé
+		_avancar_natura()
 		SalutJugador.curar(ceili(SalutJugador.vida_maxima * 0.3))
 		_guardar()
 		l.text = "😵 T'has desmaiat de cansament...\n\nDorms 8 hores a terra%s.\nVes a dormir al llit!" % ((" i et pispen %d 🪙" % perdudes) if perdudes > 0 else ""))
@@ -170,12 +176,24 @@ func _desmaiar():
 		desmaiant = false
 		estat_canviat.emit())
 
+# ─────────────── La natura
+
+## El "dia" dels recursos: el dia en què et vas despertar per última vegada. Si et
+## passes la nit despert, a fora no creix ni torna a sortir res fins que dormis.
+func dia_natura() -> int:
+	if _dia_natura < 0:
+		_dia_natura = GestorTemps.dia_actual
+	return _dia_natura
+
+func _avancar_natura():
+	_dia_natura = maxi(_dia_natura, GestorTemps.dia_actual)
+
 # ─────────────── Desat
 
 func _guardar():
 	var f := FileAccess.open(FITXER, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"ultim_despertar": ultim_despertar, "efecte": efecte, "efecte_fins": efecte_fins}))
+		f.store_string(JSON.stringify({"ultim_despertar": ultim_despertar, "efecte": efecte, "efecte_fins": efecte_fins, "dia_natura": dia_natura()}))
 
 func _carregar():
 	var f := FileAccess.open(FITXER, FileAccess.READ)
@@ -186,3 +204,4 @@ func _carregar():
 		ultim_despertar = float(d.get("ultim_despertar", ultim_despertar))
 		efecte = str(d.get("efecte", ""))
 		efecte_fins = float(d.get("efecte_fins", 0.0))
+		_dia_natura = int(d.get("dia_natura", -1))

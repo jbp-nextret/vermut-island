@@ -1,8 +1,8 @@
 extends Node3D
 class_name Roca3D
 ## Una roca feta amb els models de Blender (Models/roca_petita / mitjana / gran.glb).
-## Cada roca tria (segons on és, així sempre surt igual) una mida, un tipus de pedra
-## (color), si té molsa i un gir. Les grans donen més pedra i costen més de picar.
+## Cada roca tria (segons on és, així sempre surt igual) una mida, si té molsa i un gir.
+## El tipus de pedra (color) i quanta molsa hi ha depenen del bioma de l'illa (Biomes). Les grans donen més pedra i costen més de picar.
 ## Té els fills "Cos" (col·lisió) i "Recurs" (RecursNatural) de l'escena roca.tscn.
 
 const SHADER := preload("res://Shaders/roca.gdshader")
@@ -55,10 +55,10 @@ func _construir():
 	model.mesh = dades.malla
 	model.position = dades.centre
 	add_child(model)
-	var pedra := rng.randi() % PEDRES.size()
-	model.material_override = _material(pedra, dades.textura)
+	var bioma := Biomes.dades(global_position)
+	model.material_override = _material(int(bioma.pedra) % PEDRES.size(), dades.textura)
 	model.set_instance_shader_parameter("variacio", rng.randf_range(-1.0, 1.0))
-	model.set_instance_shader_parameter("molsa", 1.0 if rng.randf() < 0.6 else 0.0)
+	model.set_instance_shader_parameter("molsa", 1.0 if rng.randf() < float(bioma.molsa) else 0.0)
 	rotation.y = rng.randf() * TAU
 	# La col·lisió, de la mida de la roca
 	var forma := get_node_or_null("Cos/Forma") as CollisionShape3D
