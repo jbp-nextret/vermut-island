@@ -14,6 +14,8 @@ var cors: Array[TextureRect] = []
 var rellotge: Label
 var barra_mana: ProgressBar
 var barra_xp: ProgressBar
+var barra_energia: ProgressBar   # les hores que et queden abans de desmaiar-te (Descans)
+var ple_energia: StyleBoxFlat
 var label_nivell: Label
 var label_son: Label   # descansat, cansat... (Descans)
 var label_oxigen: Label
@@ -36,11 +38,25 @@ func _ready():
 	# Mana (blau) i experiència (lila) a sota dels cors, amb el nivell al costat
 	barra_mana = _barra(Vector2(10, 28), Vector2(180, 7), Color(0.35, 0.6, 1.0))
 	barra_xp = _barra(Vector2(10, 38), Vector2(180, 5), Color(0.75, 0.5, 1.0))
+	# Energia (groga): es buida mentre estàs despert; dormir l'omple
+	barra_energia = _barra(Vector2(10, 47), Vector2(180, 6), Color(0.95, 0.82, 0.3))
+	ple_energia = barra_energia.get_theme_stylebox("fill") as StyleBoxFlat
+	barra_energia.max_value = 1.0
+	barra_energia.step = 0.0
+	barra_energia.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Unes marques on et cansaràs i on t'esgotaràs
+	for hores in [Descans.HORES_CANSAT, Descans.HORES_ESGOTAT]:
+		var marca := ColorRect.new()
+		marca.color = Color(0, 0, 0, 0.6)
+		marca.size = Vector2(1, 6)
+		marca.position = Vector2(180.0 * (1.0 - hores / Descans.HORES_DESMAI), 0)
+		marca.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		barra_energia.add_child(marca)
 	label_nivell = _label(13, Color(0.85, 0.75, 1.0))
 	label_nivell.position = Vector2(196, 29)
 	add_child(label_nivell)
 	label_son = _label(13, Color.WHITE)
-	label_son.position = Vector2(196, 45)
+	label_son.position = Vector2(196, 43)
 	add_child(label_son)
 	label_xp_guanyada = _label(12, Color(0.85, 0.7, 1.0))
 	label_xp_guanyada.position = Vector2(240, 29)
@@ -174,6 +190,17 @@ func _process(_delta):
 	barra_xp.max_value = Progressio.xp_per_nivell(Progressio.nivell)
 	barra_xp.value = Progressio.xp
 	label_nivell.text = "Nv %d" % Progressio.nivell + ("  🌟%d" % Progressio.punts if Progressio.punts > 0 else "")
+	# Energia
+	var despert := Descans.hores_despert()
+	var energia := clampf(1.0 - despert / Descans.HORES_DESMAI, 0.0, 1.0)
+	barra_energia.value = energia
+	if despert >= Descans.HORES_ESGOTAT:
+		ple_energia.bg_color = Color(0.95, 0.3, 0.25).lerp(Color(1, 0.6, 0.5), 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.008))
+	elif despert >= Descans.HORES_CANSAT:
+		ple_energia.bg_color = Color(1.0, 0.6, 0.2)
+	else:
+		ple_energia.bg_color = Color(0.95, 0.82, 0.3)
+	barra_energia.tooltip_text = "⚡ Energia: portes %d h despert.\nA les %d h estaràs cansat, a les %d h esgotat i a les %d h et desmaiaràs. Dormir l'omple." % [floori(despert), Descans.HORES_CANSAT, Descans.HORES_ESGOTAT, Descans.HORES_DESMAI]
 	var son := Descans.estat()
 	label_son.visible = not son.is_empty()
 	if label_son.visible:

@@ -107,6 +107,7 @@ shader = ExtResource("11_kwl8l")
 shader_parameter/texture_albedo = ExtResource("10_7yo87")
 shader_parameter/nomes_fulles = false
 shader_parameter/texels_moviment = 2.0
+shader_parameter/mirar_camera = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kwl8l"]
 render_priority = 0
@@ -114,6 +115,7 @@ shader = ExtResource("11_kwl8l")
 shader_parameter/texture_albedo = ExtResource("10_7yo87")
 shader_parameter/nomes_fulles = false
 shader_parameter/texels_moviment = 2.0
+shader_parameter/mirar_camera = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_rwt1y"]
 size = Vector3(3.385, 0.8, 3.845)

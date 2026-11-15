@@ -1,6 +1,7 @@
 shader_type spatial;
 // Vegetació amb vent.
-//  - Herba (per defecte): tot el sprite es gronxa, més com més amunt.
+//  - Herba (per defecte): tot el sprite es gronxa, més com més amunt. Amb
+//    `mirar_camera` sempre està de cara a la càmera (només gira en vertical), com els cultius.
 //  - Arbres (`nomes_fulles = true`): el tronc es queda quiet i només es mouen les fulles.
 //    Cada píxel de fulla agafa el color d'un píxel desplaçat uns texels cap al costat
 //    (més com més amunt i com més vent), així el moviment és nítid, en pixel art.
@@ -11,6 +12,7 @@ render_mode cull_disabled, depth_draw_opaque;
 
 uniform sampler2D texture_albedo : source_color, filter_nearest;
 uniform bool nomes_fulles = false;
+uniform bool mirar_camera = false;
 // Quants texels es mouen les fulles com a màxim (amb vent normal)
 uniform float texels_moviment = 2.0;
 
@@ -32,14 +34,34 @@ void vertex()
 	// Il·luminació senzilla
 	NORMAL = vec3(0.0, 1.0, 0.0);
 
+	if (mirar_camera) {
+		// Billboard només en l'eix Y (mantenint l'escala del node)
+		MODELVIEW_MATRIX = VIEW_MATRIX * mat4(
+			vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0),
+			vec4(0.0, 1.0, 0.0, 0.0),
+			vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0),
+			MODEL_MATRIX[3]);
+		MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(
+			vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0),
+			vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0),
+			vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0),
+			vec4(0.0, 0.0, 0.0, 1.0));
+		MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+	}
 	if (!nomes_fulles) {
 		// La base no es mou
 		float influence = 1.0 - UV.y;
 		influence *= influence;
 		float wave = sin(TIME * wind_speed + aleatori(NODE_POSITION_WORLD) * 6.28318
 			+ NODE_POSITION_WORLD.x * 0.5 + NODE_POSITION_WORLD.z * 0.3);
-		VERTEX.x += wave * wind_direction.x * wind_strength * influence;
-		VERTEX.z += wave * wind_direction.y * wind_strength * influence;
+		if (mirar_camera) {
+			// De cara a la càmera només es pot gronxar de costat: cap a on bufa el vent, vist des de la càmera
+			float costat = dot(vec3(wind_direction.x, 0.0, wind_direction.y), INV_VIEW_MATRIX[0].xyz);
+			VERTEX.x += (wave * 0.7 + 0.3 * sign(costat + 0.001)) * wind_strength * influence;
+		} else {
+			VERTEX.x += wave * wind_direction.x * wind_strength * influence;
+			VERTEX.z += wave * wind_direction.y * wind_strength * influence;
+		}
 	}
 }
 
