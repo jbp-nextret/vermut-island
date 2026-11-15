@@ -138,7 +138,7 @@ func _intentar_regar():
 	if temps_des_del_rec < RECARREGA:
 		return
 	if carregues < 1.0:
-		avis.emit("No queda aigua (es recupera sola, o amb la pluja)")
+		avis.emit("No queda aigua: omple la regadora a l'aigua dolça (F), o espera que es recuperi o que plogui")
 		return
 	carregues -= 1.0
 	temps_des_del_rec = 0.0

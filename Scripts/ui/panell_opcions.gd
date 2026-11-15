@@ -74,6 +74,8 @@ func _pestanya_grafics():
 	_interruptor(l, "Postprocessat (F10)", "postprocessat")
 	_interruptor(l, "Vores al voltant dels objectes", "vores")
 	_seleccio(l, "Resolució del món", "resolucio_pixel", [[0, "Nativa"], [540, "540 px"], [480, "480 px"], [360, "360 px (per defecte)"], [270, "270 px"], [180, "180 px"]])
+	_seleccio(l, "Distància de visió", "distancia_visio", [["curta", "Curta"], ["normal", "Normal"], ["llarga", "Llarga"], ["molt_llarga", "Molt llarga"]])
+	_seleccio(l, "Fons desenfocat", "desenfocament", [["cap", "Gens"], ["suau", "Suau (per defecte)"], ["normal", "Fort"]])
 	_interruptor(l, "Pluja i partícules del temps", "particules_meteo")
 	_interruptor(l, "Efectes d'ambient (raigs de sol, insectes, ombres de núvols)", "efectes_ambient")
 	_control_lliscant(l, "Sacseig de càmera", "sacseig")

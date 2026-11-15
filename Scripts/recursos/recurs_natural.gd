@@ -30,7 +30,8 @@ const PROBABILITAT_OLIVES := 0.6
 @export var dies_per_etapa := 2
 
 const ESCALA_ETAPA := [0.35, 0.65, 1.0]
-const ESTAT_ETAPA := ["brot", "jove", "adult"]   # el model de cada etapa (arbres 3D)
+const ESTAT_ETAPA := ["brot", "jove", "adult"]
+const MIDA_SOCA_JOVE := 0.65   # el model de cada etapa (arbres 3D)
 const PROPORCIO_ETAPA := [0.34, 0.67, 1.0]   # de cops i de recursos que dona
 
 ## Creat pel regenerador de recursos: quan s'esgota desapareix (en surten de nous en un
@@ -160,7 +161,7 @@ func _esgotar():
 			t.tween_property(v, "scale", Vector3(escala_original.x * 1.1, escala_original.y * 0.05, escala_original.z), 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_:
 			t.tween_property(v, "scale", escala_original * 0.05, 0.2)
-	if te_soca() and etapa == ESCALA_ETAPA.size() - 1:   # els brots i els joves no deixen soca
+	if te_soca() and etapa >= 1:   # els brots no deixen res; els joves, una soca petita
 		t.tween_callback(_quedar_soca)
 	elif dinamic:
 		t.tween_callback(visual().queue_free)
@@ -174,7 +175,7 @@ func te_soca() -> bool:
 	return tipus == Tipus.ARBRE and visual().has_method("posar_estat") and Arbre3D.te_model("soca")
 
 func es_soca() -> bool:
-	return not disponible() and te_soca() and etapa == ESCALA_ETAPA.size() - 1
+	return not disponible() and te_soca() and etapa >= 1
 
 func _quedar_soca():
 	if disponible():
@@ -182,9 +183,11 @@ func _quedar_soca():
 	var v := visual()
 	v.posar_estat("soca")
 	v.visible = true
-	v.scale = escala_original
+	# La d'un arbre jove és més petita
+	var mida := 1.0 if etapa >= ESCALA_ETAPA.size() - 1 else MIDA_SOCA_JOVE
+	v.scale = escala_original * mida
 	if alcada_adult >= 0.0:
-		v.global_position.y = terra_y + maxf(alcada_adult, 0.0)
+		v.global_position.y = terra_y + maxf(alcada_adult, 0.0) * mida
 
 func _process(_delta):
 	var dia: int = GestorTemps.dia_actual

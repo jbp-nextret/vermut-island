@@ -14,7 +14,12 @@ extends Camera3D
 
 const ZOOM_SPEED = 0.5
 const MIN_ZOOM = 7.0
-const MAX_ZOOM = 14.0
+const MAX_ZOOM = 14.0   # amb la "Distància de visió" normal (vegeu ZOOM_MAXIM)
+## Fins on es pot allunyar el zoom i fins on arriben les ombres, segons l'opció
+const ZOOM_MAXIM := {"curta": 12.0, "normal": 14.0, "llarga": 19.0, "molt_llarga": 25.0}
+const OMBRES := {"curta": 80.0, "normal": 110.0, "llarga": 160.0, "molt_llarga": 230.0}
+## El desenfocament del fons: [quant, a quantes unitats per darrere del personatge comença]
+const DESENFOCAMENT := {"cap": [0.0, 0.0], "suau": [0.07, 18.0], "normal": [0.2, 10.0]}
 const PAS_GIR := 45.0
 const PAS_INCLINACIO := 10.0
 ## Com de des de dalt pot arribar a mirar (la vista inicial és -24°). Més avall de -40°
@@ -76,12 +81,26 @@ func _ajustar_desenfocament():
 	var atributs := attributes as CameraAttributesPractical
 	if atributs == null:
 		return
-	atributs = atributs.duplicate()   # no modificar el recurs compartit de l'escena
-	var desplacament := DISTANCIA - DISTANCIA_ORIGINAL
-	if atributs.dof_blur_far_enabled:
-		atributs.dof_blur_far_distance += desplacament
+	if not atributs.has_meta("propi"):
+		atributs = atributs.duplicate()   # no modificar el recurs compartit de l'escena
+		atributs.set_meta("propi", true)
+	var d: Array = DESENFOCAMENT.get(SettingsManager.valor("desenfocament"), DESENFOCAMENT.suau)
+	atributs.dof_blur_far_enabled = d[0] > 0.0
+	atributs.dof_blur_far_distance = DISTANCIA + d[1]
+	atributs.dof_blur_amount = d[0]
 	# El de prop només afectava el que tocava la càmera: ara ja no hi ha res tan a prop
+	atributs.dof_blur_near_enabled = false
 	attributes = atributs
+
+func zoom_maxim() -> float:
+	return ZOOM_MAXIM.get(SettingsManager.valor("distancia_visio"), MAX_ZOOM)
+
+## Les ombres del sol han d'arribar fins on es veu
+func _aplicar_distancia_visio():
+	var llum := get_tree().current_scene.get_node_or_null("GridMap/DirectionalLight3D") as DirectionalLight3D if get_tree().current_scene else null
+	if llum:
+		llum.directional_shadow_max_distance = OMBRES.get(SettingsManager.valor("distancia_visio"), 110.0)
+	target_size = minf(target_size, zoom_maxim())
 
 ## A cada fotograma (no a cada tic de física): en monitors de més de 60 Hz, si la càmera
 ## només es mogués a 60 Hz faria batzegades
@@ -120,9 +139,9 @@ func _input(event):
 		return   # construint a casa hi ha una altra càmera activa
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			target_size = clamp(target_size - ZOOM_SPEED, MIN_ZOOM, MAX_ZOOM)
+			target_size = clamp(target_size - ZOOM_SPEED, MIN_ZOOM, zoom_maxim())
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			target_size = clamp(target_size + ZOOM_SPEED, MIN_ZOOM, MAX_ZOOM)
+			target_size = clamp(target_size + ZOOM_SPEED, MIN_ZOOM, zoom_maxim())
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			girant_amb_ratoli = event.pressed
 			if not event.pressed:
@@ -184,12 +203,17 @@ func _crear_postprocessat():
 	add_child(postprocessat)
 	_aplicar_vores()
 	SettingsManager.opcio_canviada.connect(_on_opcio_canviada)
+	_aplicar_distancia_visio.call_deferred()   # (quan el cicle de dia i nit ja ha posat les seves)
 
 func _on_opcio_canviada(clau: String, _valor):
 	if clau == "postprocessat":
 		postprocessat.visible = GameState.postprocessat_actiu
 	elif clau == "vores":
 		_aplicar_vores()
+	elif clau == "desenfocament":
+		_ajustar_desenfocament()
+	elif clau == "distancia_visio":
+		_aplicar_distancia_visio()
 
 func _aplicar_vores():
 	var material := postprocessat.material_override as ShaderMaterial

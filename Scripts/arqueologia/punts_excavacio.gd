@@ -78,7 +78,28 @@ func _lliure(cella: Vector3i) -> bool:
 	var casa := mon.get_node_or_null("Casa") as Node3D
 	if casa and Vector2(casa.global_position.x - pos.x, casa.global_position.z - pos.z).length() < 5.0:
 		return false
-	return true
+	# Només on es pot llaurar: herba envoltada d'herba (no a les vores ni als límits del
+	# mapa) i sense res a sobre (parets invisibles, cases, tanques...)
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			var v := cella + Vector3i(dx, 0, dz)
+			var item := gridmap.get_cell_item(v)
+			if item == GridMap.INVALID_CELL_ITEM or gridmap.get_cell_item(v + Vector3i.UP) != GridMap.INVALID_CELL_ITEM:
+				return false
+			if not mon.es_herba(gridmap.mesh_library.get_item_name(item)) and not mon.llaurades.has(v):
+				return false
+	return not _hi_ha_obstacle(pos)
+
+func _hi_ha_obstacle(superficie: Vector3) -> bool:
+	var consulta := PhysicsShapeQueryParameters3D.new()
+	var caixa := BoxShape3D.new()
+	caixa.size = Vector3(0.8, 0.6, 0.8)
+	consulta.shape = caixa
+	consulta.transform = Transform3D(Basis(), superficie + Vector3.UP * 0.4)
+	for r in mon.get_world_3d().direct_space_state.intersect_shape(consulta, 4):
+		if not r.collider is GridMap and not r.collider.is_in_group("enemics") and not r.collider.is_in_group("player"):
+			return true
+	return false
 
 func _superficie(cella: Vector3i) -> Vector3:
 	var local := gridmap.map_to_local(cella)

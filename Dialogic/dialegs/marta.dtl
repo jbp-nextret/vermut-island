@@ -1,4 +1,9 @@
-if Grup.es_membre("marta"):
+if Missions.pot_lliurar("expedicio_illeta"):
+	marta: Mira-te-la! La teva primera criatura. T'ha triat bé.
+	do Missions.lliurar("expedicio_illeta")
+	marta: Amb les criatures domesticades pots fer corrals a casa: posa-hi tanques al voltant i et produiran coses.
+	marta: Aquí tens unes galetes perquè la tinguis contenta. Quan vulguis tornar a casa, la barca és al moll.
+elif Grup.es_membre("marta"):
 	marta: Què necessites, {Converses.nom_jugador}?
 	- Continua ajudant-me
 		marta: Som-hi! Si veig cultius amb set, ja els rego jo.
@@ -13,6 +18,34 @@ elif Missions.pot_lliurar("fusta_moll"):
 elif Missions.activa("fusta_moll"):
 	marta: Encara em falta material per al moll: 8 de fusta i 4 de fibra.
 	marta: La fusta la trauràs dels arbres, i la fibra tallant herba amb l'espasa.
+elif Missions.activa("expedicio_illeta"):
+	marta: A l'illeta del costat hi ha criatures mansoies. Agafa la barca al final del moll i anem-hi!
+	marta: Quan en vegis una, llança-li olives marinades (o el vermut hipnòtic) i, mentre menja, acosta-t'hi i prem F.
+	if not Grup.es_membre("marta"):
+		- Vine amb mi
+			if Grup.ple():
+				marta: Ja vas massa acompanyat! Fes lloc i t'acompanyo.
+			else:
+				do Grup.unir("marta")
+				marta: Som-hi!
+		- Hi vaig sol
+			marta: Molt bé! Vés amb compte.
+elif Missions.disponible("expedicio_illeta"):
+	marta: Ara que tenim el moll arreglat... saps que a les illetes del voltant hi viuen criatures?
+	marta: Algunes es poden domesticar: t'acompanyen, t'ajuden a la feina i, en un corral, produeixen coses.
+	marta: Anem plegats a l'illeta del costat i n'intentes domesticar una?
+	- Som-hi!
+		do Missions.acceptar("expedicio_illeta")
+		do Inventari.afegir("olives_marinades", 3)
+		do Inventari.afegir("vermut_hipnotic", 1)
+		marta: Té, unes olives marinades i un vermut hipnòtic: amb això n'atrauràs alguna.
+		if Grup.ple():
+			marta: Ara vas massa acompanyat; quan tinguis lloc, digue'm i vinc.
+		else:
+			do Grup.unir("marta")
+			marta: Agafem la barca al final del moll!
+	- Més endavant
+		marta: Quan vulguis. Les criatures no se n'aniran enlloc.
 elif Missions.completada("fusta_moll"):
 	marta: Hola de nou! Vols que t'acompanyi? Et puc regar els cultius.
 	- Sí, vine amb mi

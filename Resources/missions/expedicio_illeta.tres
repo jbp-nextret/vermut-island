@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="Missio" format=3]
+
+[ext_resource type="Script" path="res://Scripts/missions/objectiu_missio.gd" id="1_obj"]
+[ext_resource type="Script" path="res://Scripts/missions/missio.gd" id="3_mis"]
+
+[sub_resource type="Resource" id="Resource_arribar"]
+script = ExtResource("1_obj")
+tipus = 3
+descripcio = "Ves amb barca a l'illeta del costat"
+lloc = "illeta_propera"
+
+[sub_resource type="Resource" id="Resource_domesticar"]
+script = ExtResource("1_obj")
+tipus = 2
+descripcio = "Domestica una criatura (llança-li olives marinades o vermut hipnòtic i prem F)"
+accio = "domesticar"
+quantitat = 1
+
+[resource]
+script = ExtResource("3_mis")
+id = "expedicio_illeta"
+titol = "Expedició a l'illeta"
+descripcio = "La Marta diu que a l'illeta del costat hi viuen criatures que es poden domesticar. Hi aneu plegats amb la barca."
+donant = "marta"
+objectius = Array[ExtResource("1_obj")]([SubResource("Resource_arribar"), SubResource("Resource_domesticar")])
+missions_previes = PackedStringArray("fusta_moll")
+diners = 30
+xp = 50
+objectes = {
+"galeta_criatura": 3
+}

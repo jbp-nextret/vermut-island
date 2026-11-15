@@ -79,14 +79,17 @@ func _ready():
 		regenerador.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba)
 	regenerador.afegir_zona("Illa principal", _celles_herba_principals(), 0.15)
 	add_child(regenerador)
-	# Criatures salvatges: a les illetes i alguna de mansa a la illa principal
+	# Criatures salvatges: només a les illetes (a la principal no n'hi ha). A la més propera
+	# al moll hi ha les més mansoies, i és on la Marta et porta a domesticar-ne la primera
 	generador_criatures = GeneradorCriatures.new()
 	generador_criatures.name = "GeneradorCriatures"
 	generador_criatures.configurar(self, $GridMap)
+	var propera := illeta_propera()
 	for i in generador_illes.illes.size():
-		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "illetes")
-	generador_criatures.afegir_zona("Illa principal", _celles_herba_principals(), GeneradorCriatures.A_LA_PRINCIPAL, "principal")
+		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "principal" if i == propera else "illetes")
 	add_child(generador_criatures)
+	if propera >= 0:
+		_zona_missio_illeta(generador_illes.illes[propera])
 	# Arqueologia: marques a terra on hi ha fòssils o tresors (es desenterren llaurant)
 	punts_excavacio = PuntsExcavacio.new()
 	punts_excavacio.name = "PuntsExcavacio"
@@ -123,6 +126,9 @@ func _ready():
 	regador.name = "Regador"
 	regador.configurar(self, plantador, $Personatge)
 	add_child(regador)
+	# L'aigua dolça del mig de l'illa omple la regadora (F)
+	if has_node("Water"):
+		add_child(FontAigua.crear($Water, regador))
 	llaurador = Llaurador.new()
 	llaurador.name = "Llaurador"
 	llaurador.configurar(self, plantador, $Personatge)
@@ -287,6 +293,31 @@ func _terra_sota(punt: Vector3) -> Vector3:
 	return punt
 
 ## Les cel·les d'herba de l'illa principal (on poden sortir recursos nous)
+## L'illeta més propera al moll (-1 si no n'hi ha)
+func illeta_propera() -> int:
+	var moll := get_node_or_null("Moll") as Node3D
+	var des_de := moll.global_position if moll else Vector3.ZERO
+	var millor := -1
+	for i in generador_illes.illes.size():
+		var c: Vector3 = generador_illes.illes[i].centre
+		if millor < 0 or Vector2(c.x - des_de.x, c.z - des_de.z).length() < Vector2(generador_illes.illes[millor].centre.x - des_de.x, generador_illes.illes[millor].centre.z - des_de.z).length():
+			millor = i
+	return millor
+
+## El lloc de la missió "Expedició a l'illeta": tota l'illeta
+func _zona_missio_illeta(illa: Dictionary):
+	var zona := ZonaMissio.new()
+	zona.id = "illeta_propera"
+	zona.nom = "l'illeta del costat"
+	var forma := CollisionShape3D.new()
+	var cilindre := CylinderShape3D.new()
+	cilindre.radius = maxf(3.0, float(illa.radi) * 0.8)
+	cilindre.height = 12.0
+	forma.shape = cilindre
+	zona.add_child(forma)
+	add_child(zona)
+	zona.global_position = Vector3(illa.centre.x, 2.0, illa.centre.z)
+
 func _celles_herba_principals() -> Array:
 	var gridmap: GridMap = $GridMap
 	var illetes := {}

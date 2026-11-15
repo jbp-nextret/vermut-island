@@ -18,6 +18,8 @@ const PER_DEFECTE := {
 	"suavitat_camera": 0.25,   # 0 = enganxada al personatge, 1 = molt suau
 	"particules_meteo": true,
 	"efectes_ambient": true,
+	"desenfocament": "suau",       # el fons desenfocat: "cap", "suau" o "normal"
+	"distancia_visio": "normal",   # fins on es pot allunyar el zoom i fins on hi ha ombres
 	# Joc
 	"numeros_dany": true,
 	"boles_guiades": true,
