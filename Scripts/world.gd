@@ -86,6 +86,7 @@ func _ready():
 	generador_criatures.name = "GeneradorCriatures"
 	generador_criatures.configurar(self, $GridMap)
 	var propera := illeta_propera()
+	Ruines.crear_a_les_illetes(self, $GridMap, generador_illes.illes)
 	for i in generador_illes.illes.size():
 		generador_criatures.afegir_zona("Illeta %d" % (i + 1), generador_illes.illes[i].herba, GeneradorCriatures.PER_ILLETA, "principal" if i == propera else "illetes")
 	add_child(generador_criatures)

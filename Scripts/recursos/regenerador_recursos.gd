@@ -160,6 +160,10 @@ func _cella_lliure(celles: Array):
 		if mon.has_method("zona_de_conreu_a_prop") and mon.zona_de_conreu_a_prop(p, 2.0):
 			continue
 		var ocupada := false
+		for o in get_tree().get_nodes_in_group("ocupa_terreny"):
+			if Vector2(o.global_position.x - p.x, o.global_position.z - p.z).length() < float(o.get_meta("radi", 2.0)):
+				ocupada = true
+				break
 		for r in get_tree().get_nodes_in_group("recursos"):
 			if Vector2(r.global_position.x - p.x, r.global_position.z - p.z).length() < DISTANCIA_ENTRE_RECURSOS:
 				ocupada = true

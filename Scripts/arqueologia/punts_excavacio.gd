@@ -88,6 +88,9 @@ func _lliure(cella: Vector3i) -> bool:
 				return false
 			if not mon.es_herba(gridmap.mesh_library.get_item_name(item)) and not mon.llaurades.has(v):
 				return false
+	for o in mon.get_tree().get_nodes_in_group("ocupa_terreny"):
+		if Vector2(o.global_position.x - pos.x, o.global_position.z - pos.z).length() < float(o.get_meta("radi", 2.0)) - 1.0:
+			return false
 	return not _hi_ha_obstacle(pos)
 
 func _hi_ha_obstacle(superficie: Vector3) -> bool:
